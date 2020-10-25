@@ -104,5 +104,5 @@ theme: cactus
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: 'git'
-  repo: 'https://github.com/zhangtao0928/kyleezhang.github.io.git'
+  repo: 'https://github.com/kyleezhang/kyleezhang.github.io'
   branch: 'master'
