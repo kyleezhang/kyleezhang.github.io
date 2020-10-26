@@ -92,7 +92,7 @@ disqus: false
 
 #5、Gitment
 gitment_owner: kyleezhang    #你的 GitHub ID
-gitment_repo: 'blog-comments'       #存储评论的 repo
+gitment_repo: 'kyleezhang.github.io'       #存储评论的 repo
 gitment_oauth:
   client_id: 'dd8d4499e52320e5e320'           #client ID
   client_secret: '1b2bea0296dfdfc1f3f0664c49a17cd252c51b37'       #client secret
