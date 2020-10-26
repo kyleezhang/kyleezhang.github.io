@@ -3,7 +3,7 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: 还真是一个博客
+title: kyleezhang
 subtitle: ''
 description: ''
 keywords:
@@ -98,7 +98,7 @@ ignore:
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: cactus
+theme: yilia
 
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
@@ -106,3 +106,22 @@ deploy:
   type: 'git'
   repo: 'https://github.com/kyleezhang/kyleezhang.github.io'
   branch: 'master'
+
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: false
+    tags: true
