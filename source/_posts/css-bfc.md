@@ -60,7 +60,7 @@ BFC是一个独立的布局环境，按照块级盒子进行布局，其中的�
 
 特性6 可以利用BFC的此特性实现自适应两栏式布局，例如：
 
-```
+```html
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -109,18 +109,18 @@ BFC是一个独立的布局环境，按照块级盒子进行布局，其中的�
 1、防止margin折叠
 我们首先来了解一下外边距合并，以下面代码为例：
 
-```
+```html
 <style>
-	#container {
-		width: 400px;
-		background: #ccc;
-	}
-	p {
-		pading: 0;
-		margin: 20px 0 20px 0;
-		background: green;
-		color: #fff;
-	}
+#container {
+    width: 400px;
+    background: #ccc;
+}
+p {
+    padding: 0px;
+    margin: 20px 0 20px 0;
+    background: green;
+    color: #fff;
+}
 </style>
 <body>
 	<div id="container">
@@ -140,12 +140,12 @@ BFC是一个独立的布局环境，按照块级盒子进行布局，其中的�
 
 注：发生margin折叠的必要条件是margin必须是邻接的。
 下面我们给container元素添加属性overflow: hidden;，这样container元素创建了一个BFC：
-```
+```css
 #container {
  	width: 400px;
   	background: #ccc;
   	overflow: hidden;
- }
+}
 ```
 页面效果：
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190813144500720.png)
@@ -159,17 +159,17 @@ BFC是一个独立的布局环境，按照块级盒子进行布局，其中的�
 
 ```
 <style>
-	#container {
-		width: 400px;
-		height: 300px;
-		border: 1px dotted red;
-	}
-	#box {
-		width: 150px;
-		height: 150px;
-		float: left;
-		background: lightblue;
-	}
+#container {
+    width: 400px;
+    height: 300px;
+    border: 1px dotted red;
+}
+#box {
+    width: 150px;
+    height: 150px;
+    float: left;
+    background: lightblue;
+}
 </style>
 <body>
 	<div id="container">
@@ -183,8 +183,8 @@ BFC是一个独立的布局环境，按照块级盒子进行布局，其中的�
 ```
 页面效果：
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190813151331625.png)
-给p元素增加overflow: auto;
 
+给p元素增加overflow: auto;
 ```
 p {
 	overflow: auto;
@@ -199,16 +199,16 @@ p {
 
 ```
 <style>
-	#container {
-		width: 400px;
-		border: 2px dotted red;
-	}
-	.box {
-		float: left;
-		width: 150px;
-		height: 150px;
-		background: yellow;
-	}
+#container {
+    width: 400px;
+    border: 2px dotted red;
+}
+.box {
+    float: left;
+    width: 150px;
+    height: 150px;
+    background: yellow;
+}
 </style>
 <body>
 	<div id="container">
@@ -219,8 +219,7 @@ p {
 ```
 页面效果：
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190813152752766.png)
-由于浮动子元素脱离了标准文档流，不再占据标准文档流的内存空间，因此无法撑起container元素的高度，我们把这种情况称为高度坍塌，我们给container元素增加overflow: hidden;：
-
+由于浮动子元素脱离了标准文档流，不再占据标准文档流的内存空间，因此无法撑起container元素的高度，我们把这种情况称为高度坍塌，我们给container元素增加overflow: hidden;
 ```
 container {
 	width: 400px;
@@ -230,29 +229,29 @@ container {
 ```
 页面效果：
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/2019081315544828.png)
-能够使用BFC解决高度坍塌是因为BFC的特性5：计算BFC的高度时，考虑BFC所包含的所有元素，连浮动元素也参与计算；
+能够使用BFC解决高度坍塌是因为BFC的特性5：计算BFC的高度时，考虑BFC所包含的所有元素，连浮动元素也参与计算;
 
 （6）清除浮动塌陷
 示例：
 
-```
+```html
 <style>
-	#container {
-  		width: 400px;
-  		border: 2px dotted red;
- 	}
- 	.box {
-  		float: left;
-  		width: 150px;
-  		height: 150px;
-  		background: yellow;
-  		margin-right: 10px;
- 	}
- 	#anotherBox {
-  		width: 400px;
-  		height: 200px;
-  		background: gray;
- 	}
+#container {
+    width: 400px;
+    border: 2px dotted red;
+}
+.box {
+    float: left;
+    width: 150px;
+    height: 150px;
+    background: yellow;
+    margin-right: 10px;
+}
+#anotherBox {
+    width: 400px;
+    height: 200px;
+    background: gray;
+}
 </style>
 <body>
 	<div id="container">
