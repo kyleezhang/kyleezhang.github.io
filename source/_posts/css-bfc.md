@@ -7,7 +7,7 @@ categories:
 tags:
 - CSS
 ---
-## BFC是什么
+
 BFC的全称是块状格式化上下文，MDN中对于对于BFC的定义如下：
 
 > 一个块格式化上下文（block formatting context） 是Web页面的可视化CSS渲染出的一部分。它是块级盒布局出现的区域，也是浮动层元素进行交互的区域。
