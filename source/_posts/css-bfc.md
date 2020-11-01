@@ -2,8 +2,6 @@
 layout: posts
 title: BFC-块状格式化上下文
 date: 2020-10-26 20:56:53
-categories: 
-- CSS
 tags:
 - CSS
 ---
