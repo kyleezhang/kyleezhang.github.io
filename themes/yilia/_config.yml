@@ -11,7 +11,7 @@ subnav:
   weibo: "https://weibo.com/u/6998903195"
   # zhihu: "http://www.zhihu.com/people/zhang-tao-67-69-7"
   #qq: "#"
-  # weixin: "ai15393235699"
+  weixin: "https://kyleezhang.github.io/assets/config/wechat.png"
   #jianshu: "#"
   #douban: "#"
   #segmentfault: "#"
@@ -36,10 +36,11 @@ root: /
 excerpt_link: more
 # 文章卡片右下角常驻链接，不需要请设置为false
 show_all_link: '展开全文'
+fancybox: true
 # 数学公式
 mathjax: false
 # 是否在新窗口打开链接
-open_in_new: false
+open_in_new: true
 
 # 打赏
 # 打赏type设定：0-关闭打赏； 1-文章对应的md文件里有reward:true属性，才有打赏； 2-所有文章均有打赏

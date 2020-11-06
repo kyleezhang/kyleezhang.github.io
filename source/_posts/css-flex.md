@@ -1,6 +1,7 @@
 ---
 title: CSS Flex 弹性盒布局
 date: 2020-10-26 21:20:48
+toc: true
 tags:
 - CSS
 ---
@@ -15,6 +16,7 @@ Flex布局又称弹性盒布局，是在CSS3中的一种新布局方式，可以
  - 弹性容器添加display: flex属性显示为块级元素，添加display: inline-flex显示为行级元素。
  - 设为弹性盒布局以后弹性子元素的float、clear和vertical-align属性将失效，但position属性，依然生效。
 
+<!-- more -->
 示例：
 
 ```html
