@@ -64,8 +64,8 @@ toc_empty_wording: '目录，不存在的…'
 top: true
 
 # Miscellaneous
-baidu_analytics: ''
-google_analytics: ''
+baidu_analytics: 'f1621cb3fb0792bb294fce1b938d5eef'
+google_analytics: 'G-2KR3NK700N'
 favicon: /assets/config/avatar.png
 
 #你的头像url
@@ -118,4 +118,4 @@ smart_menu:
   innerArchive: '所有文章'
   aboutme: '关于我'
 
-aboutme: Kylee<br>毕业于西电<br>目前在西安做前端开发<br/><br/>希望，能追求自己的热爱，<br/>做一些还算有趣的事情
+aboutme: Kylee<br>毕业于西电<br>目前在西安做前端开发<br/><br/>希望，能追求自己的热爱<br/>做一些还算有趣的事情
