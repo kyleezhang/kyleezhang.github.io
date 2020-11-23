@@ -52,13 +52,15 @@ Flex布局又称弹性盒布局，是在CSS3中的一种新布局方式，可以
 >主轴： 在弹性布局中，我们会通过属性规定水平/垂直方向为主轴
 >交叉轴： 与主轴垂直的另一方向，称为交叉轴
 
-1、flex-direction属性：决定弹性子元素的排列方向（即定义了主轴方向）
+### 1、flex-direction属性
+决定弹性子元素的排列方向（即定义了主轴方向），可选值：
  - row（默认值）： 主轴为水平方向，起点在左端，子元素从左至右排列；              
  - row-reverse： 主轴在水平方向，起点在右端，子元素从右至左排列；    
  - column：主轴为垂直方向，起点在上沿，子元素从上向下排列；         
  - column-reverse：主轴为垂直方向，起点在下沿，子元素从下向上排列；
 
-2、flex-wrap属性：定义如果一行排列不下如何换行
+### 2、flex-wrap属性
+定义如果一行排列不下如何换行，可选值：
  - nowrap（默认）：不换行。当容器宽度不够时，每个项目会被挤压宽度；            
  - wrap： 换行，并且第一行在容器最上方； 
  - wrap-reverse： 换行，并且第一行在容器最下方；
@@ -95,9 +97,11 @@ Flex布局又称弹性盒布局，是在CSS3中的一种新布局方式，可以
 当把wrap-reverse换成wrap：
 <img src="/assets/css-flex/03.png" width="423" height="200"></img>
 
-3、flex-flow属性：flex-direction和flex-wrap的缩写形式，默认值为：row wrap，可以将flex-direction的可选值和flex-wrap的可选值进行任意组合，此处不再做过多赘述。
+### 3、flex-flow属性
+flex-direction和flex-wrap的缩写形式，默认值为：row wrap，可以将flex-direction的可选值和flex-wrap的可选值进行任意组合，此处不再做过多赘述。
 
-4、justify-content属性：定义了子元素在在主轴上的对齐方式（此属性与flex-direction息息相关，当flex-direction的取值为row时，起点在主轴左边，取值为row-reverse时起点在主轴右边，column起点在主轴上边，column-reverse-起点在主轴下边）
+### 4、justify-content属性
+定义了子元素在在主轴上的对齐方式（此属性与flex-direction息息相关，当flex-direction的取值为row时，起点在主轴左边，取值为row-reverse时起点在主轴右边，column起点在主轴上边，column-reverse-起点在主轴下边）
  - flex-start（默认值）： 项目位于主轴起点。           
  - flex-end：项目位于主轴终点。          
  - center： 居中          
@@ -140,7 +144,8 @@ justify-content属性为space-between：
 justify-content属性为space-around：
 <img src="/assets/css-flex/08.png" width="423" height="200"></img>
 
-5、align-items属性：定义子元素在交叉轴上的对齐方式（flex-direction属性定义主轴方向，与之相垂直的就是交叉轴方向）
+### 5、align-items属性
+定义子元素在交叉轴上的对齐方式（flex-direction属性定义主轴方向，与之相垂直的就是交叉轴方向）
  - flex-start：子元素按照交叉轴的起点对齐。            
  - flex-end：子元素按照交叉轴的终点对齐。           
  - center：子元素按照交叉轴的中点对齐。            
@@ -213,7 +218,8 @@ align-items属性取center
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190805135302650.png)
 当我们通过flex-direction属性修改主轴方向时交叉轴的方向也随之改变，因此弹性子元素的交叉轴排列方式也随之改变。大家可以自己尝试不同flex-direction取值下align-items属性对于页面布局的影响，此处限于篇幅原因不再一一尝试。
 
-6、align-content属性：修改 flex-wrap 属性的行为，类似 align-items, 但不是设置子元素对齐，而是设置行对齐，即align-content属性定义了多根轴线的对齐方式。如果项目只有一根轴线，该属性不起作用。
+6、align-content属性
+修改 flex-wrap 属性的行为，类似 align-items, 但不是设置子元素对齐，而是设置行对齐，即align-content属性定义了多根轴线的对齐方式。如果项目只有一根轴线，该属性不起作用。
 （可以将其视为多行情形下的align-items属性）
  - flex-start：子元素按照交叉轴的起点对齐。           
  - flex-end：子元素按照交叉轴的终点对齐。          
@@ -301,7 +307,8 @@ align-content属性为space-around：
 
 ## 子容器的六大属性
 
-1、order属性：定义弹性子元素排列顺序
+### 1、order属性
+定义弹性子元素排列顺序
 用整数值来定义排列顺序，数值小的排在前面。可以为负值，默认为0
 示例：
 ```html
@@ -331,8 +338,8 @@ align-content属性为space-around：
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190805150148493.png)
 由于第一个子元素的order属性为1，其他都为0，所以first子元素排在最后面，其他的排在前面。
 
-2、flex-grow属性：定义子元素的放大比例。
-用整数值规定项目将相对于其他灵活的项目进行扩展放大的量。默认值是 0，即如果存在剩余空间子元素也不扩展。
+### 2、flex-grow属性
+定义子元素的放大比例。用整数值规定项目将相对于其他灵活的项目进行扩展放大的量。默认值是 0，即如果存在剩余空间子元素也不扩展。
 示例：
 ```html
 <style>
@@ -362,8 +369,8 @@ align-content属性为space-around：
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190805152403444.png)
 如上图所示，实际上first元素的宽度为原本元素宽度 + 剩余空间的宽度 x (1/3); third元素的宽度为原本元素的宽度 + 剩余空间的宽度 x (2/3)。
 
-3、flex-shrink属性：定义了子元素的缩小比例
-整数值规定项目将相对于其他灵活的项目进行收缩的量。默认值是 1，即如果空间不足，该子元素将缩小。如果值为0，则该子元素不挤压宽度，如果所有子元素的flex-shirnk属性全为0，当宽度不够时部分子元素将挤出父容器。如果值越大，则该子元素收缩的量越大。
+### 3、flex-shrink属性
+定义了子元素的缩小比例。整数值规定项目将相对于其他灵活的项目进行收缩的量。默认值是 1，即如果空间不足，该子元素将缩小。如果值为0，则该子元素不挤压宽度，如果所有子元素的flex-shirnk属性全为0，当宽度不够时部分子元素将挤出父容器。如果值越大，则该子元素收缩的量越大。
 示例：
 ```html
 <style>
@@ -394,7 +401,8 @@ align-content属性为space-around：
 如上图所示：
 second元素和forth元素的宽度都没有收缩，first元素的实际宽度 = first元素的正常宽度 - 不足的空间宽度 x (1/3)；third元素的实际宽度 = third元素的正常宽度 - 不足的空间宽度 x (2/3)
 
-4、flex-basis属性：定义子元素占据的主轴空间，默认值为auto（如果主轴为水平，则设置这个属性类似于子元素宽度，子元素原width属性将失效；如果主轴为垂直，则设置这个属性类似于子元素的高度，子元素原height属性将失效）
+### 4、flex-basis属性
+定义子元素占据的主轴空间，默认值为auto（如果主轴为水平，则设置这个属性类似于子元素宽度，子元素原width属性将失效；如果主轴为垂直，则设置这个属性类似于子元素的高度，子元素原height属性将失效）
 可选值：
  - 整数值或百分比，规定子元素占据主轴空间的初始值；
  - auto：默认值。长度等于元素的长度。如果该项目未指定长度，则长度将根据内容决定。
@@ -428,14 +436,15 @@ second元素和forth元素的宽度都没有收缩，first元素的实际宽度 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190805172356649.png)
 从上图我们可以看出，first元素的实际宽度为100px，覆盖之前定义的width：80px
 
-5、flex属性：flex-grow, flex-shrink 和 flex-basis的简写，默认值为0 1 auto。
-除了直接分别给flex-grow、flex-shrink 和 flex-basis赋值还可以选取以下值：
+### 5、flex属性
+flex-grow, flex-shrink 和 flex-basis的简写，默认值为0 1 auto。除了直接分别给flex-grow、flex-shrink 和 flex-basis赋值还可以选取以下值：
  - auto：与 1 1 auto 相同。
  - none：与 0 0 auto 相同。
  - initial：设置该属性为它的默认值，即为 0 1 auto。
  - inherit：从父元素继承该属性。
 
-6、align-self属性：定义单个项目自身在交叉轴上的排列方式，可以覆盖掉容器上的align-items属性。
+### 6、align-self属性
+定义单个项目自身在交叉轴上的排列方式，可以覆盖掉容器上的align-items属性。
 属性值：与align-items相同，默认值为auto，表示继承父容器的align-items属性值。
 示例：
 ```html

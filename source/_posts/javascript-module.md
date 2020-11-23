@@ -113,7 +113,8 @@ Module._extensions['.json'] = function(module, filename) {￼
 其中，Module._extensions会被赋值给require()的extensions属性，所以通过在代码中访问require.extensions可以知道系统中的已有的扩展加载方式，如果想对自定义的扩展名进行特殊的加载，可以通过类似require.extensions['.ext']的方式实现。早期的CoffeeScript文件就是通过添加require.extensions['.coffee']扩展的方式来实现加载的。
 
 在确定文件的扩展名之后，Node将调用具体的编译方式来将文件执行后返回给调用者。
-#### JavaScript模块的编译
+
+（一）**JavaScript模块的编译**
 回到CommonJS模块规范，我们知道每个模块文件中存在着require、exports、module这3个变量，但是它们在模块文件中并没有定义，那么从何而来呢？甚至在Node的API文档中，我们知道每个模块中还有__filename、__dirname这两个变量的存在，它们又是从何而来的呢？如果我们把直接定义模块的过程放诸在浏览器端，会存在污染全局变量的情况。
 事实上，在编译的过程中，Node对获取的JavaScript文件内容进行了头尾包装，一个正常的JavaScript文件会被包装成如下的样子：
 ```javascript
@@ -124,10 +125,12 @@ Module._extensions['.json'] = function(module, filename) {￼
     };
 })
 ```
-这样每个模块文件之间都进行了作用域隔离。包装之后的代码会通过vm原生模块的runInThisContext()方法执行，返回一个具体的function对象。最后，将当前模块对象的exports属性、require()方法、module（模块对象自身），以及在文件定位中得到的完整文件路径和文件目录作为参数传递给这个function()执行，这就是这些变量并没有定义在每个模块文件中却存在的原因。在执行之后，模块的exports属性被返回给了调用方。exports属性上的任何方法和属性都可以被外部调用到，但是模块中的其余变量或属性则不可直接被调用，
-#### C/C++模块的编译
+这样每个模块文件之间都进行了作用域隔离。包装之后的代码会通过vm原生模块的runInThisContext()方法执行，返回一个具体的function对象。最后，将当前模块对象的exports属性、require()方法、module（模块对象自身），以及在文件定位中得到的完整文件路径和文件目录作为参数传递给这个function()执行，这就是这些变量并没有定义在每个模块文件中却存在的原因。在执行之后，模块的exports属性被返回给了调用方。exports属性上的任何方法和属性都可以被外部调用到，但是模块中的其余变量或属性则不可直接被调用。
+
+（二）**C/C++模块的编译**
 Node调用process.dlopen()方法进行加载和执行。在Node的架构下，dlopen()方法在Windows、*nix等平台下分别有不同的实现，通过libuv兼容层进行了封装。实际上，.node的模块文件并不需要编译，因为它是编写C/C++模块之后编译生成的，所以这里只有加载和执行的过程。在执行的过程中，模块的exports对象与．node模块产生联系，然后返回给调用者。C/C++模块给Node使用者带来的优势主要是执行效率，劣势则是C/C++模块的编写门槛比JavaScript高。
-#### JSON文件的编译
+
+（三）**JSON文件的编译**
 JSON文件的编译是3种编译方式中最简单的。Node利用fs模块同步读取JSON文件的内容之后，调用JSON.parse()方法得到对象，然后将它赋给模块对象的exports，以供外部调用。
 JSON文件在用作项目的配置文件时比较有用。如果你定义了一个JSON文件作为配置，那就不必调用fs模块去异步读取和解析，直接调用require()引入即可。此外，你还可以享受到模块缓存的便利，并且二次引入时也没有性能影响。
 
@@ -137,7 +140,7 @@ Node中的核心模块分为C/C++编写的和JavaScript编写的两部分，其�
 在编译所有核心模块之前编译程序首先要将所有的JavaScript模块文件编译为C/C++代码。
 #### 1、转存为C/C++代码
 Node采用了V8附带的js2c.py工具，将所有内置的JavaScript代码（src/node.js和lib/*.js）转换成C++里的数组，生成node_natives.h头文件。在这个过程中，Javascript代码以字符串的形式存储在node命名空间中，是不可直接执行的，在启动Node进程时，JavaScript代码直接加载进内存中，然后当模块被加载时Javascript核心模块经历标识符分析后直接定位到内存中，比普通文件模块从磁盘中一处一处查找要快得多。
-#### 2、编译JavaScript核心模块
+#### 2、编译JS核心模块
 lib目录下的所有模块文件也没有定义require、module、exports这些变量。在引入JavaScript核心模块的过程中，也经历了头尾包装的过程，然后才执行和导出了exports对象。与文件模块有区别的地方在于：获取源代码的方式（核心模块是从内存中加载的）以及缓存执行结果的位置。
 JavaScript核心模块的定义如下面的代码所示，源文件通过process.binding('natives')取出并放置到NativeModule._source中，编译成功的模块缓存到NativeModule._cache对象上，文件模块则缓存到Module._cache对象上：
 ```c++
