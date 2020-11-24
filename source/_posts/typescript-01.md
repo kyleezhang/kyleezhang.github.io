@@ -262,7 +262,7 @@ tupleType = ["semlinker", true];
 console.log(tupleType[0]) // 'semlinker'
 ```
 在上述示例中我们定义了一个名为tupleType的变量，它的类型是一个类型数组[string, boolean]，然后我们按照正确的类型依次初始化tupleType变量，并通过下标来访问其中元素，需要注意的是初始化元组时不仅仅需要保证每个属性类型的一致，同时必须提供每个属性的值，否则都会报错。
-### 十、void类型
+### 十、Void类型
 在JavaScript中void是关键字，最关键的用途是获取undefined：
 ```javascript
 void 0; // undefined
@@ -289,7 +289,7 @@ let num: number = 123;
 num = null;
 num = undefined;
 ```
-### 十二、bigint类型
+### 十二、Bigint类型
 BigInt里ECMAScript的一项提案，它在理论上允许我们建模任意大小的整数。TypeScript 3.2可以为BigInit进行类型检查，并支持在目标为esnext时输出BigInit字面量。为支持BigInt，TypeScript引入了一个新的原始类型bigint。可以通过调用BigInt()函数或书写BigInt字面量（在整型数字字面量末尾添加n）来获取bigint:
 ```typescript
 let foo: bigint = BigInt(100); // the BigInt function
@@ -326,7 +326,7 @@ function whatKindOfNumberIsIt(x: number | bigint) {
 }
 ```
 ### 十三、object、Object和{}类型
-#### 1、object类型
+##### 1、object类型
 TypeScript 2.2引入了被称为object类型的新类型，它用于表示非原始类型，在JavaScript中以下类型被视为原始类型：string、boolean、number、bigint、symbol、null和undefined。它的引入主要是因为随着TypeScript 2.2的发布，标准库的类型声明已经更新，例如Object.create()和Object.setPrototypeOf()方法都需要为它们的原型参数指定object | null类型：
 ```typescript
 // node_modules/typescript/lib/lib.es5.d.ts
@@ -356,7 +356,7 @@ interface WeakMap<K extends object, V> {
   set(key: K, value: V): this;
 }
 ```
-#### 2、Object类型
+##### 2、Object类型
 TypeScript定义了另一个与新的object类型几乎同名的类型，那就是Object类型。该类型是所有Object类的实例的类型。它由以下两个接口来定义：
 - Object接口定义了Object.prototype原型对象上的属性
 - ObjectConstructor接口定义了Object类的属性
@@ -441,7 +441,7 @@ header = strictTypeHeaders; // OK
 strictTypeHeaders = header; // Error
 ```
 在上述例子中，最后一行会出现编译错误，这是因为`{ [key: string]: string }`类型相比object类型更加精确。而`header = strictTypeHeaders;`这一行却没有提示任何错误，是因为这两种类型都是非基本类型，object类型比`{ [key: string]: string }`类型更加通用。
-#### 3、{}类型
+##### 3、{}类型
 还有另一种类型与之非常相似，即空类型：{}。它描述了一个没有成员的对象。当你试图访问这样一个对象的任意属性时，TypeScript 会产生一个编译时错误：
 ```typescript
 // Type {}
@@ -524,7 +524,39 @@ const namedPoint = {...pt, ...id}
 //(property) name: string
 namedPoint.name // "semlinker"
 ```
+### 十四、Never类型
+never类型表示的是那些永不存在的值的类型。 例如，never类型是那些总是会抛出异常或根本就不会有返回值的函数表达式或箭头函数表达式的返回值类型。
+```typescript
+// 返回never的函数必须存在无法达到的终点
+function error(message: string): never {
+  throw new Error(message);
+}
 
+function infiniteLoop(): never {
+  while (true) {}
+}
+```
+在TypeScript中，可以利用never类型的特性来实现全面性检查，具体示例如下：
+```typescript
+type Foo = string | number;
+
+function controlFlowAnalysisWithNever(foo: Foo) {
+  if (typeof foo === "string") {
+    // 这里 foo 被收窄为 string 类型
+  } else if (typeof foo === "number") {
+    // 这里 foo 被收窄为 number 类型
+  } else {
+    // foo 在这里是 never
+    const check: never = foo;
+  }
+}
+```
+注意在else分支里面，我们把收窄为never的foo赋值给一个显式声明的never变量。如果一切逻辑正确，那么这里应该能够编译通过。但是假如后来有一天你的同事修改了Foo的类型：
+```typescript
+type Foo = string | number | boolean;
+```
+然而他忘记同时修改controlFlowAnalysisWithNever方法中的控制流程，这时候else分支的foo类型会被收窄为boolean类型，导致无法赋值给never类型，这时就会产生一个编译错误。通过这个方式，我们可以确保controlFlowAnalysisWithNever方法总是穷尽了Foo的所有可能类型。 通过这个示例，我们可以得出一个结论：使用never避免出现新增了联合类型没有对应的实现，目的就是写出类型绝对安全的代码。
+## 接口与类
 (未完，待续)
 
 参考资料：
