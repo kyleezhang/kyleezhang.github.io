@@ -74,7 +74,7 @@ let list: Array<number> = [1, 2, 3]; // Array<number>泛型语法
 ```
 ### 六、Enum类型
 枚举类型：一组有名字的常量集合，使用枚举可以清晰地表达意图或创建一组有区别的用例。 TypeScript支持数字的和基于字符串的枚举。
-#### 1、数字枚举
+##### 1、数字枚举
 ```typescript
 enum Direction {
   NORTH, // 0
@@ -98,7 +98,7 @@ var Direction;
 var dir = Direction.NORTH;
 ```
 从上面代码我们可以看到TypeScript通过反向映射实现了数字枚举，但是其他枚举却又有所不同。
-#### 2、字符串枚举
+##### 2、字符串枚举
 ```typescript
 enum Direction {
   NORTH = "NORTH",
@@ -119,7 +119,7 @@ var Direction;
 })(Direction || (Direction = {}));
 ```
 从上面示例中我们也可以发现字符串枚举没有实现反向映射。
-#### 3、异构映射
+##### 3、异构映射
 异构枚举的成员值是数字和字符串的混合：
 ```typescript
 enum Enum {
@@ -145,7 +145,7 @@ var Enum;
 })(Enum || (Enum = {}));
 ```
 从示例我们可以发现异构枚举中的数字成员实现了反向映射，而字符串成员没有，但是异构枚举容易造成混淆，不推荐使用。
-#### 4、常量枚举
+##### 4、常量枚举
 除了数字枚举和字符串枚举之外，还有一种特殊的枚举——常量枚举。它是使用const关键字修饰的枚举，常量枚举会使用内联语法，不会为枚举类型编译生成任何JavaScript，举个🌰
 ```typescript
 const enum Direction {
@@ -162,7 +162,7 @@ let dir: Direction = Direction.NORTH;
 "use strict";
 var dir = 0 /* NORTH */;
 ```
-#### 5、枚举成员
+##### 5、枚举成员
 枚举成员的值具有如下特性：
 - 只读：枚举类型初始化以后不支持属性的修改，即枚举类型成员的属性都是只读属性
 - 类型：枚举类型成员的值包括两种类型：**常量类型(const number)**和**计算类型(computer number)**，常量类型包括没有初始值、引用已有枚举属性值和常量表达式三类，常量类型会在编译阶段编译出结果，已常量的形式出现在运行时环境，计算类型主要是一些非常量的表达式，这些表达式的值不会在编译阶段被计算而是保留到执行时阶段。
@@ -557,11 +557,520 @@ type Foo = string | number | boolean;
 ```
 然而他忘记同时修改controlFlowAnalysisWithNever方法中的控制流程，这时候else分支的foo类型会被收窄为boolean类型，导致无法赋值给never类型，这时就会产生一个编译错误。通过这个方式，我们可以确保controlFlowAnalysisWithNever方法总是穷尽了Foo的所有可能类型。 通过这个示例，我们可以得出一个结论：使用never避免出现新增了联合类型没有对应的实现，目的就是写出类型绝对安全的代码。
 ## 接口与类
-(未完，待续)
+### 一、接口
+在面向对象的语言中“接口”是个很重要的概念，它是对行为的抽象，而具体如何实现需要通过类实现，TypeScript中的接口是一个非常灵活的概念，可以用来约束对象、函数以及类的结构和类型，是一种代码协作的契约，我们必须遵守而且不能改变。
+##### 1、对象类型接口
+对象类型的接口用来设置对象需要存在的普通属性、可选属性和只读属性，另外还可以通过as或[propName: string]: any来制定可以接受的其他任意额外属性，举个🌰
+```typescript
+interface Person {
+    name: string
+    bool?: boolean
+    readonly timestamp: number
+    readonly arr: ReadonlyArray<number> // 此外还有 ReadonlyMap/ReadonlySet
+}
+
+let p1: Person = {
+    name: 'oliver',
+    bool: true, // 可选属性并非必要,可写可不写
+    timestamp: + new Date(), // 设置只读属性
+    arr: [1, 2, 3] // 设置只读数组
+}
+
+let p2: Person = {
+    // Type '{ age: string; }' is not assignable to type 'Person'
+    age: 'oliver', 
+    // Type 'number' is not assignable to type 'string'
+    name: 123 
+}
+
+// Cannot assign to 'timestamp' because it is a constant or a read-only property.
+p1.timestamp = 123
+// Property 'pop' does not exist on type 'ReadonlyArray<number>'.
+p1.arr.pop()
+```
+需要注意的是`ReadonlyArray<T>`类型，它与`Array<T>`相似，只是把所有可变方法去掉了，因此可以确保数组创建后再也不能被修改，`ReadonlyMap<T>`和`ReadonlySet<T>`与之类似。
+##### 2、函数类型接口
+TypeScript中接口还可以用来规范函数的形状，列出参数列表及返回值类型的函数定义。写法如下：
+```typescript
+let add: (x: number, y: number) => number // 常规函数类型写法
+// 函数类型接口写法，与常规类型完全一致
+interface Add {
+  (x: number, y: number): number
+}
+
+let add: Add = (a, b) => a + b 
+```
+##### 3、可索引类型接口
+当我们不确定一个接口中有多少个属性时就可以使用可索引类型接口，接口可以通过字符串类型或数字类型索引:
+```typescript
+// 数字索引
+interface StringArr {
+    readonly [index: number]: string // index只能为number类型并且为只读属性
+    length: number // 可以指定其他属性
+}
+
+let arr1: StringArr = ['hello', 'world']
+// Index signature in type 'StringArr' only permits reading.
+arr1[1] = ''
+// Type 'number' is not assignable to type 'string'.
+let arr2: StringArr = [23,12,3,21]
+// 字符串索引
+interface Names {
+  [index: string]: string // 索引签名为string类型
+}
+
+let names: Names = {
+  '1': 'xiaozhang'
+}
+// 两种类型混用
+interface Circle {
+  [x: string]: string
+  [y: number]: string // 需要注意数字索引签名的返回值必须为字符串索引签名返回值的子类型，这是因为javascript会对对象的数字属性转换成字符串，所以需要保持类型的兼容性
+}
+```
+##### 4、混合类型接口
+混合类型接口就是接口既可以定义一个函数，也可以像对象一样拥有属性和方法，因此往往可以用来描述一个函数接收什么参数，输出什么结果，同时这个函数有另外什么方法或属性之类的，举个🌰
+```typescript
+interface Counter {
+    (start: number): void // 返回类型为函数
+    version: string // 增加version属性
+    add(): void // 增加add方法
+}
+
+function getCounter(): Counter { // 它返回的函数必须符合接口的三点
+    let count = 0
+    function counter (start: number) { count = start } // counter 方法函数
+    counter.version = '0.0.1'
+    counter.add = function() { count++ } // add 方法增加 count
+    return counter
+}
+
+const c = getCounter()
+c(10) // count 默认为 10
+c.version // '0.0.1'
+c.add()
+```
+##### 5、接口的继承
+跟类一样，接口通过extend关键字继承，更新新的形状，比方说继承接口并生成新的接口，这个新的接口可以设定一个新的方法检查。举个🌰
+```typescript
+interface PersonInfoInterface { // 1️⃣ 这里是第一个接口
+    name: string
+    age: number
+    log?(): void
+}
+
+interface Student extends PersonInfoInterface { // 2️⃣ 这里继承了一个接口
+    doHomework(): boolean // ✔️ 新增一个方法检查
+}
+interface Teacher extends PersonInfoInterface { // 3️⃣ 这里又继承了一个接口
+    dispatchHomework(): void // ✔️ 新增了一个方法检查
+}
+
+// interface Emmm extends Student, Teacher // 也可以继承多个接口
+
+let Alice: Teacher = {
+    name: 'Alice',
+    age: 34,
+    dispatchHomework() { // ✔️ 必须满足继承的接口规范
+        console.log('dispatched')
+    }
+}
+
+let oliver: Student = {
+    name: 'oliver',
+    age: 12,
+    log() {
+        console.log(this.name, this.age)
+    },
+    doHomework() { // ✔️ 必须满足继承的接口规范
+        return true
+    }
+}
+```
+### 二、类
+在面向对象语言中，类是一种面向对象计算机编程语言的构造，是创建对象的蓝图，描述了所创建的对象共同的属性和方法。
+##### 1、类的属性及方法
+在TypeScript中我们通过Class关键字来定义一个类：
+```typescript
+class Greeter {
+  // 静态属性
+  static cname: string = "Greeter";
+
+  // 成员属性
+  greeting: string;
+
+  // 构造函数 - 执行初始化操作
+  constructor(message: string) {
+    this.greeting = message;
+  }
+
+  // 静态方法
+  static getClassName() {
+    return "Class name is Greeter";
+  }
+
+  // 成员方法
+  greet() {
+    return "Hello, " + this.greeting;
+  }
+}
+
+let greeter = new Greeter("world");
+```
+那么成员属性与静态属性，成员方法与静态方法有什么区别呢？我们直接查看编译后的ES5代码：
+```javascript
+var Greeter = /** @class */ (function () {
+    // 构造函数 - 执行初始化操作
+    function Greeter(message) {
+        this.greeting = message;
+    }
+    // 静态方法
+    Greeter.getClassName = function () {
+        return "Class name is Greeter";
+    };
+    // 成员方法
+    Greeter.prototype.greet = function () {
+        return "Hello, " + this.greeting;
+    };
+    // 静态属性
+    Greeter.cname = "Greeter";
+    return Greeter;
+}());
+var greeter = new Greeter("world");
+```
+从编译后的代码我们不难看出成员属性会添加到类的示例上，成员方法会添加到类的原型对象上，因此对于类的实例而言是可调用的，而静态属性与静态方法都会只添加到类自身，只能被类自身调用。除此之外我们需要注意类的成员属性和方法也有public、private和protected修饰符，举个🌰
+```typescript
+class Dog {
+  name: string // 成员属性默认为添加了public修饰符，可被类自身、子类和实例对象访问
+  private age: number // 私有属性，只可被类自身访问，对于实例对象和子类皆不可见
+  protected sex: string // 保护属性，对于实例对象不可见，可被类自身和子类访问
+  constructor (name: string, age: number) {
+    this.name = name;
+    this.age = age;
+    this.sex = 'male'
+  }
+  private pri() { console.log('private') };  // 私有方法，不可被子类或实例对象调用
+  protected pro() { console.log('protected') } // 保护方法，不可被实例对象调用，可被子类调用
+}
+
+let dog = new Dog('wangcai', 2);
+// Property 'age' is private and only accessible within class 'Dog'.
+console.log(dog.age);
+// Property 'sex' is protected and only accessible within class 'Dog' and its subclasses.
+console.log(dog.sex);
+// Property 'pri' is private and only accessible within class 'Dog'.
+dog.pri();
+// Property 'pro' is protected and only accessible within class 'Dog' and its subclasses.
+dog.pro();
+
+class Husky extends Dog {
+  color: string
+  constructor(name: string, age: number) {
+    super(name, age);
+    this.color = 'yellow';
+    this.pro(); // 保护方法，可被子类调用
+    // Property 'pri' is private and only accessible within class 'Dog'.
+    this.pri(); // 似有方法，不可被子类调用
+  }
+}
+
+// Property 'pri' does not exist on type 'typeof Husky'.
+Husky.pri()
+Husky.pro()
+```
+需要注意当我们给构造函数添加private修饰符时表示类既不可以被继承也不可以被实例化，当我们给构造函数添加protected修饰符时表示类不可被实例化只能被继承，常用于声明基类。
+##### 2、ECMA私有字段
+在 TypeScript 3.8 版本就开始支持ECMAScript 私有字段，使用方式如下：
+```typescript
+class Person {
+  #name: string;
+
+  constructor(name: string) {
+    this.#name = name;
+  }
+
+  greet() {
+    console.log(`Hello, my name is ${this.#name}!`);
+  }
+}
+
+let semlinker = new Person("Semlinker");
+
+// Property '#name' is not accessible outside class 'Person' because it has a private identifier.
+semlinker.#name;
+```
+与常规属性（甚至使用private修饰符声明的属性）不同，私有字段具有以下规则：
+- 私有字段以 # 字符开头，有时我们称之为私有名称；
+- 每个私有字段名称都唯一地限定于其包含的类；
+- 不能在私有字段上使用TypeScript可访问性修饰符（如public或private）；
+- 私有字段不能在包含的类之外访问，甚至不能被检测到。
+
+##### 3、访问器
+在 TypeScript 中，我们可以通过getter和setter方法来实现数据的封装和有效性校验，防止出现异常数据。
+```typescript
+let passcode = "Hello TypeScript";
+
+class Employee {
+  private _fullName: string = '';
+
+  get fullName(): string {
+    return this._fullName;
+  }
+
+  set fullName(newName: string) {
+    if (passcode && passcode == "Hello TypeScript") {
+      this._fullName = newName;
+    } else {
+      console.log("Error: Unauthorized update of employee!");
+    }
+  }
+}
+
+let employee = new Employee();
+employee.fullName = "Semlinker";
+if (employee.fullName) {
+  console.log(employee.fullName);
+}
+```
+##### 4、类的继承
+继承（Inheritance）是一种联结类与类的层次模型。指的是一个类（称为子类、子接口）继承另外的一个类（称为父类、父接口）的功能，并可以增加它自己的新功能的能力，继承是类与类或者接口与接口之间最常见的关系。在TypeScript中，我们通过extends关键字来实现继承，通过super关键字来调用父类的构造函数和方法。：
+```typescript
+class Animal {
+  name: string;
+  
+  constructor(theName: string) {
+    this.name = theName;
+  }
+  
+  move(distanceInMeters: number = 0) {
+    console.log(`${this.name} moved ${distanceInMeters}m.`);
+  }
+}
+
+class Snake extends Animal {
+  constructor(name: string) {
+    super(name); // 调用父类的构造函数
+  }
+  
+  move(distanceInMeters = 5) {
+    console.log("Slithering...");
+    super.move(distanceInMeters);
+  }
+}
+
+let sam = new Snake("Sammy the Python");
+sam.move();
+```
+##### 5、抽象类
+使用abstract关键字声明的类，我们称之为抽象类。抽象类不能被实例化，因为它里面包含一个或多个抽象方法，所谓的抽象方法，是指不包含具体实现的方法，抽象类的好处在于可以抽离出一些事物的共性，有利于代码的复用，和扩展，举个🌰
+```typescript
+abstract class Person {
+  constructor(public name: string){}
+
+  abstract say(words: string) :void;
+}
+
+// Cannot create an instance of an abstract class.(2511)
+const lolo = new Person(); // Error
+```
+抽象类不能被直接实例化，我们只能实例化实现了所有抽象方法的子类。具体如下所示：
+```typescript
+abstract class Person {
+  constructor(public name: string){}
+
+  // 抽象方法
+  abstract say(words: string) :void;
+}
+
+class Developer extends Person {
+  constructor(name: string) {
+    super(name);
+  }
+  
+  say(words: string): void {
+    console.log(`${this.name} says ${words}`);
+  }
+}
+
+const lolo = new Developer("lolo");
+lolo.say("I love ts!"); // lolo says I love ts!
+```
+##### 6、基于抽象类实现多态
+面向对象（OOP）语言的三大特性分别是：封装（Encapsulation）、继承（Inheritance）和多态（Polymorphism），多态是指由继承而产生了相关的不同的类，对同一个方法可以有不同的响应。比如Cat和Dog都继承自Animal，但是分别实现了自己的eat方法。此时针对某一个实例，我们无需了解它是Cat还是Dog，就可以直接调用eat方法，程序会自动判断出来应该如何执行eat：
+```typescript
+abstract class Animal {
+  abstract sleep(): void
+}
+class Dog {
+  sleep() {
+    console.log("dog sleep")
+  }
+}
+let dog = new Dog();
+class Cat {
+  sleep() {
+    console.log("cat sleep")
+  }
+}
+
+let cat = new Cat()
+let animals: Animal[] = [dog, cat]
+animals.forEach(i => {
+  i.sleep()
+})
+// dog sleep
+// cat sleep
+```
+##### 7、类的方法的重载
+对于类的方法来说，它也支持重载。比如，在以下示例中我们重载了ProductService类的getProducts成员方法：
+```typescript
+class ProductService {
+    getProducts(): void;
+    getProducts(id: number): void;
+    getProducts(id?: number) {
+      if(typeof id === 'number') {
+        console.log(`获取id为 ${id} 的产品信息`);
+      } else {
+        console.log(`获取所有的产品信息`);
+      }  
+    }
+}
+
+const productService = new ProductService();
+productService.getProducts(666); // 获取id为 666 的产品信息
+productService.getProducts(); // 获取所有的产品信息 
+```
+### 三、类与接口的关系
+##### 1、类可以实现接口
+如果你希望在类中使用必须要被遵循的接口（类）或别人定义的对象结构，可以使用implements关键字来确保其兼容性：
+```typescript
+interface Human {
+  name: string;
+  eat(): void;
+}
+
+class Asian implements Human {
+  name: string;
+  constructor (name: string) {
+    this.name = name;
+  }
+  eat() {}
+}
+```
+类实现接口需要注意的有以下几点：
+- 类实现接口的时候必须实现接口定义的所有属性，但是类可以定义接口之外自己的属性
+- 接口只能约束类的公有成员
+- 接口也不能约束类的构造函数
+
+##### 2、接口可以继承类
+接口除了可以继承接口还可以继承类，相当于接口把类的成员都抽象了出来，也就是只有类的成员结构而没有具体的实现，举个🌰
+```typescript
+class Auto {
+   state = 1
+}
+interface AutoInterface extends Auto {} // 接口内只有成员state且类型为number
+class C implements AutoInterface {
+    state = 1
+}
+```
+需要注意的是接口在抽离类的成员时不仅抽离了公共成员，还抽离了私有成员和受保护成员，举个🌰
+```typescript
+class Auto {
+   state = 1
+   private num = 12
+}
+interface AutoInterface extends Auto {}
+
+// Property 'num' is missing in type 'C' but required in type 'AutoInterface'.
+class C implements AutoInterface {
+    state = 1;
+}
+
+// 需要注意的是由于num是Auto的私有属性，而类Class并不是其子类，因此自然也不能包含它的非公有成员，所以即使我们在C中声明了num还是会报错
+// Property 'num' is private in type 'AutoInterface' but not in type 'C'.
+class C implements AutoInterface {
+  state = 1;
+  num = 14
+}
+```
+## 联合类型与类型别名
+### 一、联合类型
+### 二、类型别名
+TypeScript引入了类型别名type，其作用就是给类型起一个新名字，可以作用于原始值（基本类型）、联合类型、元组以及其它任何你需要手写的类型：
+```typescript
+type Second = number; // 基本类型
+let timeInSecond: number = 10;
+let time: Second = 10;  // time的类型其实就是number类型
+type userOjb = {name:string} // 对象
+type getName = ()=>string  // 函数
+type data = [number,string] // 元组
+type numOrFun = Second | getName  // 联合类型
+```
+需要注意的是起别名不会新建一个类型 - 它创建了一个新名字来引用那个类型。给基本类型起别名通常没什么用。类型别名常用于联合类型。
+
+##### 1、type的应用和interface的区别
+(1)**和接口一样，用来描述对象或函数的类型**
+```typescript
+type User = {
+  name: string
+  age: number
+};
+type SetUser = (name: string, age: number)=>void;
+```
+在ts编译成js后，所有的接口和type 都会被擦除掉。
+(2)**扩展和实现**
+接口可以扩展，但type不能extends和implement,但是type可以通过交叉类型实现interface的extends行为。interface 可以extends type，同时type也可以与interface类型交叉，举个🌰：
+```typescript
+// interface 扩展 type
+interface Name {
+  name: string;
+}
+interface User extends Name {
+  age: number;
+}
+let stu:User={name:'wang',age:10}
+
+// 上面的扩展可以用type交叉类型来实现
+type Name = {
+  name: string;
+}
+type User = Name & { age: number  };
+let stu: User = { name: 'wang',age: 1 };
+console.log(stu) // { name: 'wang', age: 1 }
+```
+(3)**接口的声明合并**
+接口可以定义多次，并将被视为单个接口（即所有声明属性的合并）。而type不可以定义多次。
+```typescript
+interface User {
+  name: string
+  age: number
+}
+
+interface User {
+  sex: string
+}
+let user: User = { name: 'wang',age: 1,sex: 'man' }
+```
+(4)**映射类型**
+type 能使用 in 关键字生成映射类型，但 interface 不行。
+```typescript
+type Keys = "name" | "sex"
+
+type DulKey = {
+  [key in Keys]: string    // 类似for...in
+}
+
+let stu: DulKey = {
+  name: "wang",
+  sex: "man"
+}
+```
+
 
 参考资料：
 极客时间《TypeScript开发实战》专栏
 《深入理解TypeScript》
+[typeScript 中的type关键字](https://juejin.cn/post/6876359681464336397)
 [一文读懂 TS 中 Object, object, {} 类型之间的区别](http://www.semlinker.com/ts-object-type/)
 [一份不可多得的 TS 学习指南（1.8W字）](https://juejin.im/post/6872111128135073806#heading-21)
 [Typescript使用手册](https://www.bookstack.cn/read/TypeScript-3.6/doc-handbook-README.md)

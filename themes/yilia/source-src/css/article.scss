@@ -328,3 +328,17 @@
     float: right;
   }
 }
+.article-title_code_ant {
+  color: black;
+  margin-left: 0px;
+  font-weight: 300;
+  line-height: 35px;
+  margin-bottom: 20px;
+  font-size: 32px;
+  transition: color 0.3s;
+  &:hover{
+    .article-title_code_ant {
+      color: #B0A0AA;
+    }
+  }
+}
