@@ -2,6 +2,8 @@
 title: 关于作用域和作用域链的一些想法
 date: 2020-10-30 19:45:51
 toc: true
+categories: 
+- 前端
 tags: 
 - javascript
 - Chrome

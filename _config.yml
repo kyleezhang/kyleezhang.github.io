@@ -3,11 +3,11 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: '小张的博客'
+title: '大熊猫的五分裤'
 subtitle: ''
 description: '以梦为马，不负韶华'
 keywords: '前端'
-author: kyleezhang
+author: kylee
 language: zh-CN
 timezone: ''
 
@@ -98,7 +98,7 @@ ignore:
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: yilia
+theme: next
 
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
@@ -125,3 +125,9 @@ jsonContent:
     excerpt: false
     categories: false
     tags: true
+
+# Extensions
+## Plugins: http://hexo.io/plugins/
+plugins: 
+- hexo-generate-feed
+- hexo-generator-sitemap
