@@ -43,13 +43,14 @@ int add(C a, C b) {
 - 在程序运行时动态计算属性偏移量
 - 需要额外的空间存储属性名
 - 所有对象的编译量信息各存一份
+
 而对于C++而言：
 <img src="/assets/typescript-01/02.png" width="520">
 - 编译阶段确定属性偏移量
 - 偏移量访问代替属性名访问
 - 偏移量信息共享
 
-由此可以看到动态类型语言无论在时间还是空间上都有比较多的性能损耗，实际上虽然V8为了提升JavaScript运行时的性能做了很多优化，但是TypeScript更重要的价值在于将静态类型的编程思维引入了javaScript，让我们可以在编译阶段以一种完全不同的视角去看待我们的代码。
+由此可以看到动态类型语言无论在时间还是空间上都有比较多的性能损耗，虽然实际上V8为了提升JavaScript运行时的性能做了很多优化，但是TypeScript更重要的价值在于将静态类型的编程思维引入了javaScript，让我们可以在编译阶段以一种完全不同的视角去看待我们的代码。
 
 ## 基本类型&语法
 ### 一、Boolean类型
@@ -120,7 +121,7 @@ var Direction;
     Direction["WEST"] = "WEST";
 })(Direction || (Direction = {}));
 ```
-从上面示例中我们也可以发现字符串枚举没有实现反向映射。
+从上面示例中我们可以发现字符串枚举没有实现反向映射。
 #### 3、异构映射
 异构枚举的成员值是数字和字符串的混合：
 ```typescript
@@ -167,7 +168,7 @@ var dir = 0 /* NORTH */;
 #### 5、枚举成员
 枚举成员的值具有如下特性：
 - 只读：枚举类型初始化以后不支持属性的修改，即枚举类型成员的属性都是只读属性
-- 类型：枚举类型成员的值包括两种类型：**常量类型(const number)**和**计算类型(computer number)**，常量类型包括没有初始值、引用已有枚举属性值和常量表达式三类，常量类型会在编译阶段编译出结果，已常量的形式出现在运行时环境，计算类型主要是一些非常量的表达式，这些表达式的值不会在编译阶段被计算而是保留到执行时阶段。
+- 类型：枚举类型成员的值包括两种类型：**常量类型(const number)** 和 **计算类型(computer number)** ，常量类型包括没有初始值、引用已有枚举属性值和常量表达式三类，常量类型会在编译阶段编译出结果，以常量的形式出现在运行时环境，计算类型主要是一些非常量的表达式，这些表达式的值不会在编译阶段被计算而是保留到执行时阶段。
 
 我们举个🌰说明：
 ```typescript
@@ -286,7 +287,7 @@ TypeScript里，undefined和null两者有各自的类型分别为undefined和nul
 let u: undefined = undefined;
 let n: null = null;
 ```
-需要注意的是在TypeScript规范中undefined和null是所有类型的自类型，所以当我们将tsconfig.json中的strictNullChecks属性设为false时我们可以将null和undefined1赋值给其他类型的值，举个🌰
+需要注意的是在TypeScript规范中undefined和null是所有类型的子类型，所以当我们将tsconfig.json中的strictNullChecks属性设为false时我们可以将null和undefined赋值给其他类型的值，举个🌰
 ```typescript
 let num: number = 123;
 num = null;
@@ -927,24 +928,28 @@ animals.forEach(i => {
 // cat sleep
 ```
 #### 7、类的方法的重载
-对于类的方法来说，它也支持重载。比如，在以下示例中我们重载了ProductService类的getProducts成员方法：
+方法重载是指在同一个类中方法同名，参数不同（参数类型不同、参数个数不同或参数个数相同时参数的先后顺序不同），调用时根据实参的形式，选择与它匹配的方法执行操作的一种技术。所以类中成员方法满足重载的条件是：在同一个类中，方法名相同且参数列表不同，在以下示例中我们重载了ProductService类的getProducts成员方法：
 ```typescript
 class ProductService {
-    getProducts(): void;
-    getProducts(id: number): void;
-    getProducts(id?: number) {
-      if(typeof id === 'number') {
-        console.log(`获取id为 ${id} 的产品信息`);
-      } else {
-        console.log(`获取所有的产品信息`);
-      }  
-    }
+  // 重载签名
+  getProducts(): void;
+  getProducts(id: number): void;
+  // 重载实现
+  getProducts(id?: number) {
+    if(typeof id === 'number') {
+      console.log(`获取id为 ${id} 的产品信息`);
+    } else {
+      console.log(`获取所有的产品信息`);
+    }  
+  }
 }
 
 const productService = new ProductService();
 productService.getProducts(666); // 获取id为 666 的产品信息
 productService.getProducts(); // 获取所有的产品信息 
 ```
+这里需要注意的是，当TypeScript编译器处理方法重载时，它会查找重载列表，尝试使用第一个重载定义。 如果匹配的话就使用这个。 因此，在定义重载的时候，一定要把最精确的定义放在最前面。另外在ProductService类中，`getProducts(id?: number){}`并不是重载列表的一部分，因此对于`getProducts`成员方法来说，我们只定义了两个重载方法。
+
 ### 三、类与接口的关系
 #### 1、类可以实现接口
 如果你希望在类中使用必须要被遵循的接口（类）或别人定义的对象结构，可以使用implements关键字来确保其兼容性：
@@ -996,6 +1001,93 @@ class C implements AutoInterface {
 class C implements AutoInterface {
   state = 1;
   num = 14
+}
+```
+## 函数
+### 一、TypeScript中函数与JavaScript中的区别
+| TypeScript | JavaScript |
+|--|--|
+| 含有类型 | 无类型 |
+| 箭头函数 | 剪头函数（ES2015）|
+| 函数类型 | 无函数类型 |
+| 必填参数和可选参数 | 所有参数都是可选的 | 
+| 默认参数 | 默认参数 |
+| 剩余参数 | 剩余参数 |
+| 函数重载 | 无函数重载 |
+### 二、函数的定义
+TypeScript中函数的定义一共有四种方式：
+```typescript
+// 函数类型的定义及实现
+function add1(x: number, y: number) {
+  return x + y;
+}
+
+// 通过变量名定义函数类型，后需指定具体实现
+let add2: (x: number, y: number) => number; // 无法描述函数重载
+
+// 通过类型别名定义函数类型，后需指定具体实现
+type add3 = (x: number, y: number) => number; // 无法描述函数重载
+type add4 = {
+  (x: number, y: number): number
+}
+// 通过接口定义函数类型，后需指定具体实现
+interface add5 {
+  (x: number, y: number): number;
+}
+```
+### 三、可选参数与默认参数
+```typescript
+// 可选参数
+function createUserId(name: string, id: number, age?: number): string {
+  return name + id;
+}
+
+// 默认参数
+function createUserId(
+  name: string = "semlinker",
+  id: number,
+  age?: number
+): string {
+  return name + id;
+}
+```
+此处需要注意的是可选参数要放在普通参数的后面，不然会导致编译错误。
+### 四、剩余参数
+```typescript
+function push(array, ...items) {
+  items.forEach(function (item) {
+    array.push(item);
+  });
+}
+
+let a = [];
+push(a, 1, 2, 3);
+```
+### 四、函数的重载
+在静态类型的语言中例如C++、Java都有函数重载的概念，它们本质上还是使用相同名称和不同参数数量或类型的多个函数，函数重载的好处在于我们不需要为相似或相同功能的函数选择不同的名称，这样增强了函数的可读性，TypeScript中的函数重载与C++、Java中的有所不同，举个🌰
+```typescript
+// 重载签名
+function add(a: number, b: number): number;
+function add(a: string, b: string): string;
+function add(a: string, b: number): string;
+function add(a: number, b: string): string;
+// 在一个最宽泛的版本中实现函数重载
+function add(a: string | number, b: string | number) {
+  if (typeof a === 'string' || typeof b === 'string') {
+    return a.toString() + b.toString();
+  }
+  return a + b;
+}
+```
+与类的方法的重载类似，当TypeScript编译器处理函数重载时，它会查找重载列表，尝试使用第一个重载定义，因此，在定义重载的时候，一定要把最精确的定义放在最前面。
+需要注意的是**TypeScript中的函数重载没有任何运行时开销**，它只允许你记录希望调用函数的方式，并且编译器会检查其余代码，举个🌰，上述示例编译成JavaScript后的内容如下所示：
+```javascript
+"use strict";
+function add(a, b) {
+  if (typeof a === 'string' || typeof b === 'string') {
+    return a.toString() + b.toString();
+  }
+  return a + b;
 }
 ```
 ## 联合类型与类型别名
@@ -1057,7 +1149,7 @@ interface User {
 let user: User = { name: 'wang',age: 1,sex: 'man' }
 ```
 (4)**映射类型**
-type 能使用 in 关键字生成映射类型，但 interface 不行。
+type 能使用 in 关键字生成映射类型，但interface不行。
 ```typescript
 type Keys = "name" | "sex"
 
@@ -1070,11 +1162,404 @@ let stu: DulKey = {
   sex: "man"
 }
 ```
+## 泛型
+泛型（Generics）在编程语言中是一个较为普遍的概念，在像 C# 和 Java 这样的语言中，可以使用泛型来创建可重用的组件，一个组件可以支持多种类型的数据。 这样用户就可以以自己的数据类型来使用组件。这给软件工程带来了极高的灵活性，进一步提高了组件或函数的可重用性。那么泛型具体的定义是什么呢？
+泛型是指不预先确定的数据类型，具体的类型在使用的时候才能确定，它允许同一个函数可以接受不同类型参数的一个模板。设计泛型的关键目的是在成员之间提供有意义的约束，这些成员可以是：类的实例成员、类的方法、函数参数和函数返回值。
+### 一、泛型函数
+```typescript
+function log<T>(value: T): T {
+  console.log(value);
+  return value;
+}
+log<string>('hello'); // 'hello'
+```
+如上所示，当我们调用`log<string>('hello')`时，string类型就像参数一样，它将在出现`T`的任何位置填充该类型。图中`<T>`内部的`T`被称为类型变量，它是我们希望传递给log函数的类型占位符，同时它被分配给 value参数和函数返回值用来代替它的类型：此时`T`充当的是类型，而不是特定的string类型。
+我们除了可以这样显式定义泛型函数，还可以先通过类型别名指定泛型函数类型，然后指定函数实现，举个🌰
+```typescript
+type Log = <T, U>(value: T, comment: U) => T;
+function log<T, U>(value: T, comment: U): T {
+  console.log(comment);
+  return value;
+}
 
+let myLog: Log = log
+```
+### 二、泛型接口
+上面函数我们也可以通过泛型接口实现定义：
+```typescript
+// 这儿接口与类型别名完全一致
+interface Log {
+  <T>(value: T): T
+}
+function log<T>(value: T): T {
+  console.log(value);
+  return value;
+}
+let mylog: Log = log;
+```
+在上述示例的接口中泛型仅仅约束了一个函数，我们也可以用泛型来约束接口的其他成员，举个🌰
+```typescript
+interface Obj<T> {
+  value: T;
+  name: string;
+}
+// 需要注意这种情形下我们必须注明泛型类型，不支持类型推断
+const obj1: Obj<number> = {
+  value: 21,
+  name: 'age'
+}
+// Generic type 'Obj<T>' requires 1 type argument(s).
+const obj2: Obj = {
+  value: 21,
+  name: 'age'
+}
+```
+除此之外我们还可以为泛型接口指定一个默认类型，举个🌰
+```typescript
+interface Obj<T = number> {
+  value: T;
+  name: string;
+}
+
+const obj: Obj = {
+  value: 2021,
+  name: 'year'
+}
+```
+### 三、泛型类
+与接口类似，泛型还可以约束类的成员，举个🌰
+```typescript
+// 我们将泛型放在类的后面这样就可以约束类的所有成员了
+class Log<T> {
+  run(value: T) {
+    console.log(value);
+    return value
+  }
+}
+
+const log1 = new Log<number>()
+log1.run(1234)
+
+// 如果不指定泛型则可以使用任意类型
+const log2 = new Log()
+log2.run('12')
+log2.run({name: 'kylee'})
+```
+此处需要注意的是泛型约束不能作用于静态属性和方法，举个🌰
+```typescript
+class Greeter<T> {
+  // 静态属性是只读属性，必须在初始化的时候赋值，因此无法使用泛型
+  static cname: string = "Greeter";
+
+  // 静态方法添加到类自身，不能获取到类实例内部的泛型参数
+  // Parameter 'value' of public static method from exported class has or is using private name 'T'.
+  static getClassName(value: T) {
+    return value;
+  }
+}
+```
+### 四、泛型约束
+在部分情况下我们需要对泛型做一些约束，这个时候我们就需要用到泛型约束，举个🌰
+```typescript
+function log<T> (value: T): T {
+  // 这种情况下TypeScript编译器会提示泛型T上不存在length属性
+  console.log(value, value.length);
+  return value;
+}
+
+// 此处我们可以通过接口实现对泛型的约束
+interface Log {
+  length: number;
+}
+// 此时我们为泛型T引入约束，必须具备length属性
+function log<T extends Log> (value: T): T {
+  console.log(value, value.length);
+  return value;
+}
+
+// 泛型约束能够带来很多场景的巧妙使用，比如上述示例我们在不指定泛型的情况下我们可以传入所有带有length属性的变量
+log([1]);
+log('12334');
+leo({ length: 23 });
+```
+### 五、泛型工具
+为了方便开发者 TypeScript 内置了一些常用的工具类型，比如 Partial、Required、Readonly、Record和ReturnType等，不过在具体介绍之前，我们得先介绍一些相关的基础知识：
+#### 1、基础知识
+(1)**typeof**
+在TypeScript中，typeof操作符可以用来获取一个变量声明或对象的类型，举个🌰
+```typescript
+interface Person {
+  name: string;
+  age: number;
+}
+
+const sem: Person = { name: 'semlinker', age: 33 };
+type Sem = typeof sem; // -> Person
+
+function toArray(x: number): Array<number> {
+  return [x];
+}
+
+type Func = typeof toArray; // -> (x: number) => number[]
+```
+(2)**keyof**
+keyof操作符是在TypeScript 2.1版本引入的，该操作符可以用于获取某种类型的所有键，其返回类型是联合类型。
+```typescript
+interface Person {
+  name: string;
+  age: number;
+}
+
+type K1 = keyof Person; // "name" | "age"
+type K2 = keyof Person[]; // "length" | "toString" | "pop" | "push" | "concat" | "join" 
+type K3 = keyof { [x: string]: Person };  // string | number
+```
+在 TypeScript 中支持两种索引签名，数字索引和字符串索引：
+```typescript
+interface StringArray {
+  // 字符串索引 -> keyof StringArray => string | number
+  [index: string]: string; 
+}
+
+interface StringArray1 {
+  // 数字索引 -> keyof StringArray1 => number
+  [index: number]: string;
+}
+```
+为了同时支持两种索引类型，就得要求数字索引的返回值必须是字符串索引返回值的子类。其中的原因就是当使用数值索引时，JavaScript在执行索引操作时，会先把数值索引先转换为字符串索引。所以`keyof { [x: string]: Person }`的结果会返回`string | number`。
+(3)**in**
+in用来遍历枚举类型
+```typescript
+type Keys = "a" | "b" | "c"
+
+type Obj =  {
+  [p in Keys]: any
+} // -> { a: any, b: any, c: any }
+```
+(4)**infer**
+infer表示在extends条件类型语句中待推断的类型变量，简单举个🌰
+```typescript
+type ParamType<T> = T extends (param: infer P) => any ? P : T;
+```
+在这个条件语句`T extends (param: infer P) => any ? P : T`中，`infer P`表示待推断的函数参数。
+整句表示为：如果 T 能赋值给`(param: infer P) => any`，则结果是`(param: infer P) => any`类型中的参数`P`，否则返回为`T`。
+```typescript
+interface User {
+  name: string;
+  age: number;
+}
+
+type Func = (user: User) => void;
+
+type Param = ParamType<Func>; // Param = User
+type AA = ParamType<string>; // string
+```
+#### 2、Partial
+`Partial<T>` 的作用就是将某个类型里的属性全部变为可选项
+```typescript
+type Partial<T> = {
+  [P in keyof T]?: T[P];
+};
+```
+在以上代码中，首先通过 keyof T 拿到 T 的所有属性名，然后使用 in 进行遍历，将值赋给 P，最后通过 T[P] 取得相应的属性值。中间的 ? 号，用于将所有属性变为可选。举个🌰
+```typescript
+interface Todo {
+  title: string;
+  description: string;
+}
+
+function updateTodo(todo: Todo, fieldsToUpdate: Partial<Todo>) {
+  return { ...todo, ...fieldsToUpdate };
+}
+
+const todo1 = {
+  title: "Learn TS",
+  description: "Learn TypeScript",
+};
+
+const todo2 = updateTodo(todo1, {
+  description: "Learn Ge Chui Zi",
+});
+```
+#### 3、Required
+`Required<T>`的作用是将传入的属性变为必选项
+```typescript
+type Required<T> = { [P in keyof T]-?: T[P] };
+```
+这里的`-?`就是将可选项代表的`?`去掉, 从而让这个类型变成必选项. 与之对应的还有个`+?`, 这个含义自然与`-?`之前相反, 它是用来把属性变成可选项的。举个🌰
+```typescript
+interface Todo {
+  title: string;
+  description?: string;
+}
+
+function updateTodo(todo: Required<Todo>, fieldsToUpdate: Todo) {
+  return { ...todo, ...fieldsToUpdate };
+}
+
+const todo1 = {
+  title: "Learn TS",
+  description: "Learn TypeScript",
+};
+
+const todo2 = updateTodo(todo1, {
+  title: "Learn Ge Chui Zi"
+});
+```
+#### 4、Readonly
+`Readonly<T>`用于将所有传入的属性转变成只读项
+```typescript
+type Readonly<T> = { readonly [P in keyof T]: T[P] };
+```
+举个🌰
+```typescript
+interface Todo {
+  title: string;
+  description: string;
+}
+
+function updateTodo(todo: Readonly<Todo>) {
+  // Cannot assign to 'title' because it is a read-only property.
+  todo.title = 'Learn JS'
+}
+
+const todo1 = {
+  title: "Learn TS",
+  description: "Learn TypeScript",
+};
+
+```
+#### 5、Record
+`Record<K, T>`用于将K中所有的属性的值转化为T类型
+```typescript
+type Record<K extends keyof any, T> = { [P in K]: T };
+```
+举个🌰
+```typescript
+type subjects = 'ts' | 'js';
+interface Todo {
+  title: string,
+  description: string
+}
+
+type Sub = Record<subjects, Todo>;
+
+const sub: Sub = {
+  ts: {
+    title: 'learn TS',
+    description: 'learn TypeScript'
+  },
+  js: {
+    title: 'learn JS',
+    description: 'learn JavaScript'
+  }
+}
+```
+#### 6、Pick
+`Pick<T, K>`用于从T中取出一系列K的属性
+```typescript
+type Pick<T, K extends keyof T> = { [P in K]: T[P] };
+```
+举个🌰
+```typescript
+interface Sup {
+  name: string;
+  value: string;
+  color: string;
+}
+
+type Sub = 'name' | 'value';
+
+type PickType = Pick<Sup, Sub>
+
+const pick: PickType = {
+  name: 'width',
+  value: '100px',
+}
+```
+#### 7、Exclude
+在 ts 2.8 中引入了一个条件类型, 示例如下:
+```typescript
+T extends U ? X : Y
+```
+以上语句的意思就是 如果T是U的子类型的话，那么就会返回X，否则返回Y
+条件类型甚至可以组合多个，举个🌰
+```typescript
+type TypeName<T> =
+    T extends string ? "string" :
+    T extends number ? "number" :
+    T extends boolean ? "boolean" :
+    T extends undefined ? "undefined" :
+    T extends Function ? "function" :
+    "object";
+```
+对于联合类型来说会自动分发条件，例如`T extends U ? X : Y`，`T`可能是`A | B`的联合类型, 那实际情况就变成`(A extends U ? X : Y) | (B extends U ? X : Y)`
+有了以上的了解我们再来了解工具泛型Exclude，`Exclude<T, U>` 的作用是从T中找出U中没有的元素, 换种更加贴近语义的说法其实就是从T中排除U
+```typescript
+type Exclude<T, U> = T extends U ? never : T;
+```
+举个🌰
+```typescript
+type T = Exclude<1 | 2, 1 | 3> // -> 2
+```
+#### 8、Extract
+与Exclude恰好相反，`Extract<T, U>`的作用是提取出T包含在U中的元素, 换种更加贴近语义的说法就是从T中提取出U
+```typescript
+type Extract<T, U> = T extends U ? T : never;
+```
+举个🌰
+```typescript
+type T = Exclude<1 | 2, 1 | 3> // -> 1
+```
+#### 9、ReturnType、InstanceType、ConstructorParameters
+在2.8版本中，TypeScript内置了一些与infer有关的映射类型：
+**用于提取函数类型的返回值类型**:
+```typescript
+type ReturnType<T> = T extends (...args: any[]) => infer P ? P : any;
+```
+**用于提取构造函数中参数（实例）类型**:
+一个构造函数可以使用new来实例化，因此它的类型通常表示如下：
+```typescript
+type Constructor = new (...args: any[]) => any;
+```
+举个🌰
+```typescript
+type return = ReturnType<() => string>; // -> string
+```
+当infer用于构造函数类型中，可用于参数位置`new (...args: infer P) => any;`和返回值位置 `new (...args: any[]) => infer P;`。
+因此就内置如下两个映射类型：
+```typescript
+// 获取参数类型
+type ConstructorParameters<T extends new (...args: any[]) => any> = T extends new (...args: infer P) => any ? P : never;
+
+// 获取实例类型
+type InstanceType<T extends new (...args: any[]) => any> = T extends new (...args: any[]) => infer R ? R : any;
+```
+举个🌰
+```typescript
+class TestClass {
+  constructor(public name: string, public age: number) {}
+}
+
+type Params = ConstructorParameters<typeof TestClass>; // [string, number]
+
+type Instance = InstanceType<typeof TestClass>; // TestClass
+```
+#### 10、NonNullable
+`NonNullable<T>`主要用于从T中剔除null和undefined
+```typescript
+type NonNullable<T> = T extends null | undefined ? never : T;
+```
+举个🌰
+```typescript
+type T0 = NonNullable<string | number | undefined>; // string | number
+type T1 = NonNullable<string[] | null | undefined>; // string[]
+```
 参考资料：
 极客时间《TypeScript开发实战》专栏
 《深入理解TypeScript》
 [typeScript 中的type关键字](https://juejin.cn/post/6876359681464336397)
 [一文读懂 TS 中 Object, object, {} 类型之间的区别](http://www.semlinker.com/ts-object-type/)
 [一份不可多得的 TS 学习指南（1.8W字）](https://juejin.im/post/6872111128135073806#heading-21)
-[Typescript使用手册](https://www.bookstack.cn/read/TypeScript-3.6/doc-handbook-README.md)
+[Typescript使用手册](https://www.bookstack.cn/read/TypeScript-3.6/doc-handbook-README)
+[TS一些工具泛型的使用及其实现](https://zhuanlan.zhihu.com/p/40311981)
