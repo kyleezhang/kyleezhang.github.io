@@ -1,15 +1,149 @@
 ---
-title: NodeJS中的模块机制
+title: 深入浅出模块化
 date: 2020-11-02 20:18:05
 toc: true
 categories: 
 - 前端
 tags:
 - node
+- javascript
 ---
 
-JavaScript自诞生以来很长一段时间大部分开发者都没有将其当成一门真正的编程语言，认为其只不过是一种又小又简单的网页脚本，没必要将其模块化，因此相较于Java、Python等其他高级语言JavaScript直到ES6才真正意义上拥有语言级的模块语法，在这之前JavaScript通过`<script>`标签引入代码的方式显得杂乱无章，而且如果一些无关的代码一不小心重名了全局变量，就会引起“命名空间污染”的问题，因此不得不采用命名空间的方案人为地约束代码，除此之外模块间的依赖关系完全依赖于文件引入的顺序，极易发生错误，CommonJS规范的提出主要就是为了弥补当时JavaScript没有标准模块系统的缺陷，以达到像Java、Python等语言一样开发大型应用的基础能力。
+JavaScript自诞生以来很长一段时间大部分开发者都没有将其当成一门真正的编程语言，认为其只不过是一种又小又简单的网页脚本，没必要将其模块化，但是随着前端领域的快速发展，模块化成为了前端开发大型应用所需的一项基本能力，但是相较于Java、Python等其他高级语言，JavaScript直到ES6才真正意义上拥有语言级的模块语法，前端模块化从早期的最原始实现到后面模块化规范的提出，经历了很多阶段，但是这整个过程中模块化的思想值得我们所有人思考。
+## 模块化的早期演进
+早期的前端技术标准根本没有预料到前端行业会有今天这个规模，所以在设计上存在很多缺陷，导致我们现在去实现前端模块化时会遇到诸多问题。虽然说，如今绝大部分问题都已经被一些标准或者工具解决了，但是从整体演进过程来看前端方向落实模块化主要有如下的几个代表阶段：
+### 一、文件划分阶段
+最早我们会基于文件划分的方式实现模块化，也就是 Web 最原始的模块系统。具体做法是将每个功能及其相关状态数据各自单独放到不同的 JS 文件中，约定每个文件是一个独立的模块。使用某个模块将这个模块引入到页面中，一个 script 标签对应一个模块，然后直接调用模块中的成员（变量 / 函数）。
+```
+└─ stage-1
 
+    ├── module-a.js
+
+    ├── module-b.js
+
+    └── index.html
+```
+```javascript
+// module-a.js 
+function foo () {
+   console.log('moduleA#foo') 
+}
+```
+```javascript
+// module-b.js 
+var data = 'something'
+```
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Stage 1</title>
+</head>
+<body>
+  <script src="module-a.js"></script>
+  <script src="module-b.js"></script>
+  <script>
+    // 直接使用全局成员
+    foo() // 可能存在命名冲突
+    console.log(data)
+    data = 'other' // 数据可能会被修改
+  </script>
+</body>
+</html>
+```
+缺点：
+- 模块直接在全局工作，大量模块成员污染全局作用域；
+- 没有私有空间，所有模块内的成员都可以在模块外部被访问或者修改；
+- 一旦模块增多，容易产生命名冲突；
+- 无法管理模块与模块之间的依赖关系；
+- 在维护的过程中也很难分辨每个成员所属的模块；
+
+总之，这种原始“模块化”的实现方式完全依靠约定实现，一旦项目规模变大，这种约定就会暴露出种种问题，非常不可靠，所以我们需要尽可能解决这个过程中暴露出来的问题。
+
+### 二、命名空间方式
+后来，我们约定每个模块只暴露一个全局对象，所有模块成员都挂载到这个全局对象中，具体做法是在第一阶段的基础上，通过将每个模块“包裹”为一个全局对象的形式实现，这种方式就好像是为模块内的成员添加了“命名空间”，所以我们又称之为命名空间方式。
+```typescript
+// module-a.js
+window.moduleA = {
+  method1: function () {
+    console.log('moduleA#method1')
+  }
+}
+```
+```typescript
+// module-b.js
+window.moduleB = {
+  data: 'something'
+  method1: function () {
+    console.log('moduleB#method1')
+  }
+}
+```
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Stage 2</title>
+</head>
+<body>
+  <script src="module-a.js"></script>
+  <script src="module-b.js"></script>
+  <script>
+    moduleA.method1()
+    moduleB.method1()
+    // 模块成员依然可以被修改
+    moduleA.data = 'foo'
+  </script>
+</body>
+</html>
+```
+这种命名空间的方式只是解决了命名冲突的问题，但是其它问题依旧存在。
+
+### 三、IIFE
+使用立即执行函数表达式（IIFE，Immediately-Invoked Function Expression）为模块提供私有空间。具体做法是将每个模块成员都放在一个立即执行函数所形成的私有作用域中，对于需要暴露给外部的成员，通过挂到全局对象上的方式实现。
+```javascript
+// module-a.js
+;(function () {
+  var name = 'module-a'
+  function method1 () {
+    console.log(name + '#method1')
+  }
+  window.moduleA = {
+    method1: method1
+  }
+})()
+```
+```javascript
+// module-b.js
+;(function () {
+  var name = 'module-b'
+  function method1 () {
+    console.log(name + '#method1')
+  }
+  window.moduleB = {
+    method1: method1
+  }
+})()
+```
+这种方式带来了私有成员的概念，私有成员只能在模块成员内通过闭包的形式访问，这就解决了前面所提到的全局作用域污染和命名冲突的问题。
+### 四、 IIFE 依赖参数
+在 IIFE 的基础之上，我们还可以利用 IIFE 参数作为依赖声明使用，这使得每一个模块之间的依赖关系变得更加明显。
+```javascript
+// module-a.js
+;(function ($) { // 通过参数明显表明这个模块的依赖
+  var name = 'module-a'
+  function method1 () {
+    console.log(name + '#method1')
+    $('body').animate({ margin: '200px' })
+  }
+  window.moduleA = {
+    method1: method1
+  }
+})(jQuery)
+```
+除了模块加载的问题以外，目前这几种通过约定实现模块化的方式，不同的开发者在实施的过程中会出现一些细微的差别，因此，为了统一不同开发者、不同项目之间的差异，我们就需要制定一个行业标准去规范模块化的实现方式。提到模块化规范，大家可能会首先想到 CommonJS 规范，它是 Node.js 中所遵循的模块规范，该规范约定，一个文件就是一个模块，每个模块都有单独的作用域，通过 module.exports 导出成员，再通过 require 函数载入模块。
 ## CommonJS模块规范
 CommonJS对模块的定义十分简单，主要分为**模块引用**、**模块定义**和**模块标识**3个部分。
 1、 模块引用
