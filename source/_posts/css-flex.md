@@ -50,11 +50,13 @@ Flex布局又称弹性盒布局，是在CSS3中的一种新布局方式，可以
 如上图所示，弹性子元素通常在弹性盒子内一行显示，默认情况每个容器只有一行。
 
 ## 父容器的六大属性
+
 了解两个基本方向，这个牵扯到弹性布局的使用：
 >主轴： 在弹性布局中，我们会通过属性规定水平/垂直方向为主轴
 >交叉轴： 与主轴垂直的另一方向，称为交叉轴
 
 ### 1、flex-direction属性
+
 决定弹性子元素的排列方向（即定义了主轴方向），可选值：
  - row（默认值）： 主轴为水平方向，起点在左端，子元素从左至右排列；              
  - row-reverse： 主轴在水平方向，起点在右端，子元素从右至左排列；    
@@ -62,6 +64,7 @@ Flex布局又称弹性盒布局，是在CSS3中的一种新布局方式，可以
  - column-reverse：主轴为垂直方向，起点在下沿，子元素从下向上排列；
 
 ### 2、flex-wrap属性
+
 定义如果一行排列不下如何换行，可选值：
  - nowrap（默认）：不换行。当容器宽度不够时，每个项目会被挤压宽度；            
  - wrap： 换行，并且第一行在容器最上方； 
@@ -100,15 +103,17 @@ Flex布局又称弹性盒布局，是在CSS3中的一种新布局方式，可以
 <img src="/assets/css-flex/03.png" width="423" height="200"></img>
 
 ### 3、flex-flow属性
+
 flex-direction和flex-wrap的缩写形式，默认值为：row wrap，可以将flex-direction的可选值和flex-wrap的可选值进行任意组合，此处不再做过多赘述。
 
 ### 4、justify-content属性
+
 定义了子元素在在主轴上的对齐方式（此属性与flex-direction息息相关，当flex-direction的取值为row时，起点在主轴左边，取值为row-reverse时起点在主轴右边，column起点在主轴上边，column-reverse-起点在主轴下边）
- - flex-start（默认值）： 项目位于主轴起点。           
- - flex-end：项目位于主轴终点。          
- - center： 居中          
- - space-between：两端对齐，项目之间的间隔都相等。(开头和最后的项目，与父容器边缘没有间隔)         
- - space-around：每个项目两侧的间隔相等。所以，项目之间的间隔比项目与边框的间隔大一倍。(开头和最后的项目，与父容器边缘有一定的间隔，间隔为项目间间隔的一半)
+- flex-start（默认值）： 项目位于主轴起点。           
+- flex-end：项目位于主轴终点。          
+- center： 居中          
+- space-between：两端对齐，项目之间的间隔都相等。(开头和最后的项目，与父容器边缘没有间隔)         
+- space-around：每个项目两侧的间隔相等。所以，项目之间的间隔比项目与边框的间隔大一倍。(开头和最后的项目，与父容器边缘有一定的间隔，间隔为项目间间隔的一半)
 
 示例：
 
@@ -148,11 +153,12 @@ justify-content属性为space-around：
 
 ### 5、align-items属性
 定义子元素在交叉轴上的对齐方式（flex-direction属性定义主轴方向，与之相垂直的就是交叉轴方向）
- - flex-start：子元素按照交叉轴的起点对齐。            
- - flex-end：子元素按照交叉轴的终点对齐。           
- - center：子元素按照交叉轴的中点对齐。            
- - baseline：子元素按照第一行文字的基线对齐。(文字的行高、字体大小会影响每行的基线)         
- - stretch（默认值）：如果项目未设置高度或设为auto，将占满整个容器的高度。
+
+- flex-start：子元素按照交叉轴的起点对齐。            
+- flex-end：子元素按照交叉轴的终点对齐。           
+- center：子元素按照交叉轴的中点对齐。            
+- baseline：子元素按照第一行文字的基线对齐。(文字的行高、字体大小会影响每行的基线)         
+- stretch（默认值）：如果项目未设置高度或设为auto，将占满整个容器的高度。
 
 示例：
 ```html
@@ -223,12 +229,12 @@ align-items属性取center
 6、align-content属性
 修改 flex-wrap 属性的行为，类似 align-items, 但不是设置子元素对齐，而是设置行对齐，即align-content属性定义了多根轴线的对齐方式。如果项目只有一根轴线，该属性不起作用。
 （可以将其视为多行情形下的align-items属性）
- - flex-start：子元素按照交叉轴的起点对齐。           
- - flex-end：子元素按照交叉轴的终点对齐。          
- - center：子元素按照交叉轴的中点对齐。           
- - space-between：子元素按照交叉轴两端对齐，轴线之间的间隔平均分布。      
- - space-around：每根轴线两侧的间隔都相等。所以，轴线之间的间隔比轴线与边框的间隔大一倍。        
- - stretch（默认值）：轴线占满整个交叉轴。
+- flex-start：子元素按照交叉轴的起点对齐。           
+- flex-end：子元素按照交叉轴的终点对齐。          
+- center：子元素按照交叉轴的中点对齐。           
+- space-between：子元素按照交叉轴两端对齐，轴线之间的间隔平均分布。      
+- space-around：每根轴线两侧的间隔都相等。所以，轴线之间的间隔比轴线与边框的间隔大一倍。        
+- stretch（默认值）：轴线占满整个交叉轴。
 
 示例：
 ```html
@@ -440,10 +446,10 @@ second元素和forth元素的宽度都没有收缩，first元素的实际宽度 
 
 ### 5、flex属性
 flex-grow, flex-shrink 和 flex-basis的简写，默认值为0 1 auto。除了直接分别给flex-grow、flex-shrink 和 flex-basis赋值还可以选取以下值：
- - auto：与 1 1 auto 相同。
- - none：与 0 0 auto 相同。
- - initial：设置该属性为它的默认值，即为 0 1 auto。
- - inherit：从父元素继承该属性。
+- auto：与 1 1 auto 相同。
+- none：与 0 0 auto 相同。
+- initial：设置该属性为它的默认值，即为 0 1 auto。
+- inherit：从父元素继承该属性。
 
 ### 6、align-self属性
 定义单个项目自身在交叉轴上的排列方式，可以覆盖掉容器上的align-items属性。

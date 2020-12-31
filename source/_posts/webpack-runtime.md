@@ -313,8 +313,8 @@ class MyBasicPlugin {
     // 4、注册webpack事件监听函数  
     compiler.hooks.emit.tapAsync(  
       MY_PLUGIN_NAME,  
-      (compilation, asyncCallback) => {  
-  
+      (compilation, asyncCallback) => { 
+
         // 5、操作Or改变compilation内部数据  
         console.log(compilation);        
   
@@ -357,33 +357,38 @@ const runCommand = (command, args) => {...};
  */
 const isInstalled = packageName => {...};
 // wecpack可用的CLI：webpaclk-cli和webpack-command
-const CLIs = {
-    {
-		name: "webpack-cli",
-		package: "webpack-cli",
-		binName: "webpack-cli",
-		alias: "cli",
-		installed: isInstalled("webpack-cli"),
-		recommended: true,
-		url: "https://github.com/webpack/webpack-cli",
-		description: "The original webpack full-featured CLI."
-	},
-	{
-		name: "webpack-command",
-		package: "webpack-command",
-		binName: "webpack-command",
-		alias: "command",
-		installed: isInstalled("webpack-command"),
-		recommended: false,
-		url: "https://github.com/webpack-contrib/webpack-command",
-		description: "A lightweight, opinionated webpack CLI."
-	}
-}
+const CLIs = [
+  {
+    name: "webpack-cli",
+    package: "webpack-cli",
+    binName: "webpack-cli",
+    alias: "cli",
+    installed: isInstalled("webpack-cli"),
+    recommended: true,
+    url: "https://github.com/webpack/webpack-cli",
+    description: "The original webpack full-featured CLI.",
+  },
+  {
+    name: "webpack-command",
+    package: "webpack-command",
+    binName: "webpack-command",
+    alias: "command",
+    installed: isInstalled("webpack-command"),
+    recommended: false,
+    url: "https://github.com/webpack-contrib/webpack-command",
+    description: "A lightweight, opinionated webpack CLI.",
+  }
+]
 // 判断是否两个CLI是否安装了
 const installedClis = CLIs.filter(cli=>cli.installed);
 // 根据安装数量进行处理
-if (installedClis.length === 0) {...} else if 
- (installedClis.length === 1) {...} else {...}
+if (installedClis.length === 0) {
+  ...
+} else if (installedClis.length === 1) {
+  ...
+} else {
+  ...
+}
 ```
 这儿的 node_modules/.bin/webpack.js 实际上就是 Webpack 打包流程的入口文件，启动后 Webpack 最终会找到 webpack-cli / webpack-command 的npm包（大部分项目都采用webpack-cli），并且执行CLI。
 
@@ -396,30 +401,30 @@ if (installedClis.length === 0) {...} else if
 ```javascript
 // node_modules/webpack-cli/bin/cli.js
 const NON_COMPILATION_ARGS = [
-    "init",
-    "migrate",
-    "add",
-    "remove",
-    /*
-    "update",
-    "make",
-    */
-    "serve",
-    "generate-loader",
-    "generate-plugin",
-    "info"
+  "init",
+  "migrate",
+  "add",
+  "remove",
+  /*
+  "update",
+  "make",
+  */
+  "serve",
+  "generate-loader",
+  "generate-plugin",
+  "info"
 ];
 
 const NON_COMPILATION_CMD = process.argv.find(arg => {
-    if (arg === "serve") {
-        global.process.argv = global.process.argv.filter(a => a !== "serve");
-        process.argv = global.process.argv;
-    }
-    return NON_COMPILATION_ARGS.find(a => a === arg);
+  if (arg === "serve") {
+    global.process.argv = global.process.argv.filter(a => a !== "serve");
+    process.argv = global.process.argv;
+  }
+  return NON_COMPILATION_ARGS.find(a => a === arg);
 });
 
 if (NON_COMPILATION_CMD) {
-    return require("./prompt-command")(NON_COMPILATION_CMD, ...process.argv);
+  return require("./prompt-command")(NON_COMPILATION_CMD, ...process.argv);
 }
 ```
 
@@ -430,15 +435,15 @@ if (NON_COMPILATION_CMD) {
 // This causes large help outputs to be cut short (https://github.com/nodejs/node/wiki/API-changes-between-v0.10-and-v4#process).
 // To prevent this we use the yargs.parse API and exit the process normally
 yargs.parse(process.argv.slice(2), (err, argv, output) => {
-    ...
-    let options;
-    try {
-        // 转换命令行参数
-        options = require("./convert-argv")(argv);
-    } catch (err) {
-        ...
-    }
-    ...
+  ...
+  let options;
+  try {
+      // 转换命令行参数
+      options = require("./convert-argv")(argv);
+  } catch (err) {
+      ...
+  }
+  ...
 })
 ```
 
@@ -447,9 +452,9 @@ yargs.parse(process.argv.slice(2), (err, argv, output) => {
 ```typescript
 let options;
 try {
-    options = require("./convert-argv")(argv);
+  options = require("./convert-argv")(argv);
 } catch (err) {
-    ...
+  ...
 }
 ```
 
@@ -470,60 +475,45 @@ try {
 
 随着 Webpack CLI 载入 Webpack 核心模块，整个执行过程就到了 Webpack 模块中，所以这一部分的代码需要回到 Webpack 模块中，同样，这里我们需要找到这个模块的入口文件，也就是 lib/webpack.js 文件。这个文件导出的是一个用于创建 Compiler 的函数，具体如下：
 
-```javascript
-/**
- * @param {WebpackOptions} options options object
- * @param {function(Error=, Stats=): void=} callback callback
- * @returns {Compiler | MultiCompiler} the compiler object
- */
+```js
 const webpack = (options, callback) => {
-	const webpackOptionsValidationErrors = validateSchema(
-		webpackOptionsSchema,
-		options
-	);
-	if (webpackOptionsValidationErrors.length) {
-		throw new WebpackOptionsValidationError(webpackOptionsValidationErrors);
-	}
-	let compiler;
-    // 校验外部传入options
-	if (Array.isArray(options)) {
-        // 如果options为数组开启多路打包
-		compiler = new MultiCompiler(options.map(options => webpack(options)));
-	} else if (typeof options === "object") {
-        // 如果options为对象开启单路打包
-		options = new WebpackOptionsDefaulter().process(options);
-		compiler = new Compiler(options.context);
-		compiler.options = options;
-		new NodeEnvironmentPlugin().apply(compiler);
-		if (options.plugins && Array.isArray(options.plugins)) {
-            // 注册已配置的插件
-			for (const plugin of options.plugins) {
-				if (typeof plugin === "function") {
-					plugin.call(compiler, compiler);
-				} else {
-					plugin.apply(compiler);
-				}
-			}
-		}
-        // 触发特定的Hook
-		compiler.hooks.environment.call();
-		compiler.hooks.afterEnvironment.call();
-        // 处理options
-		compiler.options = new WebpackOptionsApply().process(options, compiler);
+  ...
+  let compiler;
+  // 校验外部传入options
+  if (Array.isArray(options)) {
+    // 如果options为数组开启多路打包
+    compiler = new MultiCompiler(options.map(options => webpack(options)));
+  } else if (typeof options === "object") {
+    // 如果options为对象开启单路打包
+    options = new WebpackOptionsDefaulter().process(options);
+    compiler = new Compiler(options.context);
+    compiler.options = options;
+    new NodeEnvironmentPlugin().apply(compiler);
+    if (options.plugins && Array.isArray(options.plugins)) {
+      // 注册已配置的插件
+      for (const plugin of options.plugins) {
+        if (typeof plugin === "function") {
+          plugin.call(compiler, compiler);
+        } else {
+          plugin.apply(compiler);
+        }
+      }
+    }
+    // 触发特定的Hook
+    compiler.hooks.environment.call();
+    compiler.hooks.afterEnvironment.call();
+    // 处理options
+    compiler.options = new WebpackOptionsApply().process(options, compiler);
 	} else {
 		throw new Error("Invalid argument: options");
 	}
+
 	if (callback) {
 		if (typeof callback !== "function") {
 			throw new Error("Invalid argument: callback");
 		}
-		if (
-			options.watch === true ||
-			(Array.isArray(options) && options.some(o => o.watch))
-		) {
-			const watchOptions = Array.isArray(options)
-				? options.map(o => o.watchOptions || {})
-				: options.watchOptions || {};
+		if (options.watch === true || (Array.isArray(options) && options.some(o => o.watch))) {
+			const watchOptions = Array.isArray(options) ? options.map(o => o.watchOptions || {}): options.watchOptions || {};
 			return compiler.watch(watchOptions, callback);
 		}
 		compiler.run(callback);
@@ -531,6 +521,7 @@ const webpack = (options, callback) => {
 	return compiler;
 };
 ```
+
 在这个函数中，首先校验了外部传递过来的 options 参数是否符合要求，紧接着判断了 options 的类型。如果传入的是一个数组，那么 Webpack 内部创建的就是一个 MultiCompiler，也就是同时开启多路打包，配置数组中的每一个成员就是一个独立的配置选项。而如果我们传入的是普通的对象，流程主要分为五步：1.处理options -> 2. 创建compiler -> 3.绑定自定义插件 -> 4. 触发特定的Hook -> 5. 处理options. 我们可以看到第1和第5步都是处理options。那到底有啥不同呢？
 1. new WebpackOptionsDefaulter().process(options)：WebpackOptionsDefaulter 顾名思义，是设置webpack的默认参数的地方，比如说默认入口路径，默认rule, 默认optimize策略。这行的作用就是设置默认参数，并将用户自定义参数覆盖上去。
 2. new WebpackOptionsApply().process(options, compiler)：WebpackOptionsApply.js的源码中则是根据options中的配置，注册各种内部插件如SingleEntryPlugin，以及负责解析的各类钩子，以及负责优化的SplitChunksPlugin等等。
@@ -576,14 +567,6 @@ make 阶段主体的目标就是：根据 entry 配置找到入口模块，开�
 这个插件中调用了 Compilation 对象的 addEntry 方法，开始解析我们源代码中的入口文件:
 
 ```js
-/**
-  *
-  * @param {string} context context path for entry
-  * @param {Dependency} entry entry dependency being created
-  * @param {string} name name of entry
-  * @param {ModuleCallback} callback callback function
-  * @returns {void} returns
-  */
 addEntry(context, entry, name, callback) {
   // 外部监听 addEntry 事件的地方开始执行
   this.hooks.addEntry.call(entry, name);
@@ -697,37 +680,37 @@ build(options, compilation, resolver, fs, callback) {
 }
 
 doBuild(options, compilation, resolver, fs, callback) {
-		const loaderContext = this.createLoaderContext(
-			resolver,
-			options,
-			compilation,
-			fs
-		);
+  const loaderContext = this.createLoaderContext(
+    resolver,
+    options,
+    compilation,
+    fs
+  );
 
-		runLoaders(
-			{
-				resource: this.resource,
-				loaders: this.loaders,
-				context: loaderContext,
-				readResource: fs.readFile.bind(fs)
-			},
-			(err, result) => {
-        ...
-				this._source = this.createSource(
-					this.binary ? asBuffer(source) : asString(source),
-					resourceBuffer,
-					sourceMap
-				);
-				this._ast =
-					typeof extraInfo === "object" &&
-					extraInfo !== null &&
-					extraInfo.webpackAST !== undefined
-						? extraInfo.webpackAST
-						: null;
-				return callback();
-			}
-		);
-	}
+  runLoaders(
+    {
+      resource: this.resource,
+      loaders: this.loaders,
+      context: loaderContext,
+      readResource: fs.readFile.bind(fs)
+    },
+    (err, result) => {
+      ...
+      this._source = this.createSource(
+        this.binary ? asBuffer(source) : asString(source),
+        resourceBuffer,
+        sourceMap
+      );
+      this._ast =
+        typeof extraInfo === "object" &&
+        extraInfo !== null &&
+        extraInfo.webpackAST !== undefined
+          ? extraInfo.webpackAST
+          : null;
+      return callback();
+    }
+  );
+}
 ```
 doBuild 方法中又调用了 runLoaders 方法，并在参数中通过将 fs.readFile.bind(fs) 将 loader 资源文件传入。在runLoaders的回调中，可以看到用 createSource 给this._source 赋值。证明我们之前的推测是正确的，buildModule 方法中执行具体的 Loader，处理特殊资源加载。
 
@@ -924,9 +907,7 @@ seal(callback) {
 从上图可以看出通过判断是入口 js 还是需要异步加载的 js 来选择不同的模板对象进行封装，入口 js 会采用 webpack 事件流的 render 事件来触发 Template类 中的renderChunkModules() (异步加载的 js 会调用 chunkTemplate 中的 render 方法)。
 
 ```js
-const template = chunk.hasRuntime()
-  ? this.mainTemplate
-  : this.chunkTemplate;
+const template = chunk.hasRuntime() ? this.mainTemplate : this.chunkTemplate;
 const manifest = template.getRenderManifest({
   chunk,
   hash: this.hash,
@@ -941,12 +922,7 @@ for (const fileManifest of manifest) {
   filenameTemplate = fileManifest.filenameTemplate;
   file = this.getPath(filenameTemplate, fileManifest.pathOptions);
   ...
-  if (
-    // 引用模块添加到缓存
-    this.cache &&
-    this.cache[cacheName] &&
-    this.cache[cacheName].hash === usedHash
-  ) {
+  if (this.cache && this.cache[cacheName] && this.cache[cacheName].hash === usedHash) {
     source = this.cache[cacheName].source;
   } else {
     //  调用 Template 类的 render 方法生成代码
@@ -985,9 +961,10 @@ for (const fileManifest of manifest) {
 
 ### 七、总结
 
-webpack 的整体打包流程主要还是依赖于 compilation 和 module 这两个对象，compiliation 对象负责协调整个构建过程， module 是 webpack 构建的核心实体，由这两者合作完成了整体项目的打包，由 tapable 控制各插件在 webpack 事件流上运行，最终成就了 Webpack 这目前使用最广泛的打包啊工具。
+webpack 的整体打包流程主要还是依赖于 compilation 和 module 这两个对象，compiliation 对象负责协调整个构建过程， module 是 webpack 构建的核心实体，由这两者合作完成了整体项目的打包，由 tapable 控制各插件在 webpack 事件流上运行，最终成就了 Webpack 这目前使用最广泛的打包工具。
 
 ## 参考资料
 [编写一个webpack的loader（1）](https://juejin.cn/post/6844903861451227150)
 [webpack-loader简简单单配置入门](https://juejin.cn/post/6909459619324788750)
 [Webpack 核心知识有哪些？](https://mp.weixin.qq.com/s/xT12rUsYOkypXS8YFYQEzQ)
+[细说 webpack 之流程篇](https://developer.aliyun.com/article/61047)
