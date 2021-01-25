@@ -9,6 +9,7 @@ tags:
 ---
 
 Flex布局又称弹性盒布局，是在CSS3中的一种新布局方式，可以简洁、方便、响应式地实现各种页面布局，因此自一提出受到了极大地追捧，目前也得到了各大主流浏览器的支持，因此迅速替代了之前的“display+float+position”的布局形式。
+<!-- more -->
 
 ## 弹性盒布局简介
 
@@ -18,7 +19,6 @@ Flex布局又称弹性盒布局，是在CSS3中的一种新布局方式，可以
  - 弹性容器添加display: flex属性显示为块级元素，添加display: inline-flex显示为行级元素。
  - 设为弹性盒布局以后弹性子元素的float、clear和vertical-align属性将失效，但position属性，依然生效。
 
-<!-- more -->
 示例：
 
 ```html

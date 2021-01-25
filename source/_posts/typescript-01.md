@@ -5,7 +5,7 @@ toc: true
 categories: 
 - 前端
 tags: 
-- typescript
+- TypeScript
 ---
 TypeScript是一种由微软开发的自由和开源的编程语言。它是JavaScript的一个超集，为JavaScript引入了可选的静态类型，相比于JavaScript它的特点主要有以下三点：
 

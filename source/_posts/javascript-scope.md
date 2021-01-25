@@ -5,7 +5,7 @@ toc: true
 categories: 
 - 前端
 tags: 
-- javascript
+- JavaScript
 - Chrome
 ---
 
