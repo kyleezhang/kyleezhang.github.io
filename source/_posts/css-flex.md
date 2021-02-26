@@ -432,14 +432,15 @@ second元素和forth元素的宽度都没有收缩，first元素的实际宽度 
 }
 </style>
 <body>
-	<div id="container">
-	  	<div id="first" style="flex-basis: 100px">first</div>
+    <div id="container">
+        <div id="first" style="flex-basis: 100px">first</div>
         <div id="second">second</div>
         <div id="third">third</div>
         <div id="four">four</div>
-	</div>
+    </div>
 </body>
 ```
+
 页面效果：
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190805172356649.png)
 从上图我们可以看出，first元素的实际宽度为100px，覆盖之前定义的width：80px

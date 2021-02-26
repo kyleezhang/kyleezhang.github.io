@@ -387,10 +387,10 @@ grid-template-areas: "header header header"
 从上图我们可以看到1号网格项目和2号网格项目各占据了2个单元格，由于3号项目默认跟着2号项目，因此1号项目后面空白，并且7、8、9号元素由于没有设置行高度，所以高度表现出“包裹性”，因此在默认的`grid-auto-flow: row`情况下页面布局如上图所示。
 
 现在给 container 元素添加`grid-auto-flow: row dense;`则页面效果如下：
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20190823141711769.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80NDE5NjI5OQ==,size_16,color_FFFFFF,t_70)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190823141711769.png)
 
 将 grid-auto-flow 属性修改为 column dense，则页面效果如下图所示：
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20190823142358912.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80NDE5NjI5OQ==,size_16,color_FFFFFF,t_70)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190823142358912.png)
 
 页面效果如上图所示，column dense 表示“先列后行”，先填满第一列，再填满第2列，所以3号项目在第一列，4号项目在第二列。8号项目和9号项目被挤到了第四列。因为没有指定第四列的宽度，所以第四列的宽度为最大宽度。
 
@@ -467,7 +467,7 @@ grid-template-areas: "header header header"
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190823151303734.png)
 
 我们发现跟justify-items属性取start的页面效果相同，这是因为我们给网格子元素指定了宽高属性，所以并没有出现网格项铺满的效果，当我们去除网格项目的宽高属性时发现铺满了网格项，那么当我们不添加宽高属性时， justify-items 取 start 时页面效果又是怎么样呢，答案是如下图所示：
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20190823152159249.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80NDE5NjI5OQ==,size_16,color_FFFFFF,t_70)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190823152159249.png)
 
 我们发现子元素在水平方向上表现出了宽度的“包裹性”，即由文本内容的宽度决定。
 
@@ -1025,7 +1025,7 @@ place-self: <align-self> <justify-self>;
 - grid-template-columns，grid-template-rows 作为长度，百分比或 calc 的简单列表，只要列表中长度、百分比或calc组件的值不同即可。
 
 浏览器支持可设置动画的网格属性：
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20190824151201370.pn)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190824151201370.png)
 示例：
 
 ```html
