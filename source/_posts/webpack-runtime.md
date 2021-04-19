@@ -199,7 +199,7 @@ module.exports = function (source) {
 };
 ```
 
-此处需要注意的是虽然 Webpack 加载资源文件的过程类似于一个工作管道，你可以在这个过程中依次使用多个 Loader，但是最终这个管道结束过后的结果必须是一段标准的 JS 代码字符串，如果当前 loader 返回的结果不是 JS 代码字符串，我么可以再选择合适的加载器，在后面接着处理我们这里得到的结果，举个🌰:
+此处需要注意的是虽然 Webpack 加载资源文件的过程类似于一个工作管道，你可以在这个过程中依次使用多个 Loader，但是最终这个管道结束过后的结果必须是一段标准的 JS 代码字符串，如果当前 loader 返回的结果不是 JS 代码字符串，我们可以再选择合适的加载器，在后面接着处理我们这里得到的结果，举个🌰:
 
 ```javascript
 // ./markdown-loader.js
@@ -485,12 +485,12 @@ const webpack = (options, callback) => {
     compiler = new MultiCompiler(options.map(options => webpack(options)));
   } else if (typeof options === "object") {
     // 如果options为对象开启单路打包
-    options = new WebpackOptionsDefaulter().process(options);
-    compiler = new Compiler(options.context);
+    options = new WebpackOptionsDefaulter().process(options); // 1.处理options
+    compiler = new Compiler(options.context); // 2.创建compiler
     compiler.options = options;
     new NodeEnvironmentPlugin().apply(compiler);
     if (options.plugins && Array.isArray(options.plugins)) {
-      // 注册已配置的插件
+      // 3.注册已配置的插件
       for (const plugin of options.plugins) {
         if (typeof plugin === "function") {
           plugin.call(compiler, compiler);
@@ -499,41 +499,37 @@ const webpack = (options, callback) => {
         }
       }
     }
-    // 触发特定的Hook
+    // 4.触发特定的Hook
     compiler.hooks.environment.call();
     compiler.hooks.afterEnvironment.call();
-    // 处理options
+    // 5.处理options
     compiler.options = new WebpackOptionsApply().process(options, compiler);
-	} else {
-		throw new Error("Invalid argument: options");
-	}
-
-	if (callback) {
-		if (typeof callback !== "function") {
-			throw new Error("Invalid argument: callback");
-		}
-		if (options.watch === true || (Array.isArray(options) && options.some(o => o.watch))) {
-			const watchOptions = Array.isArray(options) ? options.map(o => o.watchOptions || {}): options.watchOptions || {};
+  } else {
+    throw new Error("Invalid argument: options");
+  }
+  if (callback) {
+    if (typeof callback !== 'function') {
+      throw new Error("Invalid argument: callback");
+    }
+    if (options.watch === true || (Array.isArray(options)) && options.some(o => o.watch)) {
+      const watchOptions = Array.isArray(options) ? options.map(o => o.watchOptions || {}): options.watchOptions || {};
 			return compiler.watch(watchOptions, callback);
-		}
-		compiler.run(callback);
-	}
-	return compiler;
+    }
+    compiler.run(callback);
+  }
+  return compiler;
 };
 ```
 
 在这个函数中，首先校验了外部传递过来的 options 参数是否符合要求，紧接着判断了 options 的类型。如果传入的是一个数组，那么 Webpack 内部创建的就是一个 MultiCompiler，也就是同时开启多路打包，配置数组中的每一个成员就是一个独立的配置选项。而如果我们传入的是普通的对象，流程主要分为五步：1.处理options -> 2. 创建compiler -> 3.绑定自定义插件 -> 4. 触发特定的Hook -> 5. 处理options. 我们可以看到第1和第5步都是处理options。那到底有啥不同呢？
-1. new WebpackOptionsDefaulter().process(options)：WebpackOptionsDefaulter 顾名思义，是设置webpack的默认参数的地方，比如说默认入口路径，默认rule, 默认optimize策略。这行的作用就是设置默认参数，并将用户自定义参数覆盖上去。
-2. new WebpackOptionsApply().process(options, compiler)：WebpackOptionsApply.js的源码中则是根据options中的配置，注册各种内部插件如SingleEntryPlugin，以及负责解析的各类钩子，以及负责优化的SplitChunksPlugin等等。
+1. `new WebpackOptionsDefaulter().process(options)`：WebpackOptionsDefaulter 顾名思义，是设置 webpack 的默认参数的地方，比如说默认入口路径，默认 rule, 默认 optimize 策略。这行的作用就是设置默认参数，并将用户自定义参数覆盖上去。
+2. `new WebpackOptionsApply().process(options, compiler)`：WebpackOptionsApply 的主要功能是根据 options 中的配置，注册各种内部插件如 SingleEntryPlugin，以及负责解析的各类钩子，以及负责优化的 SplitChunksPlugin 等等。
 
-可以注意到在创建了 Compiler 对象过后，Webpack 就开始注册我们配置中的每一个插件了，因为再往后 Webpack 工作过程的生命周期就要开始了，所以必须先注册，这样才能确保插件中的每一个钩子都能被命中。
+可以注意到在创建了 Compiler 对象过后，Webpack 就开始注册我们配置中的每一个插件了，这是因为再往后 Webpack 工作过程的生命周期就要开始了，所以必须先注册，这样才能确保插件中的每一个钩子都能被命中。
+
+完成 Compiler 对象的创建过后，紧接着这里的代码开始判断配置选项中是否启用了监视模式，如果是监视模式就调用 Compiler 对象的 watch 方法，以监视模式启动构建，如果不是监视模式就调用 Compiler 对象的 run 方法，开始构建整个应用。
 
 ### 四、开始创建
-完成 Compiler 对象的创建过后，紧接着这里的代码开始判断配置选项中是否启用了监视模式，具体实现如下：
-
-<img src="/assets/webpack-runtime/07.png" />
-
-此处如果是监视模式就调用 Compiler 对象的 watch 方法，以监视模式启动构建，如果不是监视模式就调用 Compiler 对象的 run 方法，开始构建整个应用。
 
 这个 run 方法定义在 Compiler 类型中，具体文件在 webpack 模块下的 lib/Compiler.js 中，方法内部就是先触发了beforeRun 和 run 两个钩子，然后最关键的是调用了当前对象的 compile 方法，真正开始编译整个项目，具体实现如下：
 
@@ -608,10 +604,34 @@ addEntry(context, entry, name, callback) {
 
 ```js
 _addModuleChain(context, dependency, onModule, callback) {
-  ...
+  const start = this.profile && Date.now();
+  const currentProfile = this.profile && {};
+
+  const errorAndCallback = this.bail
+    ? err => {
+        callback(err);
+      }
+    : err => {
+        err.dependencies = [dependency];
+        this.errors.push(err);
+        callback();
+      };
+
+  if (
+    typeof dependency !== "object" ||
+    dependency === null ||
+    !dependency.constructor
+  ) {
+    throw new Error("Parameter 'dependency' must be a Dependency");
+  }
   const Dep = /** @type {DepConstructor} */ (dependency.constructor);
   const moduleFactory = this.dependencyFactories.get(Dep);
-  ...
+  if (!moduleFactory) {
+    throw new Error(
+      `No dependency factory available for this dependency type: ${dependency.constructor.name}`
+    );
+  }
+
   this.semaphore.acquire(() => {
     moduleFactory.create(
       {
@@ -623,17 +643,65 @@ _addModuleChain(context, dependency, onModule, callback) {
         dependencies: [dependency]
       },
       (err, module) => {
-        ...
+        if (err) {
+          this.semaphore.release();
+          return errorAndCallback(new EntryModuleNotFoundError(err));
+        }
+
+        let afterFactory;
+
+        if (currentProfile) {
+          afterFactory = Date.now();
+          currentProfile.factory = afterFactory - start;
+        }
+
         const addModuleResult = this.addModule(module);
         module = addModuleResult.module;
-        ...
-        if (addModuleResult.build) {
-          this.buildModule(module, false, null, null, err => {})
+
+        onModule(module);
+
+        dependency.module = module;
+        module.addReason(null, dependency);
+
+        const afterBuild = () => {
+          if (addModuleResult.dependencies) {
+            this.processModuleDependencies(module, err => {
+              if (err) return callback(err);
+              callback(null, module);
+            });
+          } else {
+            return callback(null, module);
+          }
+        };
+
+        if (addModuleResult.issuer) {
+          if (currentProfile) {
+            module.profile = currentProfile;
+          }
         }
-        ...
+
+        if (addModuleResult.build) {
+          this.buildModule(module, false, null, null, err => {
+            if (err) {
+              this.semaphore.release();
+              return errorAndCallback(err);
+            }
+
+            if (currentProfile) {
+              const afterBuilding = Date.now();
+              currentProfile.building = afterBuilding - afterFactory;
+            }
+
+            this.semaphore.release();
+            afterBuild();
+          });
+        } else {
+          this.semaphore.release();
+          this.waitForBuildingFinished(module, afterBuild);
+        }
       }
-    ）
-  }
+    )
+  })
 }
 ```
 _addModuleChain 方法入参中 context 是当前项目的绝对路径， dependency 是 entry 对象，onModule 和 callback 都是 addEntry 方法传入的回调，都接收module对象。我们知道webpack的核心功能就是通过入口找到所有依赖的模块，最后编译成一个或多个bundle。那么 _addModuleChain 就是这样一个遍历依赖，构建 module 依赖图的过程。semaphone 是 Nodejs 中最受欢迎的信号量模块，解决多线程的问题。在compilation 的构造函数中可以看到这样一行代码
@@ -642,14 +710,14 @@ _addModuleChain 方法入参中 context 是当前项目的绝对路径， depend
 this.semaphore = new Semaphore(options.parallelism || 100);
 ```
 由此我们可以知道compilation允许并发解析多入口，如果 opitons 中没有设置，默认为并发100。
-除此之外我们还看到代码中有一个 moduleFactory。那它是干嘛的呢？实际上 SingleEntryPlugin 的第二个重要功能就是把entry依赖对应的模块工厂类型存到了compilation.dependencyFactories这个map中。moduleFactory就是当前依赖的工厂构造函数。那么剩余的逻辑从字面上就很好理解了。
+除此之外我们还看到代码中有一个 moduleFactory。那它是干嘛的呢？实际上 SingleEntryPlugin 的第二个重要功能就是把entry依赖对应的模块工厂类型存到了 compilation.dependencyFactories 这个 map 中。 moduleFactory 就是当前依赖的工厂构造函数。那么剩余的逻辑从字面上就很好理解了。
 
-1. 获取当前entry对应的模块工厂构造器
-2. 调用工厂函数的create方法创建module
-3. 构建解析module(this.buildModule)
-4. afterBuild-> processModuleDependencies, 处理当前module依赖
+1. 获取当前 entry 对应的模块工厂构造器
+2. 调用工厂函数的 create 方法创建 module
+3. 构建解析 this.buildModule(module)
+4. afterBuild -> processModuleDependencies, 处理当前 module 依赖
 
-在buildModule前打上断点，查看当前module的值:
+在 buildModule 前打上断点，查看当前module的值:
 
 <img src="/assets/webpack-runtime/13.jpg" />
 

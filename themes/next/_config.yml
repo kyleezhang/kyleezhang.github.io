@@ -565,11 +565,12 @@ quicklink:
 
 # Multiple Comment System Support
 comments:
+  enable: false
   # Available values: tabs | buttons
   style: tabs
   # Choose a comment system to be displayed by default.
   # Available values: changyan | disqus | disqusjs | gitalk | livere | valine
-  active: changyan
+  active: false
   # Setting `true` means remembering the comment system selected by the visitor.
   storage: true
   # Lazyload all comment systems.
@@ -605,7 +606,7 @@ disqusjs:
 
 # Changyan
 changyan:
-  enable: ture
+  enable: false
   appid: cyv8nQjUI
   appkey: prod_2ae6a0a3bc03e87258bb6b011e749131
   #post_meta_order: 0
