@@ -66,7 +66,7 @@ Blocked a frame with origin "https://www.****.ccom" from accessing a cross-origi
 
 ### 二、XSS攻击
 
-XSS 全称是 Cross Site Scripting，即跨站脚本，XSS 攻击是指黑客往 HTML 文件中或者 DOM 中注入恶意脚本，从而在用户浏览页面时利用注入的恶意脚本对用户实施攻击的一种手段。最开始的时候，这种攻击是通过跨域来实现的，所以叫“跨域脚本”。但是发展到现在，往 HTML 文件中注入恶意代码的方式越来越多了，所以是否跨域注入脚本已经不是唯一的注入手段了，但是 XSS 这个名字却一直保留至今。当页面被注入了恶意 JavaScript 脚本时，浏览器无法区分这些脚本是被恶意注入的还是正常的页面内容，所以恶意注入 JavaScript 脚本也拥有所有的脚本权限。我们根据恶意脚本的注入方式将其主要分为存储型 XSS 攻击、反射型 XSS 攻击和基于 DOM 的 XSS 攻击三种：
+XSS 全称是 Cross Site Scripting，即跨站脚本，XSS 攻击是指黑客**往 HTML 文件中或者 DOM 中注入恶意脚本，从而在用户浏览页面时利用注入的恶意脚本对用户实施攻击**的一种手段。最开始的时候，这种攻击是通过跨域来实现的，所以叫“跨域脚本”。但是发展到现在，往 HTML 文件中注入恶意代码的方式越来越多了，所以是否跨域注入脚本已经不是唯一的注入手段了，但是 XSS 这个名字却一直保留至今。当页面被注入了恶意 JavaScript 脚本时，浏览器无法区分这些脚本是被恶意注入的还是正常的页面内容，所以恶意注入 JavaScript 脚本也拥有所有的脚本权限。我们根据恶意脚本的注入方式将其主要分为存储型 XSS 攻击、反射型 XSS 攻击和基于 DOM 的 XSS 攻击三种：
 
 **1、存储型 XSS 攻击**
 
@@ -136,6 +136,39 @@ set-cookie: NID=189=M8q2FtWbsR8RlcldPVt7qkrqR38LmFY9jUxkKo3-4Bi6Qu_ocNOat7nkYZUT
 <img src="/assets/client-security/02.png" width="500" />
 
 从图中可以看出，NID 这个 Cookie 的 HttpOlny 属性是被勾选上的，所以 NID 的内容是无法通过 document.cookie 是来读取的。由于 JavaScript 无法读取设置了 HttpOnly 的 Cookie 数据，所以即使页面被注入了恶意 JavaScript 脚本，也是无法获取到设置了 HttpOnly 的数据。因此一些比较重要的数据我们建议设置 HttpOnly 标志。
+
+### 三、CSRF攻击
+
+CSRF 英文全称是 Cross-site request forgery，所以又称为“跨站请求伪造”，是指黑客引诱用户打开黑客的网站，在黑客的网站中，利用用户的登录状态发起的跨站请求。简单来讲，CSRF 攻击就是黑客**利用了用户的登录状态，并通过第三方的站点来做一些坏事**。和 XSS 不同，CSRF 攻击不需要将恶意代码注入用户的页面，仅仅是利用服务器的漏洞和用户的登录状态来实施攻击
+
+由于 CSRF 攻击核心是是利用用户的登录状态来攻击目标站点，因此发起 CSRF 攻击的三个必要条件：
+
+- 目标站点一定要有 CSRF 漏洞；
+- 用户要登录过目标站点，并且在浏览器上保持有该站点的登录状态；
+- 需要用户打开一个第三方站点，可以是黑客的站点，也可以是一些论坛。
+
+满足以上三个条件之后，黑客就可以对用户进行 CSRF 攻击了。这里还需要额外注意一点，与 XSS 攻击不同，CSRF 攻击不会往页面注入恶意脚本，因此黑客是无法通过 CSRF 攻击来获取用户页面数据的；其最关键的一点是要能找到服务器的漏洞，所以说对于 CSRF 攻击我们主要的防护手段是提升服务器的安全性。
+
+要让服务器避免遭受到 CSRF 攻击，通常有以下几种途径。
+
+（1）充分利用好 Cookie 的 SameSite 属性
+
+由于黑客会利用用户的登录状态来发起 CSRF 攻击，而 Cookie 正是浏览器和服务器之间维护登录状态的一个关键数据，因此要阻止 CSRF 攻击，我们首先就要考虑在 Cookie 上来做文章。通常 CSRF 攻击都是从第三方站点发起的，要防止 CSRF 攻击，我们最好能实现从第三方站点发送请求时禁止 Cookie 的发送，因此在浏览器通过不同来源发送 HTTP 请求时，有如下区别：
+
+- 如果是从第三方站点发起的请求，那么需要浏览器禁止发送某些关键 Cookie 数据到服务器；
+- 如果是同一个站点发起的请求，那么就需要保证 Cookie 数据正常发送。
+
+在 HTTP 响应头中，通过 set-cookie 字段设置 Cookie 时，可以带上 SameSite 选项，如下：
+
+```sh
+set-cookie: 1P_JAR=2019-10-20-06; expires=Tue, 19-Nov-2019 06:36:21 GMT; path=/; domain=.google.com; SameSite=none
+```
+
+SameSite 选项通常有 Strict、Lax 和 None 三个值。
+
+- Strict 最为严格。如果 SameSite 的值是 Strict，那么浏览器会完全禁止第三方 Cookie。简言之，如果你从极客时间的页面中访问 InfoQ 的资源，而 InfoQ 的某些 Cookie 设置了 SameSite = Strict 的话，那么这些 Cookie 是不会被发送到 InfoQ 的服务器上的。只有你从 InfoQ 的站点去请求 InfoQ 的资源时，才会带上这些 Cookie。
+- Lax 相对宽松一点。在跨站点的情况下，从第三方站点的链接打开和从第三方站点提交 Get 方式的表单这两种方式都会携带 Cookie。但如果在第三方站点中使用 Post 方法，或者通过 img、iframe 等标签加载的 URL，这些场景都不会携带 Cookie。
+- 而如果使用 None 的话，在任何情况下都会发送 Cookie 数据。
 
 ## 参考资料
 
