@@ -1032,7 +1032,11 @@ for (const fileManifest of manifest) {
 webpack 的整体打包流程主要还是依赖于 compilation 和 module 这两个对象，compiliation 对象负责协调整个构建过程， module 是 webpack 构建的核心实体，由这两者合作完成了整体项目的打包，由 tapable 控制各插件在 webpack 事件流上运行，最终成就了 Webpack 这目前使用最广泛的打包工具。
 
 ## 参考资料
+
 [编写一个webpack的loader（1）](https://juejin.cn/post/6844903861451227150)
+
 [webpack-loader简简单单配置入门](https://juejin.cn/post/6909459619324788750)
+
 [Webpack 核心知识有哪些？](https://mp.weixin.qq.com/s/xT12rUsYOkypXS8YFYQEzQ)
+
 [细说 webpack 之流程篇](https://developer.aliyun.com/article/61047)

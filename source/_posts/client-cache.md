@@ -203,5 +203,6 @@ self.addEventListener('fetch', function (event) {
 ## 参考资料
 
 [ServiceWorker简介](https://developers.google.com/web/fundamentals/primers/service-workers?hl=zh-cn)
+
 [使用 Service Workers](https://developer.mozilla.org/zh-CN/docs/Web/API/Service_Worker_API/Using_Service_Workers)
 

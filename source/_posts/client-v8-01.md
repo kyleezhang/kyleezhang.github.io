@@ -270,7 +270,11 @@ for (var i = 0; i < 9000; i++) {
 
 ## 参考资料：
 极客时间《图解Google V8》专栏
+
 [V8引擎怎样对属性进行快速访问](https://juejin.im/post/6844903496609693704)
+
 [JavaScript引擎基础：Shapes和Inline Caches](https://zhuanlan.zhihu.com/p/38202123)
+
 [V8 Hidden Class](https://www.w3ctech.com/topic/660)
+
 [V8中的多态内联缓存PIC](https://blog.csdn.net/szengtal/article/details/72861133)

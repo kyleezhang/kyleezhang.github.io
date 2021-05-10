@@ -317,6 +317,9 @@ import(/* webpackChunkName: 'posts' */'./posts/posts').then(({ default: posts })
 <img src="/assets/webpack-codesplitting/04.png" width="412px" />
 
 ## 参考资料
+
 [webpack优化之玩转代码分割和公共代码提取](https://www.cnblogs.com/champyin/p/11904831.html)
+
 [webpack 4 Code Splitting 的 splitChunks 配置探索](https://imweb.io/topic/5b66dd601402769b60847149)
+
 [webpack 代码分离](https://webpack.docschina.org/guides/code-splitting/)

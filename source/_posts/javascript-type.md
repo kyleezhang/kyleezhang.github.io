@@ -90,7 +90,7 @@ console.log(typeof rg); // object(sarari5、chrome7前返回function)
 
 事实上，“类型”在 JavaScript 中是一个有争议的概念。一方面，标准中规定了运行时数据类型； 另一方面，JS 语言中提供了 typeof 这样的运算，用来返回操作数的类型，但 typeof 的运算结果，与运行时类型的规定有很多不一致的地方。我们可以看下表来对照一下。
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20190828094822559.jpg)
+![](https://img-blog.csdnimg.cn/20190828094822559.jpg)
 
 总结：
 

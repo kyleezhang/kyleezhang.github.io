@@ -976,9 +976,15 @@ class Foo {
 这里的装饰器 staticImplements 没有做任何逻辑上的操作，它只是声明了构造函数的类型，这样静态属性自然就具备了类型声明。
 
 ## 参考资料
+
 极客时间《TypeScript开发实战》专栏
+
 《深入理解TypeScript》
+
 [一份不可多得的 TS 学习指南（1.8W字）](https://juejin.im/post/6872111128135073806#heading-21)
+
 [Typescript使用手册](https://www.bookstack.cn/read/TypeScript-3.6/doc-handbook-README)
+
 [reflect-metadata的研究](https://juejin.cn/post/6844904152812748807)
+
 [如何基于 TypeScript 实现控制反转](https://juejin.cn/post/6898882861277904910)

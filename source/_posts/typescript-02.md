@@ -1112,7 +1112,11 @@ export = jQuery;
 
 
 ## 参考资料
+
 极客时间《TypeScript开发实战》专栏
+
 《深入理解TypeScript》
+
 [CommonJs 和 ESModule 的 区别整理](https://juejin.cn/post/6844903598480965646)
+
 [TypeScript开发教程](https://www.dengwb.com/typescript/)

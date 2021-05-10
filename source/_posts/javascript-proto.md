@@ -2,6 +2,7 @@
 title: JavaScript 中基于原型的继承
 date: 2021-04-20 12:37:42
 toc: true
+mathjax: false
 categories: 
 - 前端
 tags:
@@ -41,7 +42,7 @@ console.log(instance.getSuperValue()); // false
 
 原型继承的实现本质是重写原型对象，代之以一个新类型的实例，在上面示例中原来存在于Suptype的所有实例中的属性和方法，现在也存在于SubType.prototype中了。在确定了继承关系后我们给Subtype.prototype添加了一个方法，这样就在继承了SuperType属性的方法和方法的基础上又添加了一个新方法，示例中的继承关系如下图所示
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20191127223528684.png)
+![](https://img-blog.csdnimg.cn/20191127223528684.png)
 
 优点：
 

@@ -299,8 +299,13 @@ function add(a, b) {
 ```
 
 ## 参考资料
+
 极客时间《TypeScript开发实战》专栏
+
 《深入理解TypeScript》
+
 [typeScript 中的type关键字](https://juejin.cn/post/6876359681464336397)
+
 [一份不可多得的 TS 学习指南（1.8W字）](https://juejin.im/post/6872111128135073806#heading-21)
+
 [Typescript使用手册](https://www.bookstack.cn/read/TypeScript-3.6/doc-handbook-README)

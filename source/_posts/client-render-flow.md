@@ -81,7 +81,7 @@ TCP 是面向连接的通信传输协议，面向连接是指在数据通信开�
  - 响应体：通常响应体包含了HTML的实际内容。
 
 具体如下图所示：
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20200217210427948.jpeg)
+![](https://img-blog.csdnimg.cn/20200217210427948.jpeg)
 
 在此我们需要特别注意一下重定向的情况，即当响应行返回状态码为301时浏览器需要重定向到另一个地址，而需要重定向的地址正是包含在响应头的Location字段中的地址，并使用该地址重新导航，这就是一个完整重定向的流程。
 
@@ -242,7 +242,7 @@ Aa -> B
 9. 标记生成器最后传过来一个html的结束标记, 进入到 after after body 的状态，表示解析过程到此结束。
 
 整体流程如下图所示： 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20200229213555644.png) 
+![](https://img-blog.csdnimg.cn/20200229213555644.png) 
 
 但事实上 Chrome 浏览器中 DOM 树构建算法却又与此不同，Chrome 浏览器中 DOM 树构建器主要有以下三部分组成：
 
@@ -379,7 +379,7 @@ return;
 
 和HTML文件一样，浏览器无法直接理解这种纯文本的CSS样式，因此当浏览器渲染引擎接收到CSS文本时会执行一个转换操作，将CSS文本装换成一种浏览器可以理解的结构——styleSheets。我们在控制台输入document.styleSheets可以查看浏览器生成的styleSheets结构：
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20200412101157718.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80NDE5NjI5OQ==,size_16,color_FFFFFF,t_70)
+![](https://img-blog.csdnimg.cn/20200412101157718.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80NDE5NjI5OQ==,size_16,color_FFFFFF,t_70)
 
 那么渲染引擎是如何将CSS文本转换为styleSheets结构呢？
 
@@ -417,7 +417,7 @@ dom.css文件的内容如下：
 ```
 
 整体解析过程如下图所示：
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20200412162530690.png)
+![](https://img-blog.csdnimg.cn/20200412162530690.png)
 
 在CSS没有加载好之前，DOM 树已经构建好了。为什么 DOM 构建好不直接开始页面的渲染呢？这是因为没有样式的页面将无比混乱。所以CSS不能太大，页面一打开将会停留较长时间的白屏，所以把图片/字体等转成 base64 放到CSS里面是一种不太推荐的做法。
 
@@ -427,7 +427,7 @@ dom.css文件的内容如下：
 
 CSS 解析和 html 解析的过程有很多相似的地方，都是先将字符串格式化为tokens。CSS token 定义了很多种类型，如下所示的CSS样式会被拆成多个 token：
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20200412170323745.png)
+![](https://img-blog.csdnimg.cn/20200412170323745.png)
 
 **2、tokens -> styleRule**
 
@@ -446,7 +446,7 @@ CSS 解析和 html 解析的过程有很多相似的地方，都是先将字符�
 
 解析生成的选择器结果如下所示：
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20200412172112662.png)
+![](https://img-blog.csdnimg.cn/20200412172112662.png)
 
 从上图我们也可以看出选择器的解析是从右向左进行的，因此先识别出的是 .hello 选择器，其次才是 .text 选择器。同时我们也注意到了解析结果中的 matchType 和 relation 字段，那么这两个字段分别代表着什么呢？
 
@@ -493,7 +493,7 @@ enum RelationType {
 
 解析生成的属性集结果如下图所示：
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20200412173721228.png)
+![](https://img-blog.csdnimg.cn/20200412173721228.png)
 
 如上图所示，解析生成的所有属性都是以id来标志，上面的id分别对应：
 
@@ -512,7 +512,7 @@ enum CSSPropertyID {
 
 **一个选择器和一个属性集就构成一条rule，同一个css表的所有rule放到同一个stylesheet对象里面**，Chrome 会把用户的样式存放到一个 m_authorStyleSheets 的向量里面，如下图示意：
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20200412174539228.png)
+![](https://img-blog.csdnimg.cn/20200412174539228.png)
 
 除了 autherStyleSheet，还有浏览器默认的样式 DefaultStyleSheet，这里面有几张，最常见的是 UAStyleSheet，其它的还有svg和全屏的默认样式表。
 
@@ -733,17 +733,17 @@ switch (m_match) {
 
 按优先级计算出来的 Style 会被放在一个 ComputedStyle 的对象里面，这个 style 里面的规则分成了几类，通过检查 style 对象可以一窥：
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20200413105511207.png)
+![](https://img-blog.csdnimg.cn/20200413105511207.png)
 
 把它画成一张图表：
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20200413105528396.png)
+![](https://img-blog.csdnimg.cn/20200413105528396.png)
 
 主要有几类，box 是长宽，surround 是 margin/padding，还有不可继承的 nonInheritedData 和可继承的 styleInheritedData 一些属性。Chrome 还把很多比较少用的属性放到 rareData 的结构里面，为避免实例化这些不常用的属性占了太多的空间。
 
 具体来说，上面设置的font-size为：22em * 16px = 352px：
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20200413105611166.png)
+![](https://img-blog.csdnimg.cn/20200413105611166.png)
 
 而所有的色值会变成16进制的整数，如 Chrome 定义的两种颜色的色值：
 
@@ -927,5 +927,7 @@ static void adjustStyleForFirstLetter(ComputedStyle& style) {
 ## 参考资料
 
 极客时间《浏览器工作原理与实践》专栏
+
 拉勾教育《前端高手进阶》专栏
+
 [从Chrome源码看浏览器如何计算CSS](https://zhuanlan.zhihu.com/p/25380611)

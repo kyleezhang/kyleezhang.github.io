@@ -394,5 +394,7 @@ function isString(x: any): x is string {
 ```
 
 ## 参考资料
+
 极客时间《TypeScript开发实战》专栏
+
 《深入理解TypeScript》
