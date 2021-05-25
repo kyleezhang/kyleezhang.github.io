@@ -2,6 +2,7 @@
 title: TypeScript学习笔记（四）
 date: 2020-11-23 10:27:51
 toc: true
+mathjax: false
 categories: 
 - 前端
 tags: 

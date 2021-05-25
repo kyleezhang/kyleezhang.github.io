@@ -2,6 +2,7 @@
 title: 计算机组成原理学习笔记（一）
 date: 2021-02-18 13:54:54
 toc: true
+mathjax: false
 categories: 
 - 计算机与网络
 tags:

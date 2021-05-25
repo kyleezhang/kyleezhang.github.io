@@ -2,7 +2,8 @@
 title: TypeScript学习笔记（三）
 date: 2020-11-18 11:06:03
 toc: true
-categories: 
+mathjax: false
+categories:
 - 前端
 tags: 
 - TypeScript

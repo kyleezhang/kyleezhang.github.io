@@ -2,6 +2,7 @@
 title: TypeScript工程化实践笔记
 date: 2021-01-06 23:41:06
 toc: true
+mathjax: false
 categories: 
 - 前端
 tags: 

@@ -2,6 +2,7 @@
 title: JavaScript中的类型
 date: 2021-04-18 09:51:21
 toc: true
+mathjax: false
 categories: 
 - 前端
 tags: 

@@ -2,6 +2,7 @@
 title: 浏览器安全
 date: 2021-03-17 20:06:09
 toc: true
+mathjax: false
 categories: 
 - 前端
 tags:

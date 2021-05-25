@@ -2,6 +2,7 @@
 title: 浏览器缓存
 date: 2021-03-16 19:36:17
 toc: true
+mathjax: false
 categories: 
 - 前端
 tags:

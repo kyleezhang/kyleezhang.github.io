@@ -3,6 +3,7 @@ layout: posts
 title: 关于学习的一些思考
 date: 2020-12-21 17:18:51
 toc: true
+mathjax: false
 categories: 
 - 随笔
 tags:

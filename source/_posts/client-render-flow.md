@@ -2,6 +2,7 @@
 title: 浏览器如何渲染页面
 date: 2021-01-22 10:34:23
 toc: true
+mathjax: false
 categories: 
 - 前端
 tags:

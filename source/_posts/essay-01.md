@@ -3,6 +3,7 @@ layout: posts
 title: 24岁生日随笔
 date: 2020-11-13 20:56:53
 toc: true
+mathjax: false
 categories: 
 - 随笔
 tags:

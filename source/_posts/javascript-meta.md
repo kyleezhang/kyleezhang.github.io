@@ -2,6 +2,7 @@
 title: JavaScript中的元编程
 date: 2021-01-11 10:44:29
 toc: true
+mathjax: false
 categories: 
 - 前端
 tags: 
