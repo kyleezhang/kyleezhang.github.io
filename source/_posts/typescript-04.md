@@ -1,6 +1,6 @@
 ---
-title: TypeScript学习笔记（三）
-date: 2020-11-18 11:06:03
+title: TypeScript学习笔记（二）
+date: 2020-11-17 10:05:53
 toc: true
 categories: 
 - 前端
@@ -13,33 +13,34 @@ tags:
 
 ### 一、接口
 
-在面向对象的语言中“接口”是个很重要的概念，它是对行为的抽象，而具体如何实现需要通过类实现，TypeScript中的接口是一个非常灵活的概念，可以用来约束对象、函数以及类的结构和类型，是一种代码协作的契约，我们必须遵守而且不能改变。
+在面向对象的语言中“接口”是个很重要的概念，它是对行为的抽象，而具体内容需要通过类实现，TypeScript 中的接口是一个非常灵活的概念，可以用来约束对象、函数以及类的结构和类型，是一种代码协作的契约，我们必须遵守而且不能改变。
 
 <!-- more -->
 
 #### 1、对象类型接口
 
-对象类型的接口用来设置对象需要存在的普通属性、可选属性和只读属性，另外还可以通过as或[propName: string]: any来制定可以接受的其他任意额外属性，举个🌰:
+对象类型的接口用来设置对象需要存在的普通属性、可选属性和只读属性，另外还可以通过类型注解语法或 [propName: string]: any 来制定可以接受的其他任意额外属性，举个🌰:
+
 ```typescript
 interface Person {
-    name: string
-    bool?: boolean
-    readonly timestamp: number
-    readonly arr: ReadonlyArray<number> // 此外还有 ReadonlyMap/ReadonlySet
+  name: string
+  bool?: boolean
+  readonly timestamp: number
+  readonly arr: ReadonlyArray<number> // 此外还有 ReadonlyMap/ReadonlySet
 }
 
 let p1: Person = {
-    name: 'oliver',
-    bool: true, // 可选属性并非必要,可写可不写
-    timestamp: + new Date(), // 设置只读属性
-    arr: [1, 2, 3] // 设置只读数组
+  name: 'oliver',
+  bool: true, // 可选属性并非必要,可写可不写
+  timestamp: + new Date(), // 设置只读属性
+  arr: [1, 2, 3] // 设置只读数组
 }
 
 let p2: Person = {
-    // Type '{ age: string; }' is not assignable to type 'Person'
-    age: 'oliver', 
-    // Type 'number' is not assignable to type 'string'
-    name: 123 
+  // Type '{ age: string; }' is not assignable to type 'Person'
+  age: 'oliver', 
+  // Type 'number' is not assignable to type 'string'
+  name: 123 
 }
 
 // Cannot assign to 'timestamp' because it is a constant or a read-only property.
@@ -48,11 +49,11 @@ p1.timestamp = 123
 p1.arr.pop()
 ```
 
-需要注意的是`ReadonlyArray<T>`类型，它与`Array<T>`相似，只是把所有可变方法去掉了，因此可以确保数组创建后再也不能被修改，`ReadonlyMap<T>`和`ReadonlySet<T>`与之类似。
+需要注意的是此处 `ReadonlyArray<T>` 类型，它与 `Array<T>` 相似，只是把所有可变方法去掉了，因此可以确保数组创建后再也不能被修改，`ReadonlyMap<T>` 和 `ReadonlySet<T>` 与之类似。
 
 #### 2、函数类型接口
 
-TypeScript中接口还可以用来规范函数的形状，列出参数列表及返回值类型的函数定义。写法如下：
+TypeScript 中接口还可以用来规范函数的形状，列出参数列表及返回值类型的函数定义。写法如下：
 
 ```typescript
 let add: (x: number, y: number) => number // 常规函数类型写法
@@ -71,8 +72,8 @@ let add: Add = (a, b) => a + b
 ```typescript
 // 数字索引
 interface StringArr {
-    readonly [index: number]: string // index只能为number类型并且为只读属性
-    length: number // 可以指定其他属性
+  readonly [index: number]: string // index只能为number类型并且为只读属性
+  length: number // 可以指定其他属性
 }
 
 let arr1: StringArr = ['hello', 'world']
@@ -101,17 +102,17 @@ interface Circle {
 
 ```typescript
 interface Counter {
-    (start: number): void // 返回类型为函数
-    version: string // 增加version属性
-    add(): void // 增加add方法
+  (start: number): void // 返回类型为函数
+  version: string // 增加version属性
+  add(): void // 增加add方法
 }
 
 function getCounter(): Counter { // 它返回的函数必须符合接口的三点
-    let count = 0
-    function counter (start: number) { count = start } // counter 方法函数
-    counter.version = '0.0.1'
-    counter.add = function() { count++ } // add 方法增加 count
-    return counter
+  let count = 0
+  function counter (start: number) { count = start } // counter 方法函数
+  counter.version = '0.0.1'
+  counter.add = function() { count++ } // add 方法增加 count
+  return counter
 }
 
 const c = getCounter()
@@ -125,38 +126,38 @@ c.add()
 跟类一样，接口通过extend关键字继承，更新新的形状，比方说继承接口并生成新的接口，这个新的接口可以设定一个新的方法检查。举个🌰:
 
 ```typescript
-interface PersonInfoInterface { // 1️⃣ 这里是第一个接口
-    name: string
-    age: number
-    log?(): void
+interface PersonInfoInterface {
+  name: string
+  age: number
+  log?(): void
 }
 
-interface Student extends PersonInfoInterface { // 2️⃣ 这里继承了一个接口
-    doHomework(): boolean // ✔️ 新增一个方法检查
+interface Student extends PersonInfoInterface {
+  doHomework(): boolean // 新增一个方法检查
 }
-interface Teacher extends PersonInfoInterface { // 3️⃣ 这里又继承了一个接口
-    dispatchHomework(): void // ✔️ 新增了一个方法检查
+interface Teacher extends PersonInfoInterface {
+  dispatchHomework(): void // 新增了一个方法检查
 }
 
 // interface Emmm extends Student, Teacher // 也可以继承多个接口
 
 let Alice: Teacher = {
-    name: 'Alice',
-    age: 34,
-    dispatchHomework() { // ✔️ 必须满足继承的接口规范
-        console.log('dispatched')
-    }
+  name: 'Alice',
+  age: 34,
+  dispatchHomework() { // 必须满足继承的接口规范
+    console.log('dispatched')
+  }
 }
 
 let oliver: Student = {
-    name: 'oliver',
-    age: 12,
-    log() {
-        console.log(this.name, this.age)
-    },
-    doHomework() { // ✔️ 必须满足继承的接口规范
-        return true
-    }
+  name: 'oliver',
+  age: 12,
+  log() {
+    console.log(this.name, this.age)
+  },
+  doHomework() { // 必须满足继承的接口规范
+    return true
+  }
 }
 ```
 
@@ -166,7 +167,7 @@ let oliver: Student = {
 
 #### 1、类的属性及方法
 
-在TypeScript中我们通过Class关键字来定义一个类：
+在 JavaScript 中我们通过 class 关键字来定义一个类：
 
 ```typescript
 class Greeter {
@@ -195,7 +196,7 @@ class Greeter {
 let greeter = new Greeter("world");
 ```
 
-那么成员属性与静态属性，成员方法与静态方法有什么区别呢？我们直接查看编译后的ES5代码：
+那么成员属性与静态属性，成员方法与静态方法有什么区别呢？我们直接查看编译后的 ES5 代码：
 
 ```javascript
 var Greeter = /** @class */ (function () {
@@ -218,7 +219,7 @@ var Greeter = /** @class */ (function () {
 var greeter = new Greeter("world");
 ```
 
-从编译后的代码我们不难看出成员属性会添加到类的示例上，成员方法会添加到类的原型对象上，因此对于类的实例而言是可调用的，而静态属性与静态方法都会只添加到类自身，只能被类自身调用。除此之外我们需要注意类的成员属性和方法也有public、private和protected修饰符，举个🌰:
+从编译后的代码我们不难看出成员属性会添加到类的实例上，成员方法会添加到类的原型对象上，因此对于类的实例而言是可调用的，而静态属性与静态方法都会只添加到类自身，只能被类自身调用。除此之外我们需要注意类的成员属性和方法还有 public、private 和 protected 可访问性修饰符，举个🌰:
 
 ```typescript
 class Dog {
@@ -260,7 +261,7 @@ Husky.pri()
 Husky.pro()
 ```
 
-需要注意当我们给构造函数添加private修饰符时表示类既不可以被继承也不可以被实例化，当我们给构造函数添加protected修饰符时表示类不可被实例化只能被继承，常用于声明基类。
+需要注意当我们给构造函数添加 private 修饰符时表示类既不可以被继承也不可以被实例化，当我们给构造函数添加 protected 修饰符时表示类不可被实例化只能被继承，常用于声明基类。
 
 #### 2、ECMA私有字段
 
@@ -288,13 +289,13 @@ semlinker.#name;
 与常规属性（甚至使用private修饰符声明的属性）不同，私有字段具有以下规则：
 
 - 私有字段以 # 字符开头，有时我们称之为私有名称；
-- 每个私有字段名称都唯一地限定于其包含的类；
-- 不能在私有字段上使用TypeScript可访问性修饰符（如public或private）；
+- 每个私有字段名称都唯一的限定于其包含的类；
+- 不能在私有字段上使用 TypeScript 可访问性修饰符（如 public 或 private）；
 - 私有字段不能在包含的类之外访问，甚至不能被检测到。
 
 #### 3、访问器
 
-在 TypeScript 中，我们可以通过getter和setter方法来实现数据的封装和有效性校验，防止出现异常数据。
+在 TypeScript 中，我们可以通过 getter 和 setter 方法来实现数据的封装和有效性校验，防止出现异常数据。
 
 ```typescript
 let passcode = "Hello TypeScript";
@@ -318,13 +319,13 @@ class Employee {
 let employee = new Employee();
 employee.fullName = "Semlinker";
 if (employee.fullName) {
-  console.log(employee.fullName);
+  console.log(employee.fullName); // "Semlinker"
 }
 ```
 
 #### 4、类的继承
 
-继承（Inheritance）是一种联结类与类的层次模型。指的是一个类（称为子类、子接口）继承另外的一个类（称为父类、父接口）的功能，并可以增加它自己的新功能的能力，继承是类与类或者接口与接口之间最常见的关系。在TypeScript中，我们通过extends关键字来实现继承，通过super关键字来调用父类的构造函数和方法，举个🌰:
+继承（Inheritance）是一种联结类与类的层次模型。指的是一个类（称为子类、子接口）继承另外的一个类（称为父类、父接口）的功能，并可以增加它自己的新功能的能力，继承是类与类或者接口与接口之间最常见的关系。在 TypeScript 中，我们通过 extends 关键字来实现继承，通过 super 关键字来调用父类的构造函数和方法，举个🌰:
 
 ```typescript
 class Animal {
@@ -356,7 +357,7 @@ sam.move();
 
 #### 5、抽象类
 
-使用abstract关键字声明的类，我们称之为抽象类。抽象类不能被实例化，因为它里面包含一个或多个抽象方法，所谓的抽象方法，是指不包含具体实现的方法，抽象类的好处在于可以抽离出一些事物的共性，有利于代码的复用，和扩展，举个🌰:
+使用 abstract 关键字声明的类，我们称之为抽象类。抽象类不能被实例化，因为它里面包含一个或多个抽象方法，所谓的抽象方法，是指不包含具体实现的方法，抽象类的好处在于可以抽离出一些事物的共性，有利于代码的复用和扩展，举个🌰:
 
 ```typescript
 abstract class Person {
@@ -395,7 +396,7 @@ lolo.say("I love ts!"); // lolo says I love ts!
 
 #### 6、基于抽象类实现多态
 
-面向对象（OOP）语言的三大特性分别是：封装（Encapsulation）、继承（Inheritance）和多态（Polymorphism），多态是指由继承而产生了相关的不同的类，对同一个方法可以有不同的响应。比如Cat和Dog都继承自Animal，但是分别实现了自己的eat方法。此时针对某一个实例，我们无需了解它是Cat还是Dog，就可以直接调用eat方法，程序会自动判断出来应该如何执行eat：
+面向对象（OOP）语言的三大特性分别是：封装（Encapsulation）、继承（Inheritance）和多态（Polymorphism），多态是指由继承而产生了相关的不同的类，对同一个方法可以有不同的响应。比如下面示例中 Cat 和 Dog 都继承自 Animal，但是分别实现了自己的 eat 方法。此时针对某一个实例，我们无需了解它是 Cat 还是 Dog，就可以直接调用 eat 方法，程序会自动判断出来应该如何执行 eat：
 
 ```typescript
 abstract class Animal {
@@ -424,7 +425,7 @@ animals.forEach(i => {
 
 #### 7、类的方法的重载
 
-方法重载是指在同一个类中方法同名，参数不同（参数类型不同、参数个数不同或参数个数相同时参数的先后顺序不同），调用时根据实参的形式，选择与它匹配的方法执行操作的一种技术。所以类中成员方法满足重载的条件是：在同一个类中，方法名相同且参数列表不同，在以下示例中我们重载了ProductService类的getProducts成员方法：
+方法重载是指在同一个类中方法同名，参数不同（参数类型不同、参数个数不同或参数个数相同时参数的先后顺序不同），调用时根据实参的形式，选择与它匹配的方法执行操作的一种技术。所以类中成员方法满足重载的条件是：在同一个类中，方法名相同且参数列表不同，在以下示例中我们重载了 ProductService 类的 getProducts 成员方法：
 
 ```typescript
 class ProductService {
@@ -452,7 +453,7 @@ productService.getProducts(); // 获取所有的产品信息
 
 #### 1、类可以实现接口
 
-如果你希望在类中使用必须要被遵循的接口（类）或别人定义的对象结构，可以使用implements关键字来确保其兼容性：
+如果你希望在类中使用必须要被遵循的接口（类）或别人定义的对象结构，可以使用 implements 关键字来确保其兼容性：
 
 ```typescript
 interface Human {

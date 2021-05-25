@@ -1,6 +1,6 @@
 ---
-title: TypeScript学习笔记（二）
-date: 2020-11-17 10:05:53
+title: TypeScript学习笔记（三）
+date: 2020-11-18 11:06:03
 toc: true
 categories: 
 - 前端
@@ -34,7 +34,7 @@ let strLength: number = (someValue as string).length;
 
 ### 二、非空断言
 
-在上下文中当类型检查器无法断定类型时，一个新的后缀表达式操作符!可以用于断言操作对象是非null和非undefined类型。具体而言，x!将从x值域中排除null和undefined。
+在上下文中当类型检查器无法断定类型时，一个新的后缀表达式操作符 ! 可以用于断言操作对象是非 null 和非 undefined 类型。具体而言，x! 将从 x 值域中排除 null 和 undefined。
 那么非空断言操作符到底有什么用呢？下面我们先来看一下非空断言操作符的一些使用场景：
 
 #### 1、忽略undefined和null类型
@@ -57,11 +57,11 @@ function myFunc(numGenerator: NumGenerator | undefined) {
   // Object is possibly 'undefined'.(2532)
   // Cannot invoke an object which is possibly 'undefined'.(2722)
   const num1 = numGenerator(); // Error
-  const num2 = numGenerator!(); //OK
+  const num2 = numGenerator!(); // OK
 }
 ```
 
-因为!非空断言操作符会从编译生成的JavaScript代码中移除，所以在实际使用的过程中，要特别注意。比如下面这个例子：
+因为 ! 非空断言操作符会从编译生成的 JavaScript 代码中移除，所以在实际使用的过程中，要特别注意。比如下面这个例子：
 
 ```typescript
 const a: number | undefined = undefined;
@@ -78,11 +78,11 @@ const b = a;
 console.log(b);
 ```
 
-虽然在 TS 代码中，我们使用了非空断言，使得`const b: number = a!;`语句可以通过TypeScript类型检查器的检查。但在生成的ES5代码中，!非空断言操作符被移除了，所以在浏览器中执行以上代码，在控制台会输出 undefined。
+虽然在 TS 代码中，我们使用了非空断言，使得 `const b: number = a!;` 语句可以通过 TypeScript 类型检查器的检查。但在生成的 ES5 代码中，! 非空断言操作符被移除了，所以在浏览器中执行以上代码，在控制台会输出 undefined。
 
 ### 三、确定赋值断言
 
-在TypeScript 2.7版本中引入了确定赋值断言，即允许在实例属性和变量声明后面放置一个!号，从而告诉TypeScript该属性会被明确地赋值。为了更好地理解它的作用，我们来看个具体的例子：
+在 TypeScript 2.7 版本中引入了确定赋值断言，即允许在实例属性和变量声明后面放置一个 ! 号，从而告诉 TypeScript 该属性会被明确地赋值。为了更好地理解它的作用，我们来看个具体的例子：
 
 ```typescript
 let x: number;
@@ -107,12 +107,12 @@ function initialize() {
 }
 ```
 
-通过`let x!: number;`确定赋值断言，TypeScript编译器就会知道该属性会被明确地赋值。
+通过 `let x!: number;` 确定赋值断言，TypeScript 编译器就会知道该属性会被明确地赋值。
 
 
 ## 类型别名
 
-TypeScript引入了类型别名type，其作用就是给类型起一个新名字，可以作用于原始值（基本类型）、联合类型、元组以及其它任何你需要手写的类型：
+TypeScript 引入了类型别名 type，其作用就是给类型起一个新名字，可以作用于原始值（基本类型）、联合类型、元组以及其它任何你需要手写的类型：
 
 ```typescript
 type Second = number; // 基本类型
@@ -135,13 +135,14 @@ type User = {
   name: string
   age: number
 };
-type SetUser = (name: string, age: number)=>void;
+type SetUser = (name: string, age: number) => void;
 ```
 
-在ts编译成js后，所有的接口和type 都会被擦除掉。
+在 ts 编译成 js 后，所有的接口和 type 都会被擦除掉。
 
 #### 2、扩展和实现
-接口可以扩展，但type不能extends和implement,但是type可以通过交叉类型实现interface的extends行为。interface 可以extends type，同时type也可以与interface类型交叉，举个🌰:
+
+接口可以扩展，但 type 不能 extends 和 implement，但是 type 可以通过交叉类型实现 interface 的 extends 行为。interface 可以 extends type，同时 type 也可以与 interface 类型交叉，举个🌰:
 
 ```typescript
 // interface 扩展 type
@@ -151,7 +152,7 @@ interface Name {
 interface User extends Name {
   age: number;
 }
-let stu:User={name:'wang',age:10}
+let stu: User = { name:'wang', age: 10 }
 
 // 上面的扩展可以用type交叉类型来实现
 type Name = {
@@ -164,7 +165,7 @@ console.log(stu) // { name: 'wang', age: 1 }
 
 #### 3、接口的声明合并
 
-接口可以定义多次，并将被视为单个接口（即所有声明属性的合并）。而type不可以定义多次。
+接口可以定义多次，并将被视为单个接口（即所有声明属性的合并）。而 type 不可以定义多次。
 
 ```typescript
 interface User {
@@ -180,7 +181,7 @@ let user: User = { name: 'wang',age: 1,sex: 'man' }
 
 #### 4、映射类型
 
-type 能使用 in 关键字生成映射类型，但interface不行。
+type 如果定义的是联合类型能使用 in 关键字生成映射类型，但 interface 不行。
 
 ```typescript
 type Keys = "name" | "sex"
@@ -211,7 +212,7 @@ let stu: DulKey = {
 
 ### 二、函数的定义
 
-TypeScript中函数的定义一共有四种方式：
+TypeScript 中函数的定义一共有四种方式：
 
 ```typescript
 // 函数类型的定义及实现
@@ -268,7 +269,7 @@ push(a, 1, 2, 3);
 
 ### 四、函数的重载
 
-在静态类型的语言中例如C++、Java都有函数重载的概念，它们本质上还是使用相同名称和不同参数数量或类型的多个函数，函数重载的好处在于我们不需要为相似或相同功能的函数选择不同的名称，这样增强了函数的可读性，TypeScript中的函数重载与C++、Java中的有所不同，举个🌰:
+在静态类型的语言中例如 C++、Java 都有函数重载的概念，它们本质上还是使用相同名称和不同参数数量或类型的多个函数，函数重载的好处在于我们不需要为相似或相同功能的函数选择不同的名称，这样增强了函数的可读性， TypeScript 中的函数重载与 C++、Java 中的有所不同，举个🌰:
 
 ```typescript
 // 重载签名
@@ -285,8 +286,8 @@ function add(a: string | number, b: string | number) {
 }
 ```
 
-与类的方法的重载类似，当TypeScript编译器处理函数重载时，它会查找重载列表，尝试使用第一个重载定义，因此，在定义重载的时候，一定要把最精确的定义放在最前面。
-需要注意的是**TypeScript中的函数重载没有任何运行时开销**，它只允许你记录希望调用函数的方式，并且编译器会检查其余代码，举个🌰，上述示例编译成JavaScript后的内容如下所示：
+与类的方法的重载类似，当 TypeScript 编译器处理函数重载时，它会查找重载列表，尝试使用第一个重载定义，因此，在定义重载的时候，一定要把最精确的定义放在最前面。
+需要注意的是 **TypeScript 中的函数重载没有任何运行时开销**，它只允许你记录希望调用函数的方式，并且编译器会检查其余代码，举个🌰，上述示例编译成 JavaScript 后的内容如下所示：
 
 ```javascript
 "use strict";

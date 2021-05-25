@@ -8,48 +8,48 @@ tags:
 - TypeScript
 ---
 
-TypeScript是一种由微软开发的自由和开源的编程语言，是JavaScript的一个超集，其为JavaScript引入了可选的静态类型，相比于JavaScript它的特点主要有以下三点：
+TypeScript 是一种由微软开发的自由和开源的编程语言，是 JavaScript 的一个超集，其为 JavaScript 引入了可选的静态类型，相比于 JavaScript 它的特点主要有以下三点：
 
 - 类型检查：使我们可以在编译阶段发现问题而不是运行时
-- 语言扩展：TypeScript不仅仅包括了ES6及未来提案中的一些特性，还从其他语言借鉴了一些特性，比如接口和抽象类
-- 工具属性：TypeScript会编译生成JavaScript运行在浏览器及不同操作系统上，无其他运行时开销
+- 语言扩展：TypeScript 不仅仅包括了 ES6 及未来提案中的一些特性，还从其他语言借鉴了一些特性，比如接口和抽象类
+- 工具属性：TypeScript 会编译生成 JavaScript 运行在浏览器及不同操作系统上，无其他运行时开销
 
-那么为什么我们需要TypeScript帮我们引入静态类型呢？
+那么为什么我们需要 TypeScript 帮我们引入静态类型呢？
 <!-- more -->
-静态类型语言可以在编译阶段确定所有变量的类型，而动态类型语言只能在执行阶段确定所有变量的类型，我们以相同功能的Javascript和C++代码为例：
+静态类型语言可以在编译阶段确定所有变量的类型，而动态类型语言只能在执行阶段确定所有变量的类型，我们以相同功能的 Javascript 和 C++ 代码为例：
 
 ```javascript
 // javascript
 class C {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-    }
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
 }
 function add(a, b) {
-    return a.x + a.y + b.x + b.y 
+  return a.x + a.y + b.x + b.y 
 }
 ```
 
 ```C++
 // C++
 class C {
-    public:
-        int x;
-        int y;
+  public:
+    int x;
+    int y;
 }
 int add(C a, C b) {
-    return a.x + a.y + b.x + b.y
+  return a.x + a.y + b.x + b.y
 }
 ```
 
-在上述示例中a、b都是类C的实例对象，add函数返回a、b对象所有属性的和，对于JavaScript而言，属性结构图如下图所示：
+在上述示例中 a、b 都是类 C 的实例对象，add 函数返回 a、b 对象所有属性的和，对于 JavaScript 而言，属性结构图如下图所示：
 
 <img src="/assets/typescript-01/01.png" width="520" />
 
 - 在程序运行时动态计算属性偏移量
 - 需要额外的空间存储属性名
-- 所有对象的编译量信息各存一份
+- 所有对象的属性偏移量量信息各存一份
 
 而对于C++而言：
 
@@ -57,9 +57,9 @@ int add(C a, C b) {
 
 - 编译阶段确定属性偏移量
 - 偏移量访问代替属性名访问
-- 偏移量信息共享
+- 属性偏移量信息共享
 
-由此可以看到动态类型语言无论在时间还是空间上都有比较多的性能损耗，虽然实际上V8为了提升JavaScript运行时的性能做了很多优化，但是TypeScript更重要的价值在于将静态类型的编程思维引入了javaScript，让我们可以在编译阶段以一种完全不同的视角去看待我们的代码。
+由此可以看到动态类型语言无论在时间还是空间上都有比较多的性能损耗，虽然实际上 V8 为了提升 JavaScript 运行时的性能做了很多优化，但是 TypeScript 更重要的价值在于将静态类型的编程思维引入了 JavaScript，让我们可以在编译阶段以一种完全不同的视角去看待我们的代码。
 
 ## 基本类型&语法
 
@@ -97,7 +97,7 @@ let list: Array<number> = [1, 2, 3]; // Array<number>泛型语法
 
 ### 六、Enum类型
 
-枚举类型：一组有名字的常量集合，使用枚举可以清晰地表达意图或创建一组有区别的用例。 TypeScript支持数字的和基于字符串的枚举。
+枚举类型：一组有名字的常量集合，使用枚举可以清晰地表达意图或创建一组有区别的用例。 TypeScript 支持数字的和基于字符串的枚举。
 
 #### 1、数字枚举
 
@@ -111,8 +111,8 @@ enum Direction {
 let dir: Direction = Direction.NORTH;
 ```
 
-默认情况下，NORTH的初始值为0，其余的成员会从1开始自动增长。换句话说，Direction.SOUTH的值为1，Direction.EAST的值为2，Direction.WEST的值为3。
-以上的枚举示例经编译后，对应的ES5代码如下：
+默认情况下，NORTH 的初始值为0，其余的成员会从1开始自动增长。换句话说，Direction.SOUTH 的值为1，Direction.EAST 的值为2，Direction.WEST 的值为3。
+以上的枚举示例经编译后，对应的 ES5 代码如下：
 
 ```javascript
 "use strict";
@@ -126,7 +126,7 @@ var Direction;
 var dir = Direction.NORTH;
 ```
 
-从上面代码我们可以看到TypeScript通过反向映射实现了数字枚举，但是其他枚举却又有所不同。
+从上面代码我们可以看到 TypeScript 通过反向映射实现了数字枚举，但是其他枚举却又有所不同。
 
 #### 2、字符串枚举
 
@@ -139,16 +139,16 @@ enum Direction {
 }
 ```
 
-对应的ES5代码如下：
+对应的 ES5 代码如下：
 
 ```javascript
 "use strict";
 var Direction;
 (function (Direction) {
-    Direction["NORTH"] = "NORTH";
-    Direction["SOUTH"] = "SOUTH";
-    Direction["EAST"] = "EAST";
-    Direction["WEST"] = "WEST";
+  Direction["NORTH"] = "NORTH";
+  Direction["SOUTH"] = "SOUTH";
+  Direction["EAST"] = "EAST";
+  Direction["WEST"] = "WEST";
 })(Direction || (Direction = {}));
 ```
 
@@ -175,12 +175,12 @@ enum Enum {
 "use strict";
 var Enum;
 (function (Enum) {
-    Enum[Enum["A"] = 0] = "A";
-    Enum[Enum["B"] = 1] = "B";
-    Enum["C"] = "C";
-    Enum["D"] = "D";
-    Enum[Enum["E"] = 8] = "E";
-    Enum[Enum["F"] = 9] = "F";
+  Enum[Enum["A"] = 0] = "A";
+  Enum[Enum["B"] = 1] = "B";
+  Enum["C"] = "C";
+  Enum["D"] = "D";
+  Enum[Enum["E"] = 8] = "E";
+  Enum[Enum["F"] = 9] = "F";
 })(Enum || (Enum = {}));
 ```
 
@@ -188,7 +188,7 @@ var Enum;
 
 #### 4、常量枚举
 
-除了数字枚举和字符串枚举之外，还有一种特殊的枚举——常量枚举。它是使用const关键字修饰的枚举，常量枚举会使用内联语法，不会为枚举类型编译生成任何JavaScript，举个🌰:
+除了数字枚举和字符串枚举之外，还有一种特殊的枚举——常量枚举。它是使用 const 关键字修饰的枚举，常量枚举会使用内联语法，不会为枚举类型编译生成任何 JavaScript，举个🌰:
 
 ```typescript
 const enum Direction {
@@ -234,19 +234,19 @@ enum Char {
 ```javascript
 var Char;
 (function (Char) {
-    // const number
-    Char[Char["a"] = 0] = "a";
-    Char[Char["b"] = 0] = "b";
-    Char[Char["c"] = 4] = "c";
-    // computer number
-    Char[Char["d"] = Math.random()] = "d";
-    Char[Char["e"] = '1234'.length] = "e";
+  // const number
+  Char[Char["a"] = 0] = "a";
+  Char[Char["b"] = 0] = "b";
+  Char[Char["c"] = 4] = "c";
+  // computer number
+  Char[Char["d"] = Math.random()] = "d";
+  Char[Char["e"] = '1234'.length] = "e";
 })(Char || (Char = {}));
 ```
 
 ### 七、Any类型
 
-在TypeScript中，任何类型都可以被归为any类型。这让any类型成为了类型系统的顶级类型（也被称作全局超级类型）。
+在 TypeScript 中，任何类型都可以被归为 any 类型。这让 any 类型成为了类型系统的顶级类型（也被称作全局超级类型）。
 
 ```typescript
 let notSure: any = 666;
@@ -266,11 +266,11 @@ new value(); // OK
 value[0][1]; // OK
 ```
 
-在许多场景下，这太宽松了。使用any类型，可以很容易地编写类型正确但在运行时有问题的代码。如果我们使用any类型，就无法使用TypeScript提供的大量的保护机制。为了解决any带来的问题，TypeScript 3.0 引入了unknown类型。
+在许多场景下，这太宽松了。使用 any 类型，可以很容易地编写类型正确但在运行时有问题的代码。如果我们使用 any 类型，就无法使用 TypeScript 提供的大量的保护机制。为了解决 any 带来的问题，TypeScript 3.0 引入了 unknown 类型。
 
 ### 八、unknown类型
 
-就像所有类型都可以赋值给any，所有类型也都可以赋值给unknown。这使得unknown成为TypeScript类型系统的另一种顶级类型。下面我们来看一下unknown类型的使用示例：
+就像所有类型都可以赋值给 any，所有类型也都可以赋值给 unknown。这使得 unknown 成为 TypeScript 类型系统的另一种顶级类型。下面我们来看一下 unknown 类型的使用示例：
 
 ```typescript
 let value: unknown;
@@ -287,7 +287,7 @@ value = new TypeError(); // OK
 value = Symbol("type"); // OK
 ```
 
-对value变量的所有赋值都被认为是类型正确的。但是，当我们尝试将类型为unknown的值赋值给其他类型的变量时会发生什么？
+对 value 变量的所有赋值都被认为是类型正确的。但是，当我们尝试将类型为 unknown 的值赋值给其他类型的变量时会发生什么？
 
 ```typescript
 let value: unknown;
@@ -302,8 +302,8 @@ let value7: any[] = value; // Error
 let value8: Function = value; // Error
 ```
 
-unknown类型只能被赋值给any类型和unknown类型本身。直观地说，这是有道理的：只有能够保存任意类型值的容器才能保存unknown类型的值。毕竟我们不知道变量value中存储了什么类型的值。
-现在让我们看看当我们尝试对类型为unknown的值执行操作时会发生什么。以下是我们在之前any章节看过的相同操作：
+unknown 类型只能被赋值给 any 类型和 unknown 类型本身。直观地说，这是有道理的：只有能够保存任意类型值的容器才能保存 unknown 类型的值。毕竟我们不知道变量 value 中存储了什么类型的值。
+现在让我们看看当我们尝试对类型为 unknown 的值执行操作时会发生什么。以下是我们在之前 any 章节看过的相同操作：
 
 ```typescript
 let value: unknown;
@@ -315,11 +315,11 @@ new value(); // Error
 value[0][1]; // Error
 ```
 
-将value变量类型设置为unknown后，这些操作都不再被认为是类型正确的。通过将any类型改变为unknown类型，我们已将允许所有更改的默认设置，更改为禁止任何更改。
+将 value 变量类型设置为 unknown 后，这些操作都不再被认为是类型正确的。通过将 any 类型改变为 unknown 类型，我们已将允许所有更改的默认设置，更改为禁止任何更改。
 
 ### 九、Tuple类型
 
-众所周知，数组一般由同种类型的值组成，但有时我们需要在单个变量中存储不同类型的值，这时候我们就可以使用元组。在JavaScript中是没有元组的，元组是TypeScript中特有的类型，其工作方式类似于数组。
+众所周知，数组一般由同种类型的值组成，但有时我们需要在单个变量中存储不同类型的值，这时候我们就可以使用元组。在 JavaScript 中是没有元组的，元组是 TypeScript 中特有的类型，其工作方式类似于数组。
 元组可用于定义具有有限数量的未命名属性的类型。每个属性都有一个关联的类型。使用元组时，必须提供每个属性的值，举个🌰:
 
 ```typescript
@@ -329,17 +329,17 @@ tupleType = ["semlinker", true];
 console.log(tupleType[0]) // 'semlinker'
 ```
 
-在上述示例中我们定义了一个名为tupleType的变量，它的类型是一个类型数组[string, boolean]，然后我们按照正确的类型依次初始化tupleType变量，并通过下标来访问其中元素，需要注意的是初始化元组时不仅仅需要保证每个属性类型的一致，同时必须提供每个属性的值，否则都会报错。
+在上述示例中我们定义了一个名为 tupleType 的变量，它的类型是一个类型数组 `[string, boolean]`，然后我们按照正确的类型依次初始化 tupleType 变量，并通过下标来访问其中元素，需要注意的是初始化元组时不仅仅需要保证每个属性类型的一致，同时必须提供每个属性的值，否则都会报错。
 
 ### 十、Void类型
 
-在JavaScript中void是关键字，最关键的用途是获取undefined：
+在 JavaScript 中 void 是关键字，最关键的用途是获取 undefined：
 
 ```javascript
 void 0; // undefined
 ```
 
-我们通过它可以有效避免undefined常量被重新赋值的情形，但在TypeScript中void类型表示没有任何返回：
+我们通过它可以有效避免 undefined 常量被重新赋值的情形，但在 TypeScript 中 void 类型表示没有任何返回：
 
 ```typescript
 function func(): void {
@@ -347,7 +347,7 @@ function func(): void {
 }
 ```
 
-需要注意的是，声明一个void类型的变量没有什么作用，因为在严格模式下，它的值只能为undefined：
+需要注意的是，声明一个 void 类型的变量没有什么作用，因为在严格模式下，它的值只能为 undefined：
 
 ```typescript
 let unusable: void = undefined;
@@ -355,14 +355,14 @@ let unusable: void = undefined;
 
 ### 十一、Null和Undefined类型
 
-TypeScript里，undefined和null两者有各自的类型分别为undefined和null。
+TypeScript 里，undefined 和 null 两者有各自的类型分别为 undefined 和 null。
 
 ```typescript
 let u: undefined = undefined;
 let n: null = null;
 ```
 
-需要注意的是在TypeScript规范中undefined和null是所有类型的子类型，所以当我们将tsconfig.json中的strictNullChecks选项设为false时我们可以将null和undefined赋值给其他类型的值，举个🌰:
+需要注意的是在 TypeScript 规范中 undefined 和 null 是所有类型的子类型，所以当我们将 tsconfig.json 中的 strictNullChecks 选项设为 false 时我们可以将 null 和 undefined 赋值给其他类型的值，举个🌰:
 
 ```typescript
 let num: number = 123;
@@ -372,7 +372,7 @@ num = undefined;
 
 ### 十二、BigInt类型
 
-BigInt里ECMAScript的一项提案，它在理论上允许我们建模任意大小的整数。但是TypeScript 3.2 引入了一个新的原始类型bigint，允许我们为BigInit数据类型进行类型检查，并支持在目标为esnext时输出BigInit字面量，我们可以通过调用BigInt()函数或书写BigInt字面量（在整型数字字面量末尾添加n）来获取bigint:
+BigInt 是 ECMAScript 的一项提案，它在理论上允许我们建模任意大小的整数。但是 TypeScript 3.2 引入了一个新的原始类型 bigint，允许我们为 BigInit 数据类型进行类型检查，并支持在目标为 esnext 时输出 BigInit 字面量，我们可以通过调用 BigInt() 函数或书写 BigInt 字面量（或在整型数字字面量末尾添加 n）来获取 bigint:
 
 ```typescript
 let foo: bigint = BigInt(100); // the BigInt function
@@ -380,42 +380,41 @@ let bar: bigint = 100n;        // a BigInt literal
 // *Slaps roof of fibonacci function*
 // This bad boy returns ints that can get *so* big!
 function fibonacci(n: bigint) {
-    let result = 1n;
-    for (let last = 0n, i = 0n; i < n; i++) {
-        const current = result;
-        result += last;
-        last = current;
-    }
-    return result;
+  let result = 1n;
+  for (let last = 0n, i = 0n; i < n; i++) {
+    const current = result;
+    result += last;
+    last = current;
+  }
+  return result;
 }
 fibonacci(10000n)
 ```
 
-需要注意的是bigint和number之间无法混用，是完全不同的东西：
+需要注意的是 bigint 和 number 之间无法混用，是完全不同的东西：
 
 ```typescript
-declare let foo: number;
-declare let bar: bigint;
+let foo: number;
+let bar: bigint;
 foo = bar; // error: Type 'bigint' is not assignable to type 'number'.
 bar = foo; // error: Type 'number' is not assignable to type 'bigint'.
 ```
 
-还有一点要注意的是，对bigint使用typeof操作符返回一个新的字符串："bigint"。因此，TypeScript能够正确地使用typeof细化类型，举个🌰:
+还有一点要注意的是，对 bigint 使用 typeof 操作符返回一个新的字符串："bigint"。因此，TypeScript 能够正确地使用 typeof 细化类型，举个🌰:
 
 ```typescript
 function whatKindOfNumberIsIt(x: number | bigint) {
-    if (typeof x === "bigint") {
-        console.log("'x' is a bigint!");
-    }
-    else {
-        console.log("'x' is a floating-point number");
-    }
+  if (typeof x === "bigint") {
+    console.log("'x' is a bigint!");
+  } else {
+    console.log("'x' is a floating-point number");
+  }
 }
 ```
 
 ### 十三、Never类型
 
-never类型表示的是那些永不存在的值的类型。 例如，never类型是那些总是会抛出异常或根本就不会有返回值的函数表达式或箭头函数表达式的返回值类型。
+never 类型表示的是那些永不存在的值的类型。 例如，never 类型是那些总是会抛出异常或根本就不会有返回值的函数表达式或箭头函数表达式的返回值类型。
 
 ```typescript
 // 返回never的函数必须存在无法达到的终点
@@ -428,7 +427,7 @@ function infiniteLoop(): never {
 }
 ```
 
-在TypeScript中，可以利用never类型的特性来实现全面性检查，具体示例如下：
+在 TypeScript 中，可以利用 never 类型的特性来实现全面性检查，具体示例如下：
 
 ```typescript
 type Foo = string | number;
@@ -445,19 +444,19 @@ function controlFlowAnalysisWithNever(foo: Foo) {
 }
 ```
 
-注意在else分支里面，我们把收窄为never的foo赋值给一个显式声明的never变量。如果一切逻辑正确，那么这里应该能够编译通过。但是假如后来有一天你的同事修改了Foo的类型：
+注意在 else 分支里面，我们把收窄为 never 的 foo 赋值给一个显式声明的 never 变量。如果一切逻辑正确，那么这里应该能够编译通过。但是假如后来有一天你的同事修改了 Foo 的类型：
 
 ```typescript
 type Foo = string | number | boolean;
 ```
 
-然而他忘记同时修改 controlFlowAnalysisWithNever 方法中的控制流程，这时候else分支的foo类型会被收窄为boolean类型，导致无法赋值给never类型，这时就会产生一个编译错误。通过这个方式，我们可以确保controlFlowAnalysisWithNever方法总是穷尽了Foo的所有可能类型。 通过这个示例，我们可以得出一个结论：使用never避免出现新增了联合类型没有对应的实现，目的就是写出类型绝对安全的代码。
+然而他忘记同时修改 controlFlowAnalysisWithNever 方法中的控制流程，这时候 else 分支的 foo 类型会被收窄为 boolean 类型，导致无法赋值给 never 类型，这时就会产生一个编译错误。通过这个方式，我们可以确保 controlFlowAnalysisWithNever 方法总是穷尽了 Foo 的所有可能类型。 通过这个示例，我们可以得出一个结论：使用 never 避免出现新增了联合类型没有对应的实现，目的就是写出类型绝对安全的代码。
 
 ### 十四、object、Object和{}类型
 
 #### 1、object类型
 
-TypeScript 2.2引入了被称为object类型的新类型，它用于表示非原始类型，在JavaScript中以下类型被视为原始类型：string、boolean、number、bigint、symbol、null和undefined。它的引入主要是因为随着TypeScript 2.2的发布，标准库的类型声明已经更新，例如Object.create()和Object.setPrototypeOf()方法都需要为它们的原型参数指定object | null类型：
+TypeScript 2.2 引入了被称为 object 类型的新类型，它用于表示非原始类型，在 JavaScript 中以下类型被视为原始类型：string、boolean、number、bigint、symbol、null 和 undefined。它的引入主要是因为随着 TypeScript 2.2 的发布，标准库的类型声明已经更新，例如 Object.create() 和 Object.setPrototypeOf() 方法都需要为它们的原型参数指定 object | null 类型：
 
 ```typescript
 // node_modules/typescript/lib/lib.es5.d.ts
@@ -468,7 +467,7 @@ interface ObjectConstructor {
 }
 ```
 
-将原始类型作为原型传递给Object.setPrototypeOf()或Object.create()将导致在运行时抛出类型错误。TypeScript现在能够捕获这些错误，并在编译时提示相应的错误：
+将原始类型作为原型传递给 Object.setPrototypeOf() 或 Object.create() 将导致在运行时抛出类型错误。TypeScript 现在能够捕获这些错误，并在编译时提示相应的错误：
 
 ```typescript
 const proto = {};
@@ -481,7 +480,7 @@ Object.create(true);      // Error
 Object.create("oops");    // Error
 ```
 
-object类型的另一个用例是作为ES2015的一部分引入的WeakMap数据结构。它的键必须是对象，不能是原始值。这个要求现在反映在类型定义中：
+object 类型的另一个用例是作为 ES2015 的一部分引入的 WeakMap 数据结构。它的键必须是对象，不能是原始值。这个要求现在反映在类型定义中：
 
 ```typescript
 interface WeakMap<K extends object, V> {
@@ -494,12 +493,12 @@ interface WeakMap<K extends object, V> {
 
 #### 2、Object类型
 
-TypeScript定义了另一个与新的object类型几乎同名的类型，那就是Object类型。该类型是所有Object类的实例的类型。它由以下两个接口来定义：
+TypeScript 定义了另一个与新的 object 类型几乎同名的类型，那就是 Object 类型。该类型是所有 Object 类的实例的类型。它由以下两个接口来定义：
 
-- Object接口定义了Object.prototype原型对象上的属性
-- ObjectConstructor接口定义了Object类的属性
+- Object 接口定义了 Object.prototype 原型对象上的属性
+- ObjectConstructor 接口定义了 Object 类的属性
 
-(1)**Object接口定义**
+(1) **Object接口定义**
 
 ```typescript
 // node_modules/typescript/lib/lib.es5.d.ts
@@ -514,7 +513,7 @@ interface Object {
 }
 ```
 
-(2)**ObjectConstructor接口定义**
+(2) **ObjectConstructor接口定义**
 
 ```typescript
 // node_modules/typescript/lib/lib.es5.d.ts
@@ -534,7 +533,7 @@ interface ObjectConstructor {
 declare var Object: ObjectConstructor;
 ```
 
-Object类的所有实例都继承了Object接口中的所有属性。我们可以看到，如果我们创建一个返回其参数的函数：
+Object 类的所有实例都继承了 Object 接口中的所有属性。我们可以看到，如果我们创建一个返回其参数的函数：
 
 ```typescript
 function f(x: Object): { toString(): string } {
@@ -542,7 +541,7 @@ function f(x: Object): { toString(): string } {
 }
 ```
 
-当我们传入一个Object对象的实例时，它总是会满足该函数的返回类型 —— 即要求返回对象包含一个toString()方法。
+当我们传入一个 Object 对象的实例时，它总是会满足该函数的返回类型 —— 即要求返回对象包含一个 toString() 方法。
 
 有趣的是，类型Object包括原始值：
 
@@ -551,13 +550,13 @@ function func1(x: Object) { }
 func1('semlinker'); // OK
 ```
 
-实际上这是因为Object.prototype的属性也可以通过原始值访问：
+实际上这是因为 Object.prototype 的属性也可以通过原始值访问：
 
 ```typescript
 'semlinker'.hasOwnProperty === Object.prototype.hasOwnProperty // true
 ```
 
-相反，object类型不包括原始值：
+相反，object 类型不包括原始值：
 
 ```typescript
 function func2(x: object) { }
@@ -567,18 +566,18 @@ function func2(x: object) { }
 func2('semlinker'); // Error
 ```
 
-需要注意的是，当对Object类型的变量进行赋值时，如果值对象属性名与Object接口中的属性冲突，则TypeScript编译器会提示相应的错误：
+需要注意的是，当对 Object 类型的变量进行赋值时，如果值对象属性名与 Object 接口中的属性冲突，则 TypeScript 编译器会提示相应的错误：
 
 ```typescript
 // Type '() => number' is not assignable to type 
 // '() => string'.
 // Type 'number' is not assignable to type 'string'.
 const obj1: Object = { 
-   toString() { return 123 } // Error
+  toString() { return 123 } // Error
 };
 ```
 
-而对于object类型来说，TypeScript编译器不会提示任何错误：
+而对于 object 类型来说，TypeScript 编译器不会提示任何错误：
 
 ```typescript
 const obj2: object = { 
@@ -586,7 +585,7 @@ const obj2: object = {
 };
 ```
 
-另外在处理object类型和字符串索引对象类型的赋值操作时，也要特别注意。比如：
+另外在处理 object 类型和字符串索引对象类型的赋值操作时，也要特别注意。比如：
 
 ```typescript
 let strictTypeHeaders: { [key: string]: string } = {};
@@ -596,7 +595,7 @@ header = strictTypeHeaders; // OK
 strictTypeHeaders = header; // Error
 ```
 
-在上述例子中，最后一行会出现编译错误，这是因为`{ [key: string]: string }`类型相比object类型更加精确。而`header = strictTypeHeaders;`这一行却没有提示任何错误，是因为这两种类型都是非基本类型，object类型比`{ [key: string]: string }`类型更加通用。
+在上述例子中，最后一行会出现编译错误，这是因为 `{ [key: string]: string }` 类型相比 object 类型更加精确。而 `header = strictTypeHeaders;` 这一行却没有提示任何错误，是因为这两种类型都是非基本类型，object 类型比 `{ [key: string]: string }` 类型更加通用。
 
 #### 3、{}类型
 
@@ -610,7 +609,7 @@ const obj = {};
 obj.prop = "semlinker";
 ```
 
-但是，你仍然可以使用在Object类型上定义的所有属性和方法，这些属性和方法可通过JavaScript的原型链隐式地使用：
+但是，你仍然可以使用在 Object 类型上定义的所有属性和方法，这些属性和方法可通过 JavaScript 的原型链隐式地使用：
 
 ```typescript
 // Type {}
@@ -620,7 +619,7 @@ const obj = {};
 obj.toString();
 ```
 
-在JavaScript中创建一个表示二维坐标点的对象很简单：
+在 JavaScript 中创建一个表示二维坐标点的对象很简单：
 
 ```javascript
 const pt = {}; 
@@ -628,7 +627,7 @@ pt.x = 3;
 pt.y = 4;
 ```
 
-然而以上代码在TypeScript中，每个赋值语句都会产生错误：
+然而以上代码在 TypeScript 中，每个赋值语句都会产生错误：
 
 ```typescript
 const pt = {};
@@ -638,7 +637,7 @@ pt.x = 3; // Error
 pt.y = 4; // Error
 ```
 
-这是因为第1行中的pt类型是根据它的值{}推断出来的，你只可以对已知的属性赋值。这个问题怎么解决呢？我们可能会先想到接口，比如这样子：
+这是因为第1行中的 pt 类型是根据它的值 {} 推断出来的，你只可以对已知的属性赋值。这个问题怎么解决呢？我们可能会先想到接口，比如这样子：
 
 ```typescript
 interface Point {
@@ -653,7 +652,7 @@ pt.x = 3;
 pt.y = 4;
 ```
 
-很可惜对于以上的方案，TypeScript编译器仍会提示错误。那么这个问题该如何解决呢？其实我们可以直接通过对象字面量进行赋值：
+很可惜对于以上的方案，TypeScript 编译器仍会提示错误。那么这个问题该如何解决呢？其实我们可以直接通过对象字面量进行赋值：
 
 ```typescript
 const pt = { 
@@ -679,7 +678,7 @@ const pt: Point = {
 };
 ```
 
-另外在使用Object.assign方法合并多个对象的时候，你可能也会遇到以下问题：
+另外在使用 Object.assign 方法合并多个对象的时候，你可能也会遇到以下问题：
 
 ```typescript
 const pt = { x: 666, y: 888 };

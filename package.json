@@ -6,7 +6,8 @@
     "build": "hexo generate",
     "clean": "hexo clean",
     "deploy": "hexo deploy",
-    "serve": "hexo server"
+    "serve": "hexo server",
+    "log": "echo $npm_config_registry"
   },
   "hexo": {
     "version": "5.2.0"

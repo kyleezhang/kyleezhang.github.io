@@ -25,7 +25,7 @@ function log<T>(value: T): T {
 log<string>('hello'); // 'hello'
 ```
 
-如上所示，当我们调用`log<string>('hello')`时，string类型就像参数一样，它将在出现`T`的任何位置填充该类型。图中`<T>`内部的`T`被称为类型变量，它是我们希望传递给log函数的类型占位符，同时它被分配给 value参数和函数返回值用来代替它的类型：此时`T`充当的是类型，而不是特定的string类型。
+如上所示，当我们调用 `log<string>('hello')` 时，string 类型就像参数一样，它将在出现 `T` 的任何位置填充该类型。图中 `<T>` 内部的 `T` 被称为类型变量，它是我们希望传递给 log 函数的类型占位符，同时它被分配给 value 参数和函数返回值用来代替它的类型：此时 `T` 充当的是类型，而不是特定的 string 类型。
 我们除了可以这样显式定义泛型函数，还可以先通过类型别名指定泛型函数类型，然后指定函数实现，举个🌰:
 
 ```typescript
@@ -106,7 +106,7 @@ log1.run(1234)
 // 如果不指定泛型则可以使用任意类型
 const log2 = new Log()
 log2.run('12')
-log2.run({name: 'kylee'})
+log2.run({ name: 'kylee' })
 ```
 
 此处需要注意的是泛型约束不能作用于静态属性和方法，举个🌰:
@@ -153,12 +153,13 @@ leo({ length: 23 });
 
 ### 五、泛型工具
 
-为了方便开发者 TypeScript 内置了一些常用的工具类型，比如 Partial、Required、Readonly、Record和ReturnType等，不过在具体介绍之前，我们得先介绍一些相关的基础知识：
+为了方便开发者 TypeScript 内置了一些常用的工具类型，比如 Partial、Required、Readonly、Record 和 ReturnType 等等，不过在具体介绍之前，我们得先介绍一些相关的基础知识：
 
 #### 1、基础知识
 
-(1)**typeof**
-在TypeScript中，typeof操作符可以用来获取一个变量声明或对象的类型，举个🌰:
+(1) **typeof**
+
+在 TypeScript 中，typeof 操作符可以用来获取一个变量声明或对象的类型，举个🌰:
 
 ```typescript
 interface Person {
@@ -176,8 +177,9 @@ function toArray(x: number): Array<number> {
 type Func = typeof toArray; // (x: number) => number[]
 ```
 
-(2)**keyof**
-keyof操作符是在TypeScript 2.1版本引入的，该操作符可以用于获取某种类型的所有键，其返回类型是联合类型。
+(2) **keyof**
+
+keyof 操作符是在 TypeScript 2.1 版本引入的，该操作符可以用于获取某种类型的所有键，其返回类型是联合类型。
 
 ```typescript
 interface Person {
@@ -204,10 +206,11 @@ interface StringArray1 {
 }
 ```
 
-为了同时支持两种索引类型，就得要求数字索引的返回值必须是字符串索引返回值的子类。其中的原因就是当使用数值索引时，JavaScript在执行索引操作时，会先把数值索引先转换为字符串索引。所以`keyof { [x: string]: Person }`的结果会返回`string | number`。
+为了同时支持两种索引类型，就得要求数字索引的返回值必须是字符串索引返回值的子类。其中的原因就是当使用数值索引时，JavaScript在执行索引操作时，会先把数值索引先转换为字符串索引。所以 `keyof { [x: string]: Person }` 的结果会返回 `string | number`。
 
-(3)**in**
-in用来遍历枚举类型
+(3) **in**
+
+in 用来遍历枚举类型
 
 ```typescript
 type Keys = "a" | "b" | "c"
@@ -217,15 +220,16 @@ type Obj =  {
 } // -> { a: any, b: any, c: any }
 ```
 
-(4)**infer**
-infer表示在extends条件类型语句中待推断的类型变量，简单举个🌰:
+(4) **infer**
+
+infer 表示在 extends 条件类型语句中待推断的类型变量，简单举个🌰:
 
 ```typescript
 type ParamType<T> = T extends (param: infer P) => any ? P : T;
 ```
 
-在这个条件语句`T extends (param: infer P) => any ? P : T`中，`infer P`表示待推断的函数参数。
-整句表示为：如果 T 能赋值给`(param: infer P) => any`，则结果是`(param: infer P) => any`类型中的参数`P`，否则返回为`T`。
+在这个条件语句 `T extends (param: infer P) => any ? P : T` 中，`infer P` 表示待推断的函数参数。
+整句表示为：如果 T 能赋值给 `(param: infer P) => any`，则结果是 `(param: infer P) => any` 类型中的参数 `P`，否则返回为 `T`。
 
 ```typescript
 interface User {
@@ -249,7 +253,7 @@ type Partial<T> = {
 };
 ```
 
-在以上代码中，首先通过 keyof T 拿到 T 的所有属性名，然后使用 in 进行遍历，将值赋给 P，最后通过 T[P] 取得相应的属性值。中间的 ? 号，用于将所有属性变为可选。举个🌰:
+在以上代码中，首先通过 `keyof T` 拿到 T 的所有属性名，然后使用 in 进行遍历，将值赋给 P，最后通过 `T[P]` 取得相应的属性值。中间的 ? 号，用于将所有属性变为可选。举个🌰:
 
 ```typescript
 interface Todo {
@@ -267,19 +271,19 @@ const todo1 = {
 };
 
 const todo2 = updateTodo(todo1, {
-  description: "Learn Ge Chui Zi",
+  description: "Xue Ge Chui Zi",
 });
 ```
 
 #### 3、Required
 
-`Required<T>`的作用是将传入的属性变为必选项
+`Required<T>` 的作用是将传入的属性变为必选项
 
 ```typescript
 type Required<T> = { [P in keyof T]-?: T[P] };
 ```
 
-这里的`-?`就是将可选项代表的`?`去掉, 从而让这个类型变成必选项. 与之对应的还有个`+?`, 这个含义自然与`-?`之前相反, 它是用来把属性变成可选项的。举个🌰:
+这里的 `-?` 就是将可选项代表的 `?` 去掉, 从而让这个类型变成必选项. 与之对应的还有个 `+?`, 这个含义自然与 `-?` 之前相反, 它是用来把属性变成可选项的。举个🌰:
 
 ```typescript
 interface Todo {
@@ -303,7 +307,7 @@ const todo2 = updateTodo(todo1, {
 
 #### 4、Readonly
 
-`Readonly<T>`用于将所有传入的属性转变成只读项
+`Readonly<T>` 用于将所有传入的属性转变成只读项
 
 ```typescript
 type Readonly<T> = { readonly [P in keyof T]: T[P] };
@@ -326,12 +330,11 @@ const todo1 = {
   title: "Learn TS",
   description: "Learn TypeScript",
 };
-
 ```
 
 #### 5、Record
 
-`Record<K, T>`用于将K中所有的属性的值转化为T类型
+`Record<K, T>` 用于将 K 中所有的属性的值转化为 T 类型
 
 ```typescript
 type Record<K extends keyof any, T> = { [P in K]: T };
@@ -362,7 +365,7 @@ const sub: Sub = {
 
 #### 6、Pick
 
-`Pick<T, K>`用于从T中取出一系列K的属性
+`Pick<T, K>` 用于从 T 中取出一系列 K 的属性
 
 ```typescript
 type Pick<T, K extends keyof T> = { [P in K]: T[P] };
@@ -389,27 +392,28 @@ const pick: PickType = {
 
 #### 7、Exclude
 
-在ts 2.8中引入了一个条件类型, 示例如下:
+在 TypeScript 2.8 中引入了一个条件类型, 示例如下:
 
 ```typescript
 T extends U ? X : Y
 ```
 
-以上语句的意思就是 如果T是U的子类型的话，那么就会返回X，否则返回Y
+以上语句的意思就是 如果 T 是 U 的子类型的话，那么就会返回 X，否则返回 Y
 条件类型甚至可以组合多个，举个🌰:
 
 ```typescript
 type TypeName<T> =
-    T extends string ? "string" :
-    T extends number ? "number" :
-    T extends boolean ? "boolean" :
-    T extends undefined ? "undefined" :
-    T extends Function ? "function" :
-    "object";
+  T extends string ? "string" :
+  T extends number ? "number" :
+  T extends boolean ? "boolean" :
+  T extends undefined ? "undefined" :
+  T extends Function ? "function" :
+  "object";
 ```
 
-对于联合类型来说会自动分发条件，例如`T extends U ? X : Y`，`T`可能是`A | B`的联合类型, 那实际情况就变成`(A extends U ? X : Y) | (B extends U ? X : Y)`
-有了以上的了解我们再来了解工具泛型Exclude，`Exclude<T, U>` 的作用是从T中找出U中没有的元素, 换种更加贴近语义的说法其实就是从T中排除U
+对于联合类型来说会自动分发条件，例如 `T extends U ? X : Y`，`T` 可能是 `A | B` 的联合类型, 那实际情况就变成 `(A extends U ? X : Y) | (B extends U ? X : Y)`。
+
+有了以上的了解我们再来了解工具泛型 Exclude，`Exclude<T, U>` 的作用是从 T 中找出 U 中没有的元素, 换种更加贴近语义的说法其实就是从 T 中排除 U
 
 ```typescript
 type Exclude<T, U> = T extends U ? never : T;
@@ -423,7 +427,7 @@ type T = Exclude<1 | 2, 1 | 3> // -> 2
 
 #### 8、Extract
 
-与Exclude恰好相反，`Extract<T, U>`的作用是提取出T包含在U中的元素, 换种更加贴近语义的说法就是从T中提取出U
+与 Exclude 恰好相反，`Extract<T, U>` 的作用是提取出 T 包含在 U 中的元素, 换种更加贴近语义的说法就是从 T 中提取出 U
 
 ```typescript
 type Extract<T, U> = T extends U ? T : never;
@@ -437,8 +441,9 @@ type T = Exclude<1 | 2, 1 | 3> // -> 1
 
 #### 9、ReturnType、Parameters、InstanceType、ConstructorParameters、
 
-在2.8版本中，TypeScript内置了一些与infer有关的映射类型，当当infer用于函数类型中，可用于参数位置`new (...args: infer P) => any;`和返回值位置 `new (...args: any[]) => infer P;`。
+在 2.8 版本中，TypeScript 内置了一些与 infer 有关的映射类型，当 infer 用于函数类型中，可用于参数位置 `new (...args: infer P) => any;` 和返回值位置 `new (...args: any[]) => infer P;`。
 因此就内置如下两个映射类型：
+
 **用于提取函数类型的返回值类型**:
 
 ```typescript
@@ -460,13 +465,14 @@ type parametersB = Parameters<typeof Array.isArray>; // [any]
 ```
 
 **用于提取构造函数中参数（实例）类型**:
+
 一个构造函数可以使用new来实例化，因此它的类型通常表示如下：
 
 ```typescript
 type Constructor = new (...args: any[]) => any;
 ```
 
-当infer用于构造函数类型中，可用于参数位置`new (...args: infer P) => any;`和返回值位置 `new (...args: any[]) => infer P;`。
+当 infer 用于构造函数类型中，可用于参数位置 `new (...args: infer P) => any;` 和返回值位置 `new (...args: any[]) => infer P;`。
 因此就内置如下两个映射类型：
 
 ```typescript
@@ -491,7 +497,7 @@ type Instance = InstanceType<typeof TestClass>; // TestClass
 
 #### 10、NonNullable
 
-`NonNullable<T>`主要用于从T中剔除null和undefined
+`NonNullable<T>` 主要用于从 T 中剔除 null 和 undefined
 
 ```typescript
 type NonNullable<T> = T extends null | undefined ? never : T;
