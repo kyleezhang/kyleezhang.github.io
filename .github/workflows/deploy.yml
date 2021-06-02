@@ -2,8 +2,11 @@ name: Build and Deploy
 on: [push]
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: uubuntu-18.04
     steps:
+      - uses: docker://pandoc/core:2.9
+        with: 
+        args: "--help" 
       - name: Checkout 🛎️
         uses: actions/checkout@v2 # If you're using actions/checkout@v2 you must set persist-credentials to false in most cases for the deployment to work correctly.
         with:

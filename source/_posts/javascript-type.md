@@ -1,5 +1,5 @@
 ---
-title: JavaScript中的类型
+title: JavaScript 中的类型
 date: 2021-04-18 09:51:21
 toc: true
 mathjax: false
@@ -9,7 +9,7 @@ tags:
 - JavaScript
 ---
 
-## 一、JavaScript中的类型
+## 一、JavaScript 中的类型
 
 JavaScript中的类型可以分为基本数据类型和引用类型两种：
 
