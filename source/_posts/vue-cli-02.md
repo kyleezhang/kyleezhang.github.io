@@ -11,11 +11,11 @@ tags:
 
 ## Vue CLI
 
-Vue CLI 是目前 Vue 官方推荐的 Vue 项目快速开发的完整系统，它基于 Webpack 实现，提供了终端命令行工具、零配置脚手架、插件体系、图形化管理界面等诸多功能，近乎提供了前端项目工程化的所有步骤的完整工具链，也是当前 Vue 项目构建的主流工具。
+vue-cli 在 3.0 版本进行了彻底的重构，为了区别也将其普遍称为 Vue CLI，是目前 Vue 官方推荐的 Vue 项目快速开发的完整系统，它基于 Webpack 实现，提供了终端命令行工具、零配置脚手架、插件体系、图形化管理界面等诸多功能，近乎提供了前端项目工程化的所有步骤的完整工具链，也是当前 Vue 项目构建的主流工具。
 
 ### 一、整体架构
 
-vue-cli 为了尽可能覆盖项目工程化需求所以模版项目往往引入了大量第三方库，但实际开发过程中开发者可能并不需要这些功能模块，虽然可以通过在模版项目的 meta.js 或 meta.json 文件配置 prompts 在命令行交互然后在 filterFiles 函数中对生成项目的文件目录结构进行筛选，但是依然可配置性不强，会存在较多冗余依赖或功能，因此为了给开发者提供更灵活的配置能力 Vue CLI 实现了一种极为巧妙的架构设计：
+vue-cli 为了尽可能覆盖项目工程化需求所以模版项目往往引入了大量第三方库，但实际开发过程中开发者可能并不需要这些功能模块，虽然可以通过在模版项目的 meta.js 或 meta.json 文件配置 prompts 在命令行交互然后在 filterFiles 函数中对生成项目的文件目录结构进行筛选，但是依然可配置性不强，会存在较多冗余依赖或功能，并且依赖项的升级极为痛苦，因此为了给开发者提供更灵活的配置能力 Vue CLI 实现了一种极为巧妙的架构设计：
 
 <!-- more -->
 
@@ -35,8 +35,9 @@ vue-cli 为了尽可能覆盖项目工程化需求所以模版项目往往引入
 
 - 提供了一个适用于大多数 Vue.js 项目的 Webpack 配置，并且内部只做最通用的配置。
 - 把 Webpack 与 Webpack Dev Server 封装进内部，提供 server & build 命令。
+- 加载其他 CLI 插件内部的核心服务。
 
-3、@vue/cli-plugin-xxx: 个人觉得新版 Vue CLI 设计最出彩的地方就在于插件机制，项目本身创建最开始的时候只是根据用户在命令行的交互问题生成 package.json，然后根据所拥有的模块动态完成 Webpack 的配置并生成项目结构，因此 Vue CLI 的插件模块主要完成如下功能：
+3、@vue/cli-plugin-xxx: 个人觉得 Vue CLI 设计最出彩的地方就在于插件机制，项目本身创建最开始的时候只是根据用户在命令行的交互问题生成 package.json，然后根据所拥有的模块动态完成 Webpack 的配置并生成项目结构，因此 Vue CLI 的插件模块主要完成如下功能：
 
 - 提供了个性化的 Webpack 配置，让构建过程支持不同的技术选型
 - 提供了 Generator 用于生成项目中所需的文件
@@ -1228,13 +1229,1297 @@ git ls-files --exclude-standard --modified --others
 
 因为插件的 generator 可以通过 GeneratorAPI 暴露的 render 和 extendPackage 方法修改项目的文件，因此通过执行该命令将变化的文件显示在终端上，这对开发者十分地友好。
 
-vue add 相当于只是 vue create 中的一部分，vue create 包含了插件的安装以及调用，vue add 命令只是将此功能分离了出来，而 vue invoke 命令其实是 vue add 命名去掉了插件包安装的那一部分，由于篇幅限制（wo tai lan le）不再介绍。
+vue add 相当于只是 vue create 中的一部分，vue create 包含了插件的安装以及调用，vue add 命令只是将此功能分离了出来，而 vue invoke 命令其实是 vue add 命名去掉了插件包安装的那一部分，其他 vue 命令由于篇幅限制（wo tai lan le）此处不再介绍。
 
-<img src="/assets/emoji/05.png" width="280" />
+### 三、@vue/cli-service
 
+在 Vue CLI 中将 webpack 及相关插件提供的功能都收敛到 @vue/cli-service 内部来实现，提供了 vue-cli-service 命令帮助使用者最基本的日常开发，下面就开始分析 @vue/cli-service 的具体实现。
+
+#### 1、入口
+
+vue-cli-service m命令的入口在 @vue/cli-service/bin/vue-service-service.js 中，代码如下：
+
+```js
+// @vue/cli-service/bin/vue-service-service.js
+
+#!/usr/bin/env node
+
+const { semver, error } = require('@vue/cli-shared-utils')
+const requiredVersion = require('../package.json').engines.node
+
+// Node 版本校验
+if (!semver.satisfies(process.version, requiredVersion, { includePrerelease: true })) {
+  error(
+    `You are using Node ${process.version}, but vue-cli-service ` +
+    `requires Node ${requiredVersion}.\nPlease upgrade your Node version.`
+  )
+  process.exit(1)
+}
+
+const Service = require('../lib/Service')
+const service = new Service(process.env.VUE_CLI_CONTEXT || process.cwd())
+
+// 获取命令参数 vue-cli-service serve --https
+const rawArgv = process.argv.slice(2)
+// 在 boolean 选项当中的参数会被解析成 true，例如 args.https: true, args.modern: false
+const args = require('minimist')(rawArgv, {
+  boolean: [
+    // build
+    // FIXME: --no-module, --no-unsafe-inline, no-clean, etc.
+    'modern',
+    'report',
+    'report-json',
+    'inline-vue',
+    'watch',
+    // serve
+    'open',
+    'copy',
+    'https',
+    // inspect
+    'verbose'
+  ]
+})
+const command = args._[0] // serve
+
+service.run(command, args, rawArgv).catch(err => {
+  error(err)
+  process.exit(1)
+})
+```
+
+代码看着非常简洁，与一般 node 命令文件有点不同，第一就是并没有依赖 commander.js，第二就是并没有直接提供相关 CLI 命令的服务。 在 @vue/vue-cli-service 中，对于第一点是通过 Service 这个类来处理 node 命令，而对于第二点，所有的 CLI 服务都是动态注册的。从上面这段代码可以看出，执行 CLI 命令后，主要有两个操作：实例化 Service 和调用实例的 run 方法。
+
+#### 2、Service 类实例化
+
+我们接着查看 Service 类的构造函数：
+
+```js
+// @vue/cli-service/lib/Service.js
+
+module.exports = class Service {
+  constructor (context, { plugins, pkg, inlineOptions, useBuiltIn } = {}) {
+    checkWebpack(context)
+
+    process.VUE_CLI_SERVICE = this
+    this.initialized = false
+    this.context = context
+    this.inlineOptions = inlineOptions
+    this.webpackChainFns = []
+    this.webpackRawConfigFns = []
+    this.devServerConfigFns = []
+    this.commands = {}
+    // Folder containing the target package.json for plugins
+    this.pkgContext = context
+    // package.json containing the plugins
+    this.pkg = this.resolvePkg(pkg)
+    // If there are inline plugins, they will be used instead of those
+    // found in package.json.
+    // When useBuiltIn === false, built-in plugins are disabled. This is mostly
+    // for testing.
+    // 如果有 inline plugins 的话，就不会去加载 package.json 里 devDependencies 和 dependencies 的插件，useBuiltIn 为 false 时 builtInPlugins 会被禁用
+    this.plugins = this.resolvePlugins(plugins, useBuiltIn)
+    // pluginsToSkip will be populated during run()
+    this.pluginsToSkip = new Set()
+    // resolve the default mode to use for each command
+    // this is provided by plugins as module.exports.defaultModes
+    // so we can get the information without actually applying the plugin.
+    // 注册的插件可以通过 module.exports.defaultModes 指定特定的模式
+    /*{
+      serve: 'development',
+      build: 'production',
+      inspect: 'development',
+      'test:unit': 'test'
+    }*/
+    this.modes = this.plugins.reduce((modes, { apply: { defaultModes } }) => {
+      return Object.assign(modes, defaultModes)
+    }, {})
+  }
+  ...
+}
+```
+
+实例化的过程主要进行了插件的解析和为每一种 CLI 命令指定模式，先看一下插件的解析：
+
+```js
+// @vue/cli-service/lib/Service.js
+module.exports = class Service {
+  ...
+  resolvePlugins (inlinePlugins, useBuiltIn) {
+    const idToPlugin = (id, absolutePath) => ({
+      id: id.replace(/^.\//, 'built-in:'),
+      apply: require(absolutePath || id)
+    })
+
+    let plugins
+ 
+    // 内置插件
+    const builtInPlugins = [
+      './commands/serve',
+      './commands/build',
+      './commands/inspect',
+      './commands/help',
+      // config plugins are order sensitive
+      './config/base',
+      './config/assets',
+      './config/css',
+      './config/prod',
+      './config/app'
+    ].map((id) => idToPlugin(id)) // [{ id: 'built-in:commands/serve', apply:{ [Function] defaultModes: [Object] } },...]
+
+    // 实例化 Service 时传入插件
+    if (inlinePlugins) {
+      plugins = useBuiltIn !== false
+        ? builtInPlugins.concat(inlinePlugins)
+        : inlinePlugins
+    } else {
+      const projectPlugins = Object.keys(this.pkg.devDependencies || {})
+        .concat(Object.keys(this.pkg.dependencies || {}))
+        .filter(isPlugin) // isPlugin = id => /^(@vue\/|vue-|@[\w-]+\/vue-)cli-plugin-/.test(id)
+        .map(id => {
+          if (
+            this.pkg.optionalDependencies &&
+            id in this.pkg.optionalDependencies
+          ) {
+            let apply = loadModule(id, this.pkgContext)
+            if (!apply) {
+              warn(`Optional dependency ${id} is not installed.`)
+              apply = () => {}
+            }
+
+            return { id, apply }
+          } else {
+            return idToPlugin(id, resolveModule(id, this.pkgContext))
+          }
+        })
+
+      // Add the plugin automatically to simplify the webpack-4 tests
+      // so that a simple Jest alias would suffice, avoid changing every
+      // preset used in the tests
+      if (
+        process.env.VUE_CLI_TEST &&
+        process.env.VUE_CLI_USE_WEBPACK4 &&
+        !projectPlugins.some((p) => p.id === '@vue/cli-plugin-webpack-4')
+      ) {
+        builtInPlugins.push(idToPlugin('@vue/cli-plugin-webpack-4'))
+      }
+
+      plugins = builtInPlugins.concat(projectPlugins)
+    }
+
+    // Local plugins
+    // 项目本地的插件，针对于只需要在项目里直接访问插件 API 而不需要创建一个完整的插件
+    if (this.pkg.vuePlugins && this.pkg.vuePlugins.service) {
+      const files = this.pkg.vuePlugins.service
+      if (!Array.isArray(files)) {
+        throw new Error(`Invalid type for option 'vuePlugins.service', expected 'array' but got ${typeof files}.`)
+      }
+      plugins = plugins.concat(files.map(file => ({
+        id: `local:${file}`,
+        apply: loadModule(`./${file}`, this.pkgContext)
+      })))
+    }
+    debug('vue:plugins')(plugins)
+
+    const orderedPlugins = sortPlugins(plugins)
+    debug('vue:plugins-ordered')(orderedPlugins)
+
+    return orderedPlugins
+  }
+  ...
+}
+```
+
+可以将解析的插件分为4类：
+
+- 内置插件
+- inlinePlugins
+- package.json 插件
+- package.vuePlugins 插件
+
+**内置插件**指的是 @vue/cli-service 内部提供的插件，又可以大致分为两类，serve、build、inspect、help 这一类插件在内部动态注册新的 CLI 命令， 开发者即可通过 npm script 的形式去启动对应的 CLI 命令服务，base ,css, dev, prod, app 这一类插件主要是完成 webpack 本地编译构建时的各种相关的配置。 @vue/cli-service 将 webpack 的开发构建功能收敛到内部来完成。
+
+**inlinePlugins** 指的是直接在实例化 Service 时传入，执行 vue serve 和 vue build 命令时会创建一个 Service 实例，并传入 inlinePlugins。
+
+**package.json 插件**指的是 devDependencies 和 dependencies 中的 vue 插件，比如 @vue/cli-plugin-eslint。
+
+**package.vuePlugins** 也是在 package.json 中的插件，不过是在 vuePlugins 字段中，该类插件是针对于只需要在项目里直接访问插件 API 而不需要创建一个完整的插件。
+
+我们接着查看 CLI 指定模式：
+
+CLI 模式是 vue cli 中一个重要的概念，默认情况下，一个 Vue CLI 项目有三个模式：
+
+- development 模式用于 vue-cli-service serve
+- test 模式用于 vue-cli-service test:unit
+- production 模式用于 vue-cli-service build 和 vue-cli-service test:e2e
+
+我们也可以通过传递 --mode 选项参数为命令行覆写默认的模式。详情可查看[官方文档](https://cli.vuejs.org/zh/guide/mode-and-env.html#%E6%A8%A1%E5%BC%8F)。
+
+在 Service 的构造函数中解析完插件之后就为每种插件命令指定模式，插件命令的模式可以 通过 module.exports.defaultModes 以 { [commandName]: mode } 的形式来暴露：
+
+```js
+module.exports = api => {
+  api.registerCommand('build', () => {
+    // ...
+  })
+}
+
+module.exports.defaultModes = {
+  build: 'production'
+}
+```
+
+解析命令模式利用 js 内建函数 reduce 实现:
+
+```js
+this.modes = this.plugins.reduce((modes, { apply: { defaultModes }}) => {
+  return Object.assign(modes, defaultModes)
+}, {})
+```
+
+#### 3、实例的 run 方法
+
+在 vue-cli-service 的入口处完成 Service 类的实例化后又调用了实例的 run 方法，我们接着查看其具体实现：
+
+```js
+// @vue/cli-service/lib/Service.js
+module.exports = class Service {
+  ...
+  async run (name, args = {}, rawArgv = []) {
+    // resolve mode
+    // prioritize inline --mode
+    // fallback to resolved default modes from plugins or development if --watch is defined
+    const mode = args.mode || (name === 'build' && args.watch ? 'development' : this.modes[name])
+
+    // --skip-plugins arg may have plugins that should be skipped during init()
+    this.setPluginsToSkip(args)
+
+    // load env variables, load user config, apply plugins
+    await this.init(mode)
+
+    args._ = args._ || []
+    let command = this.commands[name] // 这里的 commands 就是加载插件时通过 api.registerCommand 注册的 command，后续详细介绍
+    if (!command && name) {
+      error(`command "${name}" does not exist.`)
+      process.exit(1)
+    }
+    if (!command || args.help || args.h) {
+      command = this.commands.help
+    } else {
+      args._.shift() // remove command itself
+      rawArgv.shift()
+    }
+    const { fn } = command
+    return fn(args, rawArgv)
+  }
+  ...
+}
+```
+
+run 方法开始会获取该命令所对应的模式值，然后调用实例的 init 方法，init 主要有三个功能：
+
+- 加载对应模式下本地的环境变量文件
+- 解析 vue.config.js 或者 package.vue
+- 执行所有被加载的插件
+
+我们来查看 init 方法的具体实现：
+
+```js
+module.exports = class Service {
+  ...
+  init (mode = process.env.VUE_CLI_MODE) {
+    if (this.initialized) {
+      return
+    }
+    this.initialized = true
+    this.mode = mode
+
+    // load mode .env
+    // 加载指定的模式环境文件
+    if (mode) {
+      this.loadEnv(mode)
+    }
+    // load base .env
+    // 加载普通环境文件
+    this.loadEnv()
+
+    // load user config
+    const userOptions = this.loadUserOptions()
+    const loadedCallback = (loadedUserOptions) => {
+      this.projectOptions = defaultsDeep(loadedUserOptions, defaults())
+
+      debug('vue:project-config')(this.projectOptions)
+
+      // apply plugins.
+      this.plugins.forEach(({ id, apply }) => {
+        if (this.pluginsToSkip.has(id)) return
+        apply(new PluginAPI(id, this), this.projectOptions)
+      })
+
+      // apply webpack configs from project config file
+      if (this.projectOptions.chainWebpack) {
+        this.webpackChainFns.push(this.projectOptions.chainWebpack)
+      }
+      if (this.projectOptions.configureWebpack) {
+        this.webpackRawConfigFns.push(this.projectOptions.configureWebpack)
+      }
+    }
+
+    if (isPromise(userOptions)) {
+      return userOptions.then(loadedCallback)
+    } else {
+      return loadedCallback(userOptions)
+    }
+  }
+  ...
+}
+```
+
+init 执行了两次实例的 loadEnv 函数，第一次是加载指定的模式环境文件（.env.development, .env.development.local），第二次执行是加载普通环境文件 (.env, .env.local)，看一下实例 loadEnv 函数代码：
+
+```js
+// 加载本地的环境文件，环境文件的作用就是设置某个模式下特有的环境变量
+// 加载环境变量其实要注意的就是优先级的问题，下面的代码已经体现的非常明显了，先加载 .env.mode.local，然后加载 .env.mode 最后再加载 .env
+// 由于环境变量不会被覆盖，因此 .env.mode.local 的优先级最高，.env.mode.local 与 .env.mode 的区别就是前者会被 git 忽略掉。另外一点要
+// 注意的就是环境文件不会覆盖Vue CLI 启动时已经存在的环境变量。
+loadEnv (mode) {
+  const logger = debug('vue:env')
+  // path/.env.production || path/.env.development || ...
+  const basePath = path.resolve(this.context, `.env${mode ? `.${mode}` : ``}`)
+  const localPath = `${basePath}.local`
+
+  const load = envPath => {
+    try {
+      const env = dotenv.config({ path: envPath, debug: process.env.DEBUG }) // 加载指定路径的环境变量
+      dotenvExpand(env)
+      logger(envPath, env)
+    } catch (err) {
+      // only ignore error if file is not found
+      if (err.toString().indexOf('ENOENT') < 0) {
+        error(err)
+      }
+    }
+  }
+
+  load(localPath)
+  load(basePath)
+
+  // by default, NODE_ENV and BABEL_ENV are set to "development" unless mode
+  // is production or test. However the value in .env files will take higher
+  // priority.
+  if (mode) {
+    // always set NODE_ENV during tests
+    // as that is necessary for tests to not be affected by each other
+    const shouldForceDefaultEnv = (
+      process.env.VUE_CLI_TEST &&
+      !process.env.VUE_CLI_TEST_TESTING_ENV
+    )
+    const defaultNodeEnv = (mode === 'production' || mode === 'test')
+      ? mode
+      : 'development'
+    if (shouldForceDefaultEnv || process.env.NODE_ENV == null) {
+      process.env.NODE_ENV = defaultNodeEnv
+    }
+    if (shouldForceDefaultEnv || process.env.BABEL_ENV == null) {
+      process.env.BABEL_ENV = defaultNodeEnv
+    }
+  }
+}
+```
+
+通过代码我们可以看到 loadEnv 方法的主要作用就是向 node process 中添加环境变量。我们接着查看 loadUserOptions：
+
+```js
+// Note: we intentionally make this function synchronous by default
+// because eslint-import-resolver-webpack does not support async webpack configs.
+loadUserOptions () {
+  // fileConfig: import(fileConfigPath)/require(fileConfigPath), fileConfigPath: path.resolve(context, './vue.config.js')
+  const { fileConfig, fileConfigPath } = loadFileConfig(this.context)
+
+  if (isPromise(fileConfig)) {
+    return fileConfig
+      .then(mod => mod.default)
+      .then(loadedConfig => resolveUserConfig({
+        inlineOptions: this.inlineOptions,
+        pkgConfig: this.pkg.vue,
+        fileConfig: loadedConfig,
+        fileConfigPath
+      }))
+  }
+
+  return resolveUserConfig({
+    inlineOptions: this.inlineOptions,
+    pkgConfig: this.pkg.vue, // package.json 里面的 vue config
+    fileConfig,
+    fileConfigPath
+  })
+}
+```
+
+示例代码中的 loadFileConfig 方法的主要作用是配置文件路径的获取及内容解析，其首先会在遍历 './vue.config.js'、'./vue.config.cjs'、'./vue.config.mjs' 查看当前项目目录下是否存在对应文件，如果存在则判断文件内容是否遵从 ESModule 规范？如果遵从则通过 import 方法获取文件内容，如果不是则通过 require 方法获取。在获取到配置文件内容后紧接着调用了 resolveUserConfig 函数，我们接着查看其实现：
+
+```js
+module.exports = function resolveUserConfig ({
+  inlineOptions,
+  pkgConfig,
+  fileConfig,
+  fileConfigPath
+}) {
+  if (fileConfig) {
+    if (typeof fileConfig === 'function') {
+      fileConfig = fileConfig()
+    }
+
+    if (!fileConfig || typeof fileConfig !== 'object') {
+      throw new Error(
+        `Error loading ${chalk.bold(fileConfigPath)}: ` +
+        `should export an object or a function that returns object.`
+      )
+    }
+  }
+
+  // package.vue
+  if (pkgConfig && typeof pkgConfig !== 'object') {
+    throw new Error(
+      `Error loading Vue CLI config in ${chalk.bold(`package.json`)}: ` +
+      `the "vue" field should be an object.`
+    )
+  }
+
+  let resolved, resolvedFrom
+  // 既有 vue.config.js 而且在 package.json 里面又包含了 vue 的配置，将会取 vue.config.js 的配置
+  if (fileConfig) {
+    const configFileName = path.basename(fileConfigPath)
+    if (pkgConfig) {
+      warn(
+        `"vue" field in package.json ignored ` +
+        `due to presence of ${chalk.bold(configFileName)}.`
+      )
+      warn(
+        `You should migrate it into ${chalk.bold(configFileName)} ` +
+        `and remove it from package.json.`
+      )
+    }
+    resolved = fileConfig
+    resolvedFrom = configFileName
+  } else if (pkgConfig) {
+    resolved = pkgConfig
+    resolvedFrom = '"vue" field in package.json'
+  } else {
+    resolved = inlineOptions || {}
+    resolvedFrom = 'inline options'
+  }
+
+  // normalize some options
+  if (resolved.publicPath !== 'auto') {
+    ensureSlash(resolved, 'publicPath')
+  }
+  if (typeof resolved.publicPath === 'string') {
+    resolved.publicPath = resolved.publicPath.replace(/^\.\//, '')
+  }
+  removeSlash(resolved, 'outputDir')
+
+  // validate options
+  validate(resolved, msg => {
+    error(`Invalid options in ${chalk.bold(resolvedFrom)}: ${msg}`)
+  })
+
+  return resolved
+}
+```
+
+示例代码首先会加载项目中 vue.config.js，然后会加载 package.json 中的 vue 字段中的配置信息。如果既有 vue.config.js 而且在 package.json 里面又包含了 vue 的配置，将会取 vue.config.js 的配置，如果两者都没有配置信息的话会取 this.inlineOptions || {}， 在获取到配置以后还会进行一些处理和验证，最后返回配置 resolved 。
+
+在通过 loadUserOptions 方法完成了配置文件的解析及获取后紧接着便开始加载插件，核心代码如下：
+
+```js
+// apply plugins.
+this.plugins.forEach(({ id, apply }) => {
+  if (this.pluginsToSkip.has(id)) return
+  // service 插件接受两个参数，一个 PluginAPI 实例，一个包含 vue.config.js 内指定的项目本地选项的对象，或者在 package.json 内的 vue 字段。
+  apply(new PluginAPI(id, this), this.projectOptions)
+})
+```
+
+PluginAPI 类的核心代码如下：
+
+```js
+// Note: if a plugin-registered command needs to run in a specific default mode,
+// the plugin needs to expose it via `module.exports.defaultModes` in the form
+// of { [commandName]: mode }. This is because the command mode needs to be
+// known and applied before loading user options / applying plugins.
+
+class PluginAPI {
+  /**
+   * @param {string} id - Id of the plugin.
+   * @param {Service} service - A vue-cli-service instance.
+   */
+  constructor (id, service) {
+    this.id = id
+    this.service = service
+  }
+
+  get version () {
+    return require('../package.json').version
+  }
+
+  assertVersion (range) {
+    if (typeof range === 'number') {
+      if (!Number.isInteger(range)) {
+        throw new Error('Expected string or integer value.')
+      }
+      range = `^${range}.0.0-0`
+    }
+    if (typeof range !== 'string') {
+      throw new Error('Expected string or integer value.')
+    }
+
+    if (semver.satisfies(this.version, range, { includePrerelease: true })) return
+
+    throw new Error(
+      `Require @vue/cli-service "${range}", but was loaded with "${this.version}".`
+    )
+  }
+
+  /**
+   * Current working directory.
+   */
+  getCwd () {
+    return this.service.context
+  }
+
+  /**
+   * Resolve path for a project.
+   *
+   * @param {string} _path - Relative path from project root
+   * @return {string} The resolved absolute path.
+   */
+  resolve (_path) {
+    return path.resolve(this.service.context, _path)
+  }
+
+  /**
+   * Check if the project has a given plugin.
+   *
+   * @param {string} id - Plugin id, can omit the (@vue/|vue-|@scope/vue)-cli-plugin- prefix
+   * @return {boolean}
+   */
+  hasPlugin (id) {
+    return this.service.plugins.some(p => matchesPluginId(id, p.id))
+  }
+
+  /**
+   * Register a command that will become available as `vue-cli-service [name]`.
+   *
+   * @param {string} name
+   * @param {object} [opts]
+   *   {
+   *     description: string,
+   *     usage: string,
+   *     options: { [string]: string }
+   *   }
+   * @param {function} fn
+   *   (args: { [string]: string }, rawArgs: string[]) => ?Promise
+   */
+  registerCommand (name, opts, fn) {
+    if (typeof opts === 'function') {
+      fn = opts
+      opts = null
+    }
+    this.service.commands[name] = { fn, opts: opts || {} }
+  }
+
+  /**
+   * Register a function that will receive a chainable webpack config
+   * the function is lazy and won't be called until `resolveWebpackConfig` is
+   * called
+   *
+   * @param {function} fn
+   */
+  chainWebpack (fn) {
+    this.service.webpackChainFns.push(fn)
+  }
+
+  /**
+   * Register
+   * - a webpack configuration object that will be merged into the config
+   * OR
+   * - a function that will receive the raw webpack config.
+   *   the function can either mutate the config directly or return an object
+   *   that will be merged into the config.
+   *
+   * @param {object | function} fn
+   */
+  configureWebpack (fn) {
+    this.service.webpackRawConfigFns.push(fn)
+  }
+
+  /**
+   * Register a dev serve config function. It will receive the express `app`
+   * instance of the dev server.
+   *
+   * @param {function} fn
+   */
+  configureDevServer (fn) {
+    this.service.devServerConfigFns.push(fn)
+  }
+
+  /**
+   * Resolve the final raw webpack config, that will be passed to webpack.
+   *
+   * @param {ChainableWebpackConfig} [chainableConfig]
+   * @return {object} Raw webpack config.
+   */
+  resolveWebpackConfig (chainableConfig) {
+    return this.service.resolveWebpackConfig(chainableConfig)
+  }
+
+  /**
+   * Resolve an intermediate chainable webpack config instance, which can be
+   * further tweaked before generating the final raw webpack config.
+   * You can call this multiple times to generate different branches of the
+   * base webpack config.
+   * See https://github.com/mozilla-neutrino/webpack-chain
+   *
+   * @return {ChainableWebpackConfig}
+   */
+  resolveChainableWebpackConfig () {
+    return this.service.resolveChainableWebpackConfig()
+  }
+
+  /**
+   * Generate a cache identifier from a number of variables
+   */
+  genCacheConfig (id, partialIdentifier, configFiles = []) {
+    const fs = require('fs')
+    const cacheDirectory = this.resolve(`node_modules/.cache/${id}`)
+
+    // replace \r\n to \n generate consistent hash
+    const fmtFunc = conf => {
+      if (typeof conf === 'function') {
+        return conf.toString().replace(/\r\n?/g, '\n')
+      }
+      return conf
+    }
+
+    const variables = {
+      partialIdentifier,
+      'cli-service': require('../package.json').version,
+      env: process.env.NODE_ENV,
+      test: !!process.env.VUE_CLI_TEST,
+      config: [
+        fmtFunc(this.service.projectOptions.chainWebpack),
+        fmtFunc(this.service.projectOptions.configureWebpack)
+      ]
+    }
+
+    try {
+      variables['cache-loader'] = require('cache-loader/package.json').version
+    } catch (e) {
+      // cache-loader is only intended to be used for webpack 4
+    }
+
+    if (!Array.isArray(configFiles)) {
+      configFiles = [configFiles]
+    }
+    configFiles = configFiles.concat([
+      'package-lock.json',
+      'yarn.lock',
+      'pnpm-lock.yaml'
+    ])
+
+    const readConfig = file => {
+      const absolutePath = this.resolve(file)
+      if (!fs.existsSync(absolutePath)) {
+        return
+      }
+
+      if (absolutePath.endsWith('.js')) {
+        // should evaluate config scripts to reflect environment variable changes
+        try {
+          return JSON.stringify(require(absolutePath))
+        } catch (e) {
+          return fs.readFileSync(absolutePath, 'utf-8')
+        }
+      } else {
+        return fs.readFileSync(absolutePath, 'utf-8')
+      }
+    }
+
+    variables.configFiles = configFiles.map(file => {
+      const content = readConfig(file)
+      return content && content.replace(/\r\n?/g, '\n')
+    })
+
+    const cacheIdentifier = hash(variables)
+    return { cacheDirectory, cacheIdentifier }
+  }
+}
+
+module.exports = PluginAPI
+```
+
+简单介绍一些 PluginAPI 常用的方法：
+
+- registerCommand: 注册 cli 命令服务
+- chainWebpack: 通过 webpack-chain 修改 webpack 配置
+- configureWebpack: 通过 webpack-merge 对 webpack 配置进行合并
+- resolveWebpackConfig: 调用之前通过 chainWebpack 和 configureWebpack 上完成的对于 webpack 配置的改造，并返回最终的 webpack 配置
+- genCacheConfig: 返回 cacheDirectory, cacheIdentifier
+- ...
+
+系统的内置插件 builtInPlugins 例如 './commands/serve'、'./commands/build' 等也是通过调用 PluginAPI 提供的具体方法实现其功能，我们以 serve 命令为例：
+
+```js
+// @vue/cli-service/lib/commands/serve.js
+module.exports = (api, options) => {
+  api.registerCommand('serve', {
+    description: 'start development server',
+    usage: 'vue-cli-service serve [options] [entry]',
+    options: {
+      '--open': `open browser on server start`,
+      '--copy': `copy url to clipboard on server start`,
+      '--mode': `specify env mode (default: development)`,
+      '--host': `specify host (default: ${defaults.host})`,
+      '--port': `specify port (default: ${defaults.port})`,
+      '--https': `use https (default: ${defaults.https})`,
+      '--public': `specify the public network URL for the HMR client`
+    }
+  }, async function serve (args) {
+   // resolveWebpackConfig
+   // create server
+   // ....
+  })
+}
+```
+
+利用 api.registerCommand 注册了 serve 命名，并将 serve 命令的处理函数挂载到 Service 实例的 serve 命令中，当然你还可以通过 module.exports.defaultModes 以 `{ [commandName]: mode }` 的形式来指定命令的运行模式。
+
+分析到这里你应该逐渐熟悉 vue-cli 3.0 的插件机制了，vue-cli 3.0 将所有的工作都交给插件去执行，开发模式执行内置 serve 插件，打包执行内置 build 插件，检查代码规范由 @vue/cli-plugin-eslint 插件完成。
+
+在加载完所有的插件以后，实例的 init 方法在最后会读取项目配置中的 webpack 配置信息，即 chainWebpack 和 configureWebpack，代码如下：
+
+```js
+// apply webpack configs from project config file
+if (this.projectOptions.chainWebpack) {
+  this.webpackChainFns.push(this.projectOptions.chainWebpack)
+}
+if (this.projectOptions.configureWebpack) {
+  this.webpackRawConfigFns.push(this.projectOptions.configureWebpack)
+}
+```
+
+在实例的 run 函数中执行了实例 init 函数对 Service 实例的属性进行初始化后就会解析 CLI 命令，具体实现如下：
+
+```js
+...
+args._ = args._ || []
+let command = this.commands[name] // 加载插件时注册了 command，api.registerCommand
+if (!command && name) { // 非法命令
+  error(`command "${name}" does not exist.`)
+  process.exit(1)
+}
+if (!command || args.help) { // vue-cli-service || vue-cli-service -h
+  command = this.commands.help
+} else {
+  args._.shift() // remove command itself
+  rawArgv.shift()
+}
+const { fn } = command
+return fn(args, rawArgv)
+```
+
+会先对 CLI 命令进行一个判断，主要有一下三种情况：
+
+- 输入了命令 name ，但是并没有通过 api.registerCommand 注册，即非法命令，process.exit(1)
+- 直接输入了 vue-cli-service 或者 vue-cli-service --help，加载内置 help 插件
+- 正常输入，eg: vue-cli-service test:unit，这种情况会加载对应地单元测试插件 @vue/cli-plugin-unit-jest || @vue/cli-plugin-unit-mocha，并执行插件内与对应 test 命令指定的处理函数。
+
+#### 4、总结
+
+至此 @vue/cli-service 的分析就完成了，@vue/cli-service 的主要作用就是提供了 vue-cli-service 命令，但是与一般 node 命令文件有点不同，@vue/cli-service 并没有直接提供相关 serve、build 等 CLI 命令的服务。具体实现主要是通过 Service 实例的 run 方法，run 方法主要执行了环境变量文件加载，获取项目配置信息，合并项目配置，加载插件，加载项目配置中的 webpack 信息，最后 执行 CLI 服务，常见的 serve 和 build 指令也是通过系统提供的内置插件实现的，在下面我们将详细介绍 Vue CLI 的最后一个核心内容：插件。
+
+### 四、插件
+
+（已经六万字了，，，我当时论文都没这么多字😭）
+
+通过前文对于 @vue/cli 和 @vue/cli-service 的介绍我们也已经初步知道了 Vue CLI 中插件的重要性，一个 CLI 插件是一个 npm 包，它能够为 Vue CLI 创建的项目添加额外的功能，这些功能包括：
+
+- 修改项目的 webpack 配置 - 例如，如果你的插件希望去针对某种类型的文件工作，你可以为这个特定的文件扩展名添加新的 webpack 解析规则。比如说，@vue/cli-plugin-typescript 就添加这样的规则来解析 .ts 和 .tsx 扩展的文件；
+- 添加新的 vue-cli-service 命令 - 例如，@vue/cli-plugin-unit-jest 添加了 test:unit 命令，允许开发者运行单元测试；
+- 扩展 package.json - 当你的插件添加了一些依赖到项目中，你需要将他们添加到 package 的 dependencies 部分时，这是一个有用的选项；
+- 在项目中创建新文件、或者修改老文件。有时创建一个示例组件或者通过给入口文件（main.js）添加导入（imports）是一个好的主意；
+- 提示用户选择一个特定的选项 - 例如，你可以询问用户是否创建我们前面提到的示例组件。
+
+CLI 插件应该总是包含一个 service 插件 做为主的导出，并且他能够选择性的包含 generator, prompt 文件 和 Vue UI 集成。
+
+作为一个 npm 包，CLI 插件必须有一个 package.json 文件。通常建议在 README.md 中包含插件的描述，来帮助其他人在 npm 上发现你的插件。
+
+所以，通常的 CLI 插件目录结构看起来像下面这样：
+
+```sh
+.
+├── README.md
+├── generator.js  # generator（可选）
+├── index.js      # service 插件
+├── package.json
+├── prompts.js    # prompt 文件（可选）
+└── ui.js         # Vue UI 集成（可选）
+```
+
+#### 1、package.json
+
+为了让一个 CLI 插件在 Vue CLI 项目中被正常使用，它必须遵循 vue-cli-plugin-<name> 或者 @scope/vue-cli-plugin-<name> 这样的命名惯例。这样你的插件才能够：
+
+- 被 @vue/cli-service 发现;
+- 被其他开发者通过搜索发现;
+- 通过 `vue add <name>` 或者 `vue invoke <name>` 安装;
+
+为了能够被用户在搜索时更好的发现，keywords 尽可能多写一些项目相关的词，同时可以将插件的关键描述放到 description 字段中。
+
+例如：
+
+```json
+{
+  "name": "vue-cli-plugin-apollo",
+  "version": "0.7.7",
+  "description": "vue-cli plugin to add Apollo and GraphQL"
+}
+```
+
+你应该在 homepage 或者 repository 字段添加创建插件的官网地址或者仓库的地址，这样你的插件详情里就会出现一个 查看详情 按钮：
+
+```json
+{
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Akryum/vue-cli-plugin-apollo.git"
+  },
+  "homepage": "https://github.com/Akryum/vue-cli-plugin-apollo#readme"
+}
+```
+
+#### 2、generator
+
+插件的 Generator 部分通常在你想要为项目扩展包依赖，创建新的文件或者编辑已经存在的文件时需要。在 CLI 插件内部，generator 应该放在 generator.js 或者 generator/index.js 文件中。它将在以下两个场景被调用：
+
+- 项目初始创建期间，CLI 插件被作为项目创建 preset 的一部分被安装时。
+- 当插件在项目创建完成和通过 vue add 或者 vue invoke 单独调用被安装时。
+
+一个 generator 应该导出一个接收三个参数的函数：
+
+1、一个 GeneratorAPI 实例；
+
+2、插件的 generator 选项。这些选项在项目创建，或者从 ~/.vuerc 载入预设时被解析。例如：如果保存的 ~/.vuerc 像这样：
+
+```json
+{
+  "presets" : {
+    "foo": {
+      "plugins": {
+        "@vue/cli-plugin-foo": { "option": "bar" }
+      }
+    }
+  }
+}
+```
+
+如果用户使用 preset foo 创建了一个项目，那么 @vue/cli-plugin-foo 的 generator 就会收到 { option: 'bar' } 作为第二个参数。
+
+对于第三方插件，这个选项将在用户执行 vue invoke 时，从提示或者命令行参数中被解析。
+
+3、整个 preset (presets.foo) 将会作为第三个参数传入。
+
+关于 GeneratorAPI 我们已经在前面解析 @vue/cli 的过程中进行了详细介绍，那么我们通过 GeneratorAPI 可以实现哪些功能呢？
+
+**1、创建新的模板**
+
+当你调用 api.render('./template') 时，该 generator 将会使用 EJS 渲染 ./template 中的文件 (相对于 generator 中的文件路径进行解析)
+
+想象我们正在创建 vue-cli-auto-routing 插件，我们希望当插件在项目中被引用时做以下的改变：
+
+- 创建一个 layouts 文件夹包含默认布局文件；
+- 创建一个 pages 文件夹包含 about 和 home 页面；
+- 在 src 文件夹中添加 router.js 文件
+
+为了渲染这个结构，你需要在 generator/template 文件夹内创建它：
+
+```sh
+.
+├── src
+ ├── layouts
+  ├── default.vue
+ ├── pages
+  ├── about.vue
+  ├── home.vue
+ ├── router
+  └── index.js
+```
+
+模板创建完之后，我们就可以在 generator/index.js 文件中添加 api.render('./template') 来调用。
+
+不过需要注意文件名的边界情况，如果你想要渲染一个以点开头的模板文件 (例如 .env)，则需要遵循一个特殊的命名约定，因为以点开头的文件会在插件发布到 npm 的时候被忽略：
+
+```sh
+# 以点开头的模板需要使用下划线取代那个点：
+
+/generator/template/_env
+
+# 当调用 api.render('./template') 时，它在项目文件夹中将被渲染为：
+
+/generator/template/.env
+```
+
+同时这也意味着当你想渲染以下划线开头的文件时，同样需要遵循一个特殊的命名约定：
+
+```sh
+# 这种模板需要使用两个下划线来取代单个下划线：
+
+/generator/template/__variables.scss
+
+# 当调用 api.render('./template') 时，它在项目文件夹中将被渲染为：
+
+/generator/template/_variable.scss
+```
+
+**2、编辑已经存在的模板**
+
+此外，你可以使用 YAML 前置元信息继承并替换已有的模板文件的一部分（即使来自另一个包）：
+
+```yaml
+---
+extend: '@vue/cli-service/generator/template/src/App.vue'
+replace: !!js/regexp /<script>[^]*?<\/script>/
+---
+
+<script>
+export default {
+  // 替换默认脚本
+}
+</script>
+```
+
+也可以替换多处，只不过你需要将替换的字符串包裹在 <%# REPLACE %> 和 <%# END_REPLACE %> 块中：
+
+```yaml
+---
+extend: '@vue/cli-service/generator/template/src/App.vue'
+replace:
+  - !!js/regexp /Welcome to Your Vue\.js App/
+  - !!js/regexp /<script>[^]*?<\/script>
+---
+
+<%# REPLACE %>
+替换欢迎信息
+<%# END_REPLACE %>
+
+<%# REPLACE %>
+<script>
+export default {
+  // 替换默认脚本
+}
+</script>
+<%# END_REPLACE %>
+```
+
+**3、扩展包**
+
+如果你需要向项目中添加额外的依赖，创建一个 npm 脚本或者修改 package.json 的其他任何一处，你可以使用 API extendPackage 方法。
+
+```js
+// generator/index.js
+
+module.exports = api => {
+  api.extendPackage({
+    dependencies: {
+      'vue-router-layout': '^0.1.2'
+    }
+  })
+}
+```
+
+在上面这个例子中，我们添加了一个依赖：vue-router-layout。在插件调用时，这个 npm 模块将被安装，这个依赖将被添加到用户项目的 package.json 文件。
+
+同样使用这个 API 我们可以添加新的 npm 任务到项目中。为了实现这个，我们需要定义一个任务名和一个命令，这样他才能够在用户 package.json 文件的 scripts 部分运行：
+
+```js
+// generator/index.js
+
+module.exports = api => {
+  api.extendPackage({
+    scripts: {
+      greet: 'vue-cli-service greet'
+    }
+  })
+}
+```
+
+在上面这个例子中，我们添加了一个新的 greet 任务来执行一个创建在 Service 部分 的自定义 vue-cli 服务命令。
+
+**4、修改主文件**
+
+通过 generator 方法你能够修改项目中的文件。最有用的场景是针对 main.js 或 main.ts 文件的一些修改：新的导入，新的 Vue.use() 调用等。
+
+让我们来思考一个场景，当我们通过 模板 创建了一个 router.js 文件，现在我们希望导入这个路由到主文件中。我们将用到两个 generator API 方法： entryFile 将返回项目的主文件（main.js 或 main.ts），injectImports 用于添加新的导入到主文件中：
+
+```js
+// generator/index.js
+
+api.injectImports(api.entryFile, `import router from './router'`)
+```
+
+现在，当我们路由被导入时，我们可以在主文件中将这个路由注入到 Vue 实例。我们可以使用 afterInvoke 钩子，这个钩子将在文件被写入硬盘之后被调用。
+
+首先，我们需要通过 Node 的 fs 模块（提供了文件交互 API）读取文件内容，将内容拆分
+
+```js
+// generator/index.js
+
+module.exports.hooks = (api) => {
+  api.afterInvoke(() => {
+    const fs = require('fs')
+    const contentMain = fs.readFileSync(api.resolve(api.entryFile), { encoding: 'utf-8' })
+    const lines = contentMain.split(/\r?\n/g)
+  })
+}
+```
+
+然后我们需要找到包含 render 单词的字符串（它通常是 Vue 实例的一部分），router 就是下一个字符串：
+
+```js
+// generator/index.js
+
+module.exports.hooks = (api) => {
+  api.afterInvoke(() => {
+    const fs = require('fs')
+    const contentMain = fs.readFileSync(api.resolve(api.entryFile), { encoding: 'utf-8' })
+    const lines = contentMain.split(/\r?\n/g)
+
+    const renderIndex = lines.findIndex(line => line.match(/render/))
+    lines[renderIndex] += `\n router,`
+  })
+}
+```
+
+最后，你需要将内容写入主文件：
+
+```js
+// generator/index.js
+
+module.exports.hooks = (api) => {
+  api.afterInvoke(() => {
+    const { EOL } = require('os')
+    const fs = require('fs')
+    const contentMain = fs.readFileSync(api.resolve(api.entryFile), { encoding: 'utf-8' })
+    const lines = contentMain.split(/\r?\n/g)
+
+    const renderIndex = lines.findIndex(line => line.match(/render/))
+    lines[renderIndex] += `${EOL}  router,`
+
+    fs.writeFileSync(api.entryFile, lines.join(EOL), { encoding: 'utf-8' })
+  })
+}
+```
+
+#### 3、service 插件
+
+Service 插件可以修改 webpack 配置，创建新的 vue-cli service 命令或者修改已经存在的命令（如 serve 和 build）。
+
+Service 插件在 Service 实例被创建后自动加载 - 例如，每次 vue-cli-service 命令在项目中被调用的时候。它位于 CLI 插件根目录的 index.js 文件。
+
+一个 service 插件应该导出一个函数，这个函数接受两个参数：
+
+- 一个 PluginAPI 实例
+- 一个包含 vue.config.js 内指定的项目本地选项的对象，或者在 package.json 内的 vue 字段。
+
+PluginAPI 为 service 插件提供了针对不同的环境扩展/修改内部的 webpack 配置的能力。例如，这里我们在 webpack-chain 中添加 vue-auto-routing 这个 webpack 插件，并指定参数：
+
+```js
+const VueAutoRoutingPlugin = require('vue-auto-routing/lib/webpack-plugin')
+
+module.exports = (api, options) => {
+  api.chainWebpack(webpackConfig => {
+    webpackConfig
+    .plugin('vue-auto-routing')
+      .use(VueAutoRoutingPlugin, [
+        {
+          pages: 'src/pages',
+          nested: true
+        }
+      ])
+  })
+}
+```
+
+你也可以使用 configureWebpack 方法修改 webpack 配置或者返回一个对象，返回的对象将通过 webpack-merge 被合并到配置中。
+
+除了修改 webpack 配置之外我们还可以通过 Service 插件实现如下功能：
+
+**1、添加一个新的 cli-service 命令**
+
+通过 service 插件你可以注册一个新的 cli-service 命令，除了标准的命令（即 serve 和 build）。你可以使用 registerCommand API 方法实现。
+
+下面的例子创建了一个简单的新命令，可以向开发控制台输出一条问候语：
+
+```js
+api.registerCommand(
+  'greet',
+  {
+    description: 'Write a greeting to the console',
+    usage: 'vue-cli-service greet'
+  },
+  () => {
+    console.log(`👋  Hello`)
+  }
+)
+```
+
+在这个例子中，我们提供了命令的名字（'greet'）、一个有 description 和 usage 选项的对象，和一个在执行 vue-cli-service greet 命令时会调用的函数。
+
+如果你在已经安装了插件的项目中运行新命令，你将看到下面的输出：
+
+```sh
+$ vue-cli-service greet
+👋 Hello!
+```
+
+你也可以给新命令定义一系列可能的选项。接下来我们添加一个 --name 选项，并修改实现函数，当提供了 name 参数时把它也打印出来。
+
+```js
+api.registerCommand(
+  'greet',
+  {
+    description: 'Writes a greeting to the console',
+    usage: 'vue-cli-service greet [options]',
+    options: { '--name': 'specifies a name for greeting' }
+  },
+  args => {
+    if (args.name) {
+      console.log(`👋 Hello, ${args.name}!`);
+    } else {
+      console.log(`👋 Hello!`);
+    }
+  }
+)
+```
+
+现在，如果 greet 命令携带了特定的 --name 选项，这个 name 被添加到控制台输出：
+
+```sh
+$ vue-cli-service greet --name 'John Doe'
+👋 Hello, John Doe!
+```
+
+**2、修改已经存在的 cli-service 命令**
+
+如果你想修改一个已经存在的 cli-service 命令，你可以使用 api.service.commands 获取到命令对象并且做些改变。我们将在应用程序运行的端口打印一条信息到控制台：
+
+```js
+const { serve } = api.service.commands
+
+const serveFn = serve.fn
+
+serve.fn = (...args) => {
+  return serveFn(...args).then(res => {
+    if(res && res.url) {
+      console.log(`Project is running now at ${res.url}`)
+    }
+  })
+}
+```
+
+在上面的这个例子中，我们从已经存在的命令列表中获取到命令对象 serve；然后我们修改了他的 fn 部分（fn 是创建这个新命令时传入的第三个参数；它定义了在执行这个命令时要执行的函数）。修改完后，这个控制台消息将在 serve 命令成功运行后打印。
+
+**3、为命令指定模式**
+
+如果一个已注册的插件命令需要运行在特定的默认模式下，则该插件需要通过 module.exports.defaultModes 以 { [commandName]: mode } 的形式来暴露：
+
+```js
+module.exports = api => {
+  api.registerCommand('build', () => {
+    // ...
+  })
+}
+
+module.exports.defaultModes = {
+  build: 'production'
+}
+```
+
+这是因为我们需要在加载环境变量之前知道该命令的预期模式，所以需要提前加载用户选项/应用插件。
+
+#### 4、prompt 文件
+
+对话是在创建一个新的项目或者在已有项目中添加新的插件时处理用户选项时需要的。所有的对话逻辑都存储在 prompts.js 文件中。对话内部是通过 inquirer 实现。
+
+当用户通过调用 vue invoke 初始化插件时，如果插件根目录包含 prompts.js，它将在调用时被使用。这个文件应该导出一个问题数组 -- 将被 Inquirer.js 处理。
+
+```js
+// prompts.js 
+// 直接返回问题数组
+module.exports = [
+  {
+    type: 'input',
+    name: 'locale',
+    message: 'The locale of project localization.',
+    validate: input => !!input,
+    default: 'en'
+  }
+  // ...
+]
+
+// 返回问题数组的函数
+module.exports = pkg => {
+  const prompts = [
+    {
+      type: 'input',
+      name: 'locale',
+      message: 'The locale of project localization.',
+      validate: input => !!input,
+      default: 'en'
+    }
+  ]
+
+  // 添加动态对话
+  if ('@vue/cli-plugin-eslint' in (pkg.devDependencies || {})) {
+    prompts.push({
+      type: 'confirm',
+      name: 'useESLintPluginVueI18n',
+      message: 'Use ESLint plugin for Vue I18n ?'
+    })
+  }
+
+  return prompts
+}
+```
+
+解析到的答案对象将作为选项传入到插件的 generator。如果我们想在 generator 中使用用户的选择结果，可以通过对话名字获得。例如我们可以修改一下 generator/index.js：
+
+```js
+if (options.useESLintPluginVueI18n) {
+  ...
+}
+```
+
+#### 5、Vue UI 集成
+
+Vue CLI 有一个非常强大的 UI 工具 -- 允许用户通过图形接口来架构和管理项目。Vue CLI 插件能够集成到接口中。UI 为 CLI 插件提供了额外的功能：
+
+- 可以执行 npm 任务，直接在 UI 中执行插件中定义的命令；
+- 可以展示插件的自定义配置。
+- 当创建项目时，你可以展示对话
+- 如果你想支持多种语言，你可以为你的插件添加本地化
+- 你可以使插件在 Vue UI 搜索中被搜索到
+
+图形化配置及管理也是 Vue CLI 最新架构的一个重要亮点，个人感觉实际插件开发比较少用，所以此处不再展开，详细配置方法请查看[官方文档](https://cli.vuejs.org/zh/dev-guide/plugin-dev.html#ui-%E9%9B%86%E6%88%90)
+
+至此对于 Vue CLI 的架构的主要分析全部完成，这种基于插件机制的架构为开发者提供了终端命令行工具、零配置脚手架、插件体系、图形化管理界面等诸多功能，相较于早前的  vue-cli 其可配置性强，极为灵活并且版本依赖易于管理与升级，就很牛皮！
+
+<img src="/assets/emoji/05.jpg" width="280" />
 
 ## 参考资料
 
 [vue-cli-analysis](https://kuangpf.com/vue-cli-analysis)
 
 [剖析 Vue CLI 实现原理](https://cloud.tencent.com/developer/article/1781202)
+
+[Vue CLI官方文档](https://cli.vuejs.org/)

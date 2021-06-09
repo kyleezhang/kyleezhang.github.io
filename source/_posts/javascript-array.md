@@ -6,7 +6,7 @@ mathjax: false
 categories: 
 - 前端
 tags: 
-- JavaScript
+- javascript
 ---
 
 数组在任何一门编程语言中都是一个最常见的词，它不仅仅是一种编程语言中的数据类型，还是一种最基础的数据结构。其作为数据结构的官方定义如下所示：

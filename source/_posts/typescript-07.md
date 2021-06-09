@@ -6,7 +6,7 @@ mathjax: false
 categories: 
 - 前端
 tags: 
-- TypeScript
+- typescript
 ---
 
 ## 类型检查机制

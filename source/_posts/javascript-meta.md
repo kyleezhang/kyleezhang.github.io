@@ -6,7 +6,7 @@ mathjax: false
 categories: 
 - 前端
 tags: 
-- JavaScript
+- javascript
 ---
 
 什么是元编程？

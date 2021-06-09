@@ -6,7 +6,7 @@ mathjax: false
 categories: 
 - 前端
 tags: 
-- TypeScript
+- typescript
 ---
 
 TypeScript 作为 JavaScript 的超集，由于其静态类型系统的引入，使得前端开发大型项目更容易实现团队内代码规范限制及接口数据约定，同时使得代码更容易阅读和理解，但是当我们在基于 TypeScript 实现大型项目的过程中同样要注意如下内容：
