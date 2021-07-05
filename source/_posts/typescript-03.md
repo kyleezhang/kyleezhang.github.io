@@ -1,12 +1,12 @@
 ---
-title: TypeScript学习笔记（三）
+title: TypeScript学习笔记（三）——断言、类型别名与函数
 date: 2020-11-18 11:06:03
 toc: true
 mathjax: false
 categories:
 - 前端
 tags: 
-- typescript
+- TypeScript
 ---
 
 ## 断言

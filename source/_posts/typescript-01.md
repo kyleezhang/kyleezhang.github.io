@@ -1,12 +1,12 @@
 ---
-title: TypeScript学习笔记（一）
+title: TypeScript学习笔记（一）——基本类型
 date: 2020-11-15 16:30:03
 toc: true
 mathjax: false
 categories: 
 - 前端
 tags: 
-- typescript
+- TypeScript
 ---
 
 TypeScript 是一种由微软开发的自由和开源的编程语言，是 JavaScript 的一个超集，其为 JavaScript 引入了可选的静态类型，相比于 JavaScript 它的特点主要有以下三点：

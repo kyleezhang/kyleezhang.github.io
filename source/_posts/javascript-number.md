@@ -6,7 +6,7 @@ mathjax: true
 categories: 
 - 前端
 tags:
-- javascript
+- JavaScript
 ---
 
 在 JavaScript 中数值只有一种，即 Number 类型，内部表示为双精度浮点型，即其他语言中的 double 类型，所以在 JavaScript 中实际上是没有整数类型的，数值都是按浮点数来处理的，存储方法相同，遵循 IEEE 754 国际标准，因此在 JavaScript 中 3 和 3.0 被视为同一个值，示例：

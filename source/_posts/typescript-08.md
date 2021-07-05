@@ -1,12 +1,12 @@
 ---
-title: TypeScript学习笔记（七）
+title: TypeScript学习笔记（七）——高级类型
 date: 2020-11-28 18:44:45
 toc: true
 mathjax: false
 categories: 
 - 前端
 tags: 
-- typescript
+- TypeScript
 ---
 
 ## 高级类型
@@ -95,6 +95,7 @@ interface Rectangle {
 在上述代码中，我们分别定义了 Square 和 Rectangle 两个接口，在这些接口中都包含一个 kind 属性，该属性被称为可辨识的属性，而其它的属性只跟特性的接口相关。
 
 (2)**联合类型**
+
 基于前面定义了两个接口，我们可以创建一个 Shape 联合类型：
 
 ```typescript
@@ -166,18 +167,19 @@ function area(s: Shape) {
   }
 }
 ```
+
 ### 三、索引类型
 
 在实际开发中，我们经常能遇到这样的场景，在对象中获取一些属性的值，然后建立对应的集合。
 
 ```js
 let person = {
-    name: 'musion',
-    age: 35
+  name: 'musion',
+  age: 35
 }
 
 function getValues(person: any, keys: string[]) {
-    return keys.map(key => person[key])
+  return keys.map(key => person[key])
 }
 
 console.log(getValues(person, ['name', age])) // ['musion', 35]
@@ -190,17 +192,17 @@ console.log(getValues(person, ['gender'])) // [undefined]
 // T是一个任意类型，K类型是T类型中，任意一个属性的类型，形参names是K类型变量组成的数组
 // 返回值 T[K][]: T类型的K属性数组（第一个方括号表示取属性，第二个表示数组类型）
 function pluck<T, K extends keyof T>(o: T, names: K[]): T[K][] {
-    return names.map(n => o[n]);
+  return names.map(n => o[n]);
 }
 
 interface Person {
-    name: string;
-    age: number;
+  name: string;
+  age: number;
 }
 
 const person: Person = {
-    name: 'kylee',
-    age: 17
+  name: 'kylee',
+  age: 17
 }
 
 const stars: string[] = pluck(person, ['name']);
@@ -237,8 +239,8 @@ TypeScript提供了从旧类型中创建新类型的一种方式 — 映射类�
 
 ```typescript
 interface Person {
-    name: string;
-    age: number;
+  name: string;
+  age: number;
 }
 
 // 因为所有的映射都是发生在类型T之上的，没有别的变量和属性参与，因此属于同态映射
@@ -253,9 +255,9 @@ const pRequired: Required<Person> = { name: 'required name', age: 22 }
 
 ```typescript
 interface Obj {
-    a: number
-    b: string
-    c: boolean
+  a: number
+  b: string
+  c: boolean
 }
 // 映射出的新类型所具有的属性由Record的第一个属性指定，而这些属性类型为第二个参数指定的已知类型，这种类型属性就是一种非同态的类型
 type RecordObj = Record<'x' | 'y', Obj>
@@ -283,7 +285,7 @@ const val3: T3 = undefined
 
 #### 1、分布的条件类型
 
-如果这个 T 是联合类型的情形下结果类型也是多个类型的联合类型，即`(A | B) extends U ? X : Y`可以被拆解为`A extends U ? X : Y | B extends U ? X : Y`，这种情形也被成为分布的条件类型，举个🌰:
+如果这个 T 是联合类型的情形下结果类型也是多个类型的联合类型，即`(A | B) extends U ? X : Y`可以被拆解为`(A extends U ? X : Y) | (B extends U ? X : Y)`，这种情形也被成为分布的条件类型，举个🌰:
 
 ```typescript
 type T4 = TypeName<string | number> // string | number
@@ -302,13 +304,13 @@ type T5 = Diff<"a" | "b" | "c", "a" | "d"> // "b" | "c"
 为了便于使用者进行条件判断TypeScript内置了一些条件类型（实际上还是TypeScript泛型中内置的一些泛型工具，比如NonNullable、Extract、Exclude、ReturnType、Parameters、ConstructorParameters、InstanceType），举个🌰:
 
 ```typescript
-type T6 = Exclude<"a" | "b" | "c", "a" | "d"> // "b" | "c"
+type T6 = Exclude<"a" | "b" | "c", "a" | "d">             // "b" | "c"
 type T7 = NonNullable<string | number | null | undefined> // string | number
-type T8 = Extract<"a" | "b" | "c", "a" | "d"> // "a"
-type T9 = ReturnType<(x: string) => number> // number
-type T10 = Parameters<(x: string, y: number) => number> // [x: string, y: number]
-type T11 = ConstructorParameters<ErrorConstructor> // [message?: string | undefined]
-type T12 = InstanceType<ErrorConstructor>;    // Error
+type T8 = Extract<"a" | "b" | "c", "a" | "d">             // "a"
+type T9 = ReturnType<(x: string) => number>               // number
+type T10 = Parameters<(x: string, y: number) => number>   // [x: string, y: number]
+type T11 = ConstructorParameters<ErrorConstructor>        // [message?: string | undefined]
+type T12 = InstanceType<ErrorConstructor>;                // Error
 ```
 
 ## 参考资料

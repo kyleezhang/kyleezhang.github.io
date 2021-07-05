@@ -1,17 +1,17 @@
 ---
-title: TypeScript学习笔记（五）
+title: TypeScript学习笔记（五）——装饰器及相关应用
 date: 2020-11-25 10:27:57
 toc: true
 mathjax: false
 categories: 
 - 前端
 tags: 
-- typescript
+- TypeScript
 ---
 
 ## 装饰器
 
-在 ES6 中增加了对类对象的相关定义和操作（比如class和extends），这就使得我们在多个不同类之间共享或者扩展一些方法或者行为的时候，变得并不是那么优雅。这个时候，我们就需要一种更优雅的方法来帮助我们完成这些事情，这个方法就是**装饰器**。
+在 ES6 中增加了对类对象的相关定义和操作（比如class和extends），与此同时如何更加优雅地在多个不同类之间共享或者扩展一些方法或者行为也开始被提上日程，我们需要一种更优雅的方法来帮助我们完成这些事情，这个方法就是**装饰器**。
 
 装饰器（decorators）这一特性的提出来源于python之类的语言，如果你熟悉python的话，对它一定不会陌生。那么我们先来看一下python里的装饰器是什么样子的吧：
 
@@ -263,6 +263,7 @@ declare global {
 #### 1、decorate
 
 decorate方法的主要作用是装饰，有好几个重载，下面分别介绍：
+
 (1)**对类的装饰**
 
 ```typescript
@@ -304,6 +305,7 @@ t.sayName() // 'override'
 ```
 
 **注意**: 在classDecorator中传入的target, 只能修改其prototype的方法, 不能修改其属性, 因为其属性是`read-only`。
+
 (2)**对属性或方法装饰**
 
 ```typescript
@@ -443,7 +445,7 @@ const t3 = Reflect.getMetadata(type, DefineMetadata.prototype.getName); // metho
 const t4 = Reflect.getMetadata(type, DefineMetadata, 'staticProperty'); // staticProperty 
 ```
 
-注意t4定义和获取不一样的地方, 比如t2到t3都有两种写法, 一种就是将target传为对应的对象且必须为对象.以t2为例, 也可以写为
+注意t4定义和获取不一样的地方, 比如t2到t3都有两种写法, 一种就是将target传为对应的对象且必须为对象。以t2为例, 也可以写为
 
 ```typescript
 Reflect.defineMetadata(type, 'staticMethod', DefineMetadata, 'staticMethod');

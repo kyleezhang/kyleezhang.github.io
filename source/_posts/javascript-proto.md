@@ -6,7 +6,7 @@ mathjax: false
 categories: 
 - 前端
 tags:
-- javascript
+- JavaScript
 ---
 
 继承是面向对象语言最为重要的概念之一，许多面向对象语言都支持两种继承方式：接口继承和实现继承，接口继承只继承方法签名，而实现继承则继承实际的方法，由于JavaScript中函数没有签名，因此JavaScript中无法实现接口继承，只支持实现继承。

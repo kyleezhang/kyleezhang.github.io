@@ -7,7 +7,7 @@ mathjax: false
 categories: 
 - 前端
 tags:
-- css
+- CSS
 ---
 
 BFC的全称是块状格式化上下文，MDN中对于对于BFC的定义如下：

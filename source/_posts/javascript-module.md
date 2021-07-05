@@ -7,7 +7,7 @@ categories:
 - 前端
 tags:
 - Node
-- javascript
+- JavaScript
 ---
 
 JavaScript自诞生以来很长一段时间大部分开发者都没有将其当成一门真正的编程语言，认为其只不过是一种又小又简单的网页脚本，没必要将其模块化，但是随着前端领域的快速发展，模块化成为了前端开发大型应用所需的一项基本能力，但是相较于Java、Python等其他高级语言，JavaScript直到ES6才真正意义上拥有语言级的模块语法，因此 Node 选择了 CommonJS 为基础的一条独属于自己的模块化方案。

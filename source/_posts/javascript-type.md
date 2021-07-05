@@ -6,7 +6,7 @@ mathjax: false
 categories: 
 - 前端
 tags: 
-- javascript
+- JavaScript
 ---
 
 ## 一、JavaScript 中的类型

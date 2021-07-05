@@ -7,7 +7,7 @@ mathjax: false
 categories: 
 - 前端
 tags:
-- css
+- CSS
 ---
 
 浮动属性最早提出是在CSS1中，其最初的主要目的就是为了允许其他内容（如文本）“围绕”图像，因此浮动属性也只允许作用于图像（有些浏览器还支持表格），后来随着不断发展，浮动属性也允许作用于任何元素，但是文本环绕这一页面样式目前仍然只有利用float属性可以实现，具有唯一性，以下面代码为例：
@@ -381,7 +381,8 @@ tags:
 ```
 
 页面效果：
-<img src="/assets/css-float/10.png" width="227" height="227"></img>
+
+<img src="/assets/css-float/10.png" width="227" height="227" />
 
 至此，我们对浮动特性进行一个总结：
 
