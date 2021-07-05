@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/config/favicon.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kyleezhang.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"enable":false,"style":"tabs","active":false,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="TypeScript 作为 JavaScript 的超集，由于其静态类型系统的引入，使得前端开发大型项目更容易实现团队内代码规范限制及接口数据约定，同时使得代码更容易阅读和理解，但是当我们在基于 TypeScript 实现大型项目的过程中同样要注意如下内容：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TypeScript工程化实践笔记">
+<meta property="og:url" content="http://kyleezhang.com/2021/01/06/typescript-02/index.html">
+<meta property="og:site_name" content="大熊猫的五分裤">
+<meta property="og:description" content="TypeScript 作为 JavaScript 的超集，由于其静态类型系统的引入，使得前端开发大型项目更容易实现团队内代码规范限制及接口数据约定，同时使得代码更容易阅读和理解，但是当我们在基于 TypeScript 实现大型项目的过程中同样要注意如下内容：">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-01-06T15:41:06.000Z">
+<meta property="article:modified_time" content="2021-07-03T06:13:07.068Z">
+<meta property="article:author" content="kyleezhang">
+<meta property="article:tag" content="TypeScript">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://kyleezhang.com/2021/01/06/typescript-02/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>TypeScript工程化实践笔记 | 大熊猫的五分裤</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2KR3NK700N"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-2KR3NK700N');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?f1621cb3fb0792bb294fce1b938d5eef";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="大熊猫的五分裤" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+    <a target="_blank" rel="noopener" href="https://github.com/kyleezhang " class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#fff; color:#151513; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    </div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">大熊猫的五分裤</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://kyleezhang.com/2021/01/06/typescript-02/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/assets/config/avatar.png">
+      <meta itemprop="name" content="kyleezhang">
+      <meta itemprop="description" content="学源于思">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="大熊猫的五分裤">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          TypeScript工程化实践笔记
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-01-06 23:41:06" itemprop="dateCreated datePublished" datetime="2021-01-06T23:41:06+08:00">2021-01-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-07-03 14:13:07" itemprop="dateModified" datetime="2021-07-03T14:13:07+08:00">2021-07-03</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%89%8D%E7%AB%AF/" itemprop="url" rel="index"><span itemprop="name">前端</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>20k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>18 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>TypeScript 作为 JavaScript 的超集，由于其静态类型系统的引入，使得前端开发大型项目更容易实现团队内代码规范限制及接口数据约定，同时使得代码更容易阅读和理解，但是当我们在基于 TypeScript 实现大型项目的过程中同样要注意如下内容： <a id="more"></a></p>
+<h2 id="声明空间">声明空间</h2>
+<p>在 TypeScript 里存在两种声明空间：类型声明空间与变量声明空间：</p>
+<h3 id="一类型声明空间">一、类型声明空间</h3>
+<p>类型声明空间包含用来当做类型注解的内容，例如下面的类型声明：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span> </span>&#123;&#125;</span><br><span class="line"><span class="keyword">interface</span> Bar &#123;&#125;</span><br><span class="line"><span class="keyword">type</span> Bas = &#123;&#125;;</span><br></pre></td></tr></table></figure>
+<p>你可以将 Foo, Bar, Bas 作为类型注解使用，示例如下：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> foo: Foo;</span><br><span class="line"><span class="keyword">let</span> bar: Bar;</span><br><span class="line"><span class="keyword">let</span> bas: Bas;</span><br></pre></td></tr></table></figure>
+<p>注意，尽管你定义了 interface Bar，却并不能够把它作为一个变量来使用，因为它没有定义在变量声明空间中。</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> Bar &#123;&#125;</span><br><span class="line"><span class="keyword">const</span> bar = Bar; <span class="comment">// Error: &quot;cannot find name &#x27;Bar&#x27;&quot;</span></span><br></pre></td></tr></table></figure>
+<p>出现错误提示提示： cannot find name 'Bar' 的原因是名称 Bar 并未定义在变量声明空间。这将带领我们进入下一个主题 -- 变量声明空间。</p>
+<h3 id="二变量声明空间">二、变量声明空间</h3>
+<p>变量声明空间包含可用作变量的内容，在上文中 Class Foo 提供了一个类型 Foo 到类型声明空间，此外它同样提供了一个变量 Foo 到变量声明空间，如下所示：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Foo</span> </span>&#123;&#125;</span><br><span class="line"><span class="keyword">const</span> someVar = Foo;</span><br><span class="line"><span class="keyword">const</span> someOtherVar = <span class="number">123</span>;</span><br></pre></td></tr></table></figure>
+<p>因此当我们想把一个类来当做变量传递时这显得极为便捷，但是我们并不能把一些如 interface 定义的内容当作变量使用。与此相似，一些用 var 声明的变量，也只能在变量声明空间使用，不能用作类型注解。举个🌰:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> foo = <span class="number">123</span>;</span><br><span class="line"><span class="keyword">let</span> bar: foo; <span class="comment">// ERROR: &quot;cannot find name &#x27;foo&#x27;&quot;</span></span><br></pre></td></tr></table></figure>
+<p>提示 ERROR: "cannot find name 'foo'" 原因是，名称 foo 没有定义在类型声明空间里。</p>
+<h2 id="模块系统">模块系统</h2>
+<h3 id="一全局模块">一、全局模块</h3>
+<p>在默认情况下，如果一个目录下存在一个 tsconfig.json 文件，那么它意味着这个目录是当前 TypeScript 项目的根目录。默认情况下，你在当前项目目录下任何一处编写的 TS 代码总是对于根目录起的所有子目录可见（不论是变量声明空间亦或是类型声明空间都可见），当你开始在一个新的 TypeScript 文件中写下代码时，它处于全局命名空间中。如在 foo.ts 里的以下代码。</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> foo = <span class="number">123</span>;</span><br></pre></td></tr></table></figure>
+<p>如果你在相同的项目里创建了一个新的文件 bar.ts，TypeScript 类型系统将会允许你使用变量 foo，就好像它在全局可用一样：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> bar = foo; <span class="comment">// allowed</span></span><br></pre></td></tr></table></figure>
+<p>毋庸置疑，使用全局变量空间是危险的，因为它会与文件内的代码命名冲突。我们推荐使用下文中将要提到的文件模块。</p>
+<h3 id="二文件模块">二、文件模块</h3>
+<p>文件模块也被称为外部模块。如果在你的 TypeScript 文件的根级别位置含有 import 或者 export，那么它会在这个文件中创建一个本地的作用域。因此，我们需要把上文 foo.ts 改成如下方式（注意 export 用法）：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> foo = <span class="number">123</span>;</span><br></pre></td></tr></table></figure>
+<p>在全局命名空间里，我们不再有 foo，这可以通过创建一个新文件 bar.ts 来证明：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> bar = foo; <span class="comment">// ERROR: &quot;cannot find name &#x27;foo&#x27;&quot;</span></span><br></pre></td></tr></table></figure>
+<p>如果你想在 bar.ts 里使用来自 foo.ts 的内容，你必须显式地导入它，更新后的 bar.ts 如下所示。</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; foo &#125; <span class="keyword">from</span> <span class="string">&#x27;./foo&#x27;</span>;</span><br><span class="line"><span class="keyword">const</span> bar = foo; <span class="comment">// allow</span></span><br></pre></td></tr></table></figure>
+<p>在 bar.ts 文件里使用 import 时，它不仅允许你使用从其他文件导入的内容，还会将此文件 bar.ts 标记为一个模块，文件内定义的声明也不会“污染”全局命名空间。 文件模块拥有强大的功能和较强的可用性，我们可以通过指定 tsconfig.json 中的 module 属性指定不同的模块系统，较为常用的是 ES Module 以及 Commonjs 模块：</p>
+<h4 id="es-module">1、ES Module</h4>
+<p>（1）单独导出一个变量或类型</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> someVar = <span class="number">123</span>;</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">type</span> someType = &#123;</span><br><span class="line">  foo: <span class="built_in">string</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>（2）批量导出</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> someVar = <span class="number">123</span>;</span><br><span class="line"><span class="keyword">type</span> someType = &#123;</span><br><span class="line">  <span class="keyword">type</span>: <span class="built_in">string</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> &#123; someVar, someType &#125;;</span><br></pre></td></tr></table></figure>
+<p>（3）导出时重命名</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> someVar = <span class="number">123</span>;</span><br><span class="line"><span class="keyword">export</span> &#123; someVar <span class="keyword">as</span> aDifferentName &#125;;</span><br></pre></td></tr></table></figure>
+<p>（4）默认导出</p>
+<p>ES 模块中导出主要通过 export default 实现，主要有如下三种应用场景：</p>
+<ul>
+<li>在一个变量之前（不需要使用 let/const/var）；</li>
+<li>在一个函数之前（不需要函数名）；</li>
+<li>在一个类之前。</li>
+</ul>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// some var</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> (someVar = <span class="number">123</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// some function</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span> <span class="title">someFunction</span>(<span class="params"></span>) </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// some class</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="class"><span class="keyword">class</span> <span class="title">someClass</span> </span>&#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>（5）导入一个变量或者是一个类型</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; someVar, someType &#125; <span class="keyword">from</span> <span class="string">&#x27;./foo&#x27;</span>;</span><br></pre></td></tr></table></figure>
+<p>（6）通过重命名的方式导入变量或者类型</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; someVar <span class="keyword">as</span> aDifferentName &#125; <span class="keyword">from</span> <span class="string">&#x27;./foo&#x27;</span>;</span><br></pre></td></tr></table></figure>
+<p>（7）整体导入</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> foo <span class="keyword">from</span> <span class="string">&#x27;./foo&#x27;</span>;</span><br><span class="line"><span class="comment">// 你可以使用 `foo.someVar` 和 `foo.someType` 以及其他任何从 `foo` 导出的变量或者类型</span></span><br></pre></td></tr></table></figure>
+<p>（8）只导入模块</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&#x27;core-js&#x27;</span>; <span class="comment">// 一个普通的 polyfill 库</span></span><br></pre></td></tr></table></figure>
+<p>（9）从其他模块导入后整体导出</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> * <span class="keyword">from</span> <span class="string">&#x27;./foo&#x27;</span>;</span><br></pre></td></tr></table></figure>
+<p>（10）从其他模块导入后，部分导出</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> &#123; someVar &#125; <span class="keyword">from</span> <span class="string">&#x27;./foo&#x27;</span>;</span><br></pre></td></tr></table></figure>
+<p>（11）通过重命名，部分导出从另一个模块导入的项目</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> &#123; someVar <span class="keyword">as</span> aDifferentName &#125; <span class="keyword">from</span> <span class="string">&#x27;./foo&#x27;</span>;</span><br></pre></td></tr></table></figure>
+<p>（12）默认导入</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> someLocalNameForThisFile <span class="keyword">from</span> <span class="string">&#x27;./foo&#x27;</span>;</span><br></pre></td></tr></table></figure>
+<h4 id="commonjs">2、CommonJS</h4>
+<p>（1）部分导出</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">someClass</span> </span>&#123;&#125;;</span><br><span class="line"><span class="built_in">exports</span>.someClass = someClass</span><br></pre></td></tr></table></figure>
+<p>（2）部分导入</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> test = <span class="built_in">require</span>(<span class="string">&quot;./foo&quot;</span>).someClass;</span><br></pre></td></tr></table></figure>
+<p>（3）整体导出</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Class1</span> </span>&#123;&#125;;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Class2</span> </span>&#123;&#125;</span><br><span class="line"><span class="built_in">module</span>.exports = &#123; Class1, Class2 &#125;</span><br></pre></td></tr></table></figure>
+<p>（4）整体导入</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> test = <span class="built_in">require</span>(<span class="string">&quot;./foo&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>在 CommonJS 中，整体导出就是一个 module.exports ，exports 实际指向的也是 module.exports 指向的引用，而 require 方法实际上返回的是 module.exports 而不是 exports，因此如果对 exports 重新赋值，则断开了 exports 对 module.exports 的指向。</p>
+<h4 id="commonjs与es-module之间的区别">3、CommonJS与ES Module之间的区别</h4>
+<ul>
+<li>CommonJs是被加载的时候运行，ES Module是编译的时候运行</li>
+<li>CommonJs输出的是值的浅拷贝，ES Module输出值的引用</li>
+<li>CommentJs具有缓存。在第一次被加载时，会完整运行整个文件并输出一个对象，拷贝（浅拷贝）在内存中。下次加载文件时，直接从内存中取值</li>
+</ul>
+<p><strong>CommonJS输出值拷贝</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// a.js</span></span><br><span class="line"><span class="keyword">let</span> count = <span class="number">0</span></span><br><span class="line"><span class="built_in">exports</span>.count = count; <span class="comment">// 输出值的拷贝</span></span><br><span class="line"><span class="built_in">exports</span>.add = <span class="function">()=&gt;</span>&#123;</span><br><span class="line">    <span class="comment">//这里改变count值，并不会将module.exports对象的count属性值改变</span></span><br><span class="line">    count++;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// b.js</span></span><br><span class="line"><span class="keyword">const</span> &#123; count, add &#125; = <span class="built_in">require</span>(<span class="string">&#x27;./a.js&#x27;</span>)</span><br><span class="line"><span class="built_in">console</span>.log(count) <span class="comment">// 0</span></span><br><span class="line">add();</span><br><span class="line"><span class="built_in">console</span>.log(count) <span class="comment">// 0</span></span><br></pre></td></tr></table></figure>
+<p><strong>ES Module输出值引用</strong> <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// a.js</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">let</span> count = <span class="number">0</span>; <span class="comment">// 输出的是值的引用，指向同一块内存</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> add = <span class="function">()=&gt;</span>&#123;</span><br><span class="line">    count++; <span class="comment">// 此时引用指向的内存值发生改变</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// b.js</span></span><br><span class="line"><span class="keyword">import</span> &#123; count, add &#125; <span class="keyword">from</span> <span class="string">&#x27;./a.js&#x27;</span></span><br><span class="line"><span class="built_in">console</span>.log(count) <span class="comment">// 0</span></span><br><span class="line">add();</span><br><span class="line"><span class="built_in">console</span>.log(count)<span class="comment">// 1</span></span><br></pre></td></tr></table></figure></p>
+<p><strong>CommonJS输出浅拷贝验证</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// a.js</span></span><br><span class="line"><span class="keyword">const</span> foo = &#123;</span><br><span class="line">	count: <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// module.exports的foo属性为 foo 对象的浅拷贝，指向同一个内存中</span></span><br><span class="line"><span class="built_in">exports</span>.foo=foo;</span><br><span class="line"></span><br><span class="line"><span class="built_in">window</span>.setTimeout(<span class="function">()=&gt;</span>&#123;</span><br><span class="line">	foo.count += <span class="number">1</span></span><br><span class="line">	<span class="built_in">console</span>.log(<span class="string">&#x27;changed foo&#x27;</span>)</span><br><span class="line">&#125;,<span class="number">1000</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// b.js</span></span><br><span class="line"><span class="keyword">const</span>  &#123; foo &#125;  = <span class="built_in">require</span>(<span class="string">&#x27;./a.js&#x27;</span>)</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;foo&#x27;</span>, foo); <span class="comment">// &#x27;foo&#x27;,&#123;count: 0&#125;</span></span><br><span class="line"><span class="built_in">window</span>.setTimeout(<span class="function">()=&gt;</span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;after 2s foo&#x27;</span>, foo); <span class="comment">//&#x27;after 2s foo &#x27;,&#123;count: 1&#125;</span></span><br><span class="line">&#125;, <span class="number">2000</span>)</span><br></pre></td></tr></table></figure>
+<p>其实上个🌰中的 <code>const &#123; foo &#125; = require('./a.js')</code> 或者 <code>const foo = require('./a.js').foo</code> 写法是相当危险的。因为 CommonJS 输出的值的拷贝，若后面在 a.js 中对 foo 的内存指向作出改动，则不能及时更新。举个🌰:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// a.js</span></span><br><span class="line"><span class="keyword">const</span> foo = &#123;</span><br><span class="line">	count: <span class="number">0</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">exports</span>.foo=foo; <span class="comment">// 此时 foo 指向 &#123;count: 0&#125; 的内存地址</span></span><br><span class="line"><span class="built_in">window</span>.setTimeout(<span class="function">()=&gt;</span>&#123;</span><br><span class="line">  <span class="comment">//改变 foo 的内存指向</span></span><br><span class="line">	<span class="built_in">exports</span>.foo=<span class="string">&#x27;haha&#x27;</span>;</span><br><span class="line">&#125;,<span class="number">1000</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// b.js</span></span><br><span class="line"><span class="keyword">const</span>  &#123; foo &#125;  = <span class="built_in">require</span>(<span class="string">&#x27;./a.js&#x27;</span>); <span class="comment">// 拷贝了 foo 属性指向 &#123;count: 0&#125; 内存地址的引用</span></span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;foo&#x27;</span>, foo); <span class="comment">// &#x27;foo&#x27;,&#123;count: 0&#125;</span></span><br><span class="line"><span class="built_in">window</span>.setTimeout(<span class="function">()=&gt;</span>&#123;</span><br><span class="line">  <span class="comment">//此处并没有改变</span></span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;after 2s foo&#x27;</span>, foo); <span class="comment">// &#x27;after 2s foo &#x27;,&#123;count: 0&#125;</span></span><br><span class="line">&#125;, <span class="number">2000</span>)</span><br></pre></td></tr></table></figure>
+<p>改进：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// b.js</span></span><br><span class="line"><span class="keyword">const</span> test = <span class="built_in">require</span>(<span class="string">&#x27;./a.js&#x27;</span>); </span><br><span class="line"><span class="comment">// test 拷贝了 整个输出对象&#123;foo:&#123;count: 0&#125;&#125;内存地址的引用</span></span><br><span class="line"><span class="comment">// 当内存中的属性值发生变化时，可以拿到最新的值，因为指向的是同一片内存</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&#x27;foo&#x27;</span>, test.foo); <span class="comment">//&#x27;foo&#x27;,&#123;count: 0&#125;</span></span><br><span class="line"><span class="built_in">window</span>.setTimeout(<span class="function">()=&gt;</span>&#123;</span><br><span class="line">  <span class="comment">// 保证获取到的是最新的</span></span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;after 2s foo&#x27;</span>, test.foo); <span class="comment">// &#x27;after 2s foo &#x27;,&#x27;haha&#x27;</span></span><br><span class="line">&#125;, <span class="number">2000</span>)</span><br></pre></td></tr></table></figure>
+<p>进阶：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// a.js</span></span><br><span class="line"><span class="keyword">let</span> foo = <span class="number">1</span></span><br><span class="line"><span class="built_in">setTimeout</span>(<span class="function">()=&gt;</span>&#123;</span><br><span class="line">  foo = <span class="number">2</span>;</span><br><span class="line">  <span class="built_in">exports</span>.foo = foo</span><br><span class="line">&#125;,<span class="number">1000</span>)</span><br><span class="line"><span class="built_in">exports</span>.foo = foo</span><br><span class="line"></span><br><span class="line"><span class="comment">// b.js</span></span><br><span class="line"><span class="keyword">var</span> test = <span class="built_in">require</span>(<span class="string">&#x27;./b.js&#x27;</span>);</span><br><span class="line"><span class="built_in">console</span>.log(test.foo); <span class="comment">// 1</span></span><br><span class="line"><span class="built_in">setTimeout</span>(<span class="function">()=&gt;</span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(test.foo); <span class="comment">// 2</span></span><br><span class="line">&#125;,<span class="number">2000</span>)</span><br></pre></td></tr></table></figure>
+<p>但是需要注意由于 module.exports 实际上输出的是内存地址的引用，所以如果缓存的内存地址依然存在且无变更的话依然是之前的值，举个🌰:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// a.js</span></span><br><span class="line"><span class="keyword">let</span> foo = <span class="number">1</span></span><br><span class="line"><span class="built_in">setTimeout</span>(<span class="function">()=&gt;</span>&#123;</span><br><span class="line">  foo=<span class="number">2</span>;</span><br><span class="line">  <span class="built_in">module</span>.exports=&#123;foo&#125;; <span class="comment">//注意：指向新内存 &#123;foo:2&#125;</span></span><br><span class="line">&#125;,<span class="number">1000</span>)</span><br><span class="line"><span class="built_in">module</span>.exports=&#123;foo&#125;; <span class="comment">//指向内存 &#123;foo:1&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// b.js</span></span><br><span class="line"><span class="keyword">var</span> test =<span class="built_in">require</span>(<span class="string">&#x27;./a.js&#x27;</span>); <span class="comment">// 浅拷贝，指向的还是&#123;foo:1&#125;的内存，并缓存在内存中</span></span><br><span class="line"><span class="comment">//从缓存的内存中取值</span></span><br><span class="line"><span class="built_in">console</span>.log(test.foo); <span class="comment">// 1</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">setTimeout</span>(<span class="function">()=&gt;</span>&#123;</span><br><span class="line">  <span class="comment">// 从缓存的内存取值</span></span><br><span class="line">  <span class="built_in">console</span>.log(test.foo) <span class="comment">// 1</span></span><br><span class="line">&#125;,<span class="number">2000</span>)</span><br></pre></td></tr></table></figure>
+<h4 id="兼容性处理">4、兼容性处理</h4>
+<p>我们在 tsconfig.json 中通过配置 target 和 module 属性可以实现不同版本、不同模块化方案代码的编译生成，需要注意的是如果 target 属性设为 ES3 或 ES5 时及时 module 指定为 es2015 也依然会编译成CommonJS 模块，举个🌰:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> a: <span class="built_in">number</span> = <span class="number">1223</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">getA</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> a;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> b: <span class="built_in">string</span> = <span class="string">&#x27;b&#x27;</span>;</span><br><span class="line"><span class="keyword">const</span> c: <span class="built_in">string</span> = <span class="string">&#x27;c&#x27;</span>;</span><br><span class="line"><span class="keyword">export</span> &#123; b, c &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&#x27;6666&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译后（target: "es5", module: "es2015"）：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&quot;use strict&quot;</span>;</span><br><span class="line"><span class="built_in">exports</span>.__esModule = <span class="literal">true</span>;</span><br><span class="line"><span class="built_in">exports</span>.c = <span class="built_in">exports</span>.b = <span class="built_in">exports</span>.getA = <span class="built_in">exports</span>.a = <span class="keyword">void</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="built_in">exports</span>.a = <span class="number">1223</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">getA</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">exports</span>.a;</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">exports</span>.getA = getA;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> b = <span class="string">&#x27;b&#x27;</span>;</span><br><span class="line"><span class="built_in">exports</span>.b = b;</span><br><span class="line"><span class="keyword">var</span> c = <span class="string">&#x27;c&#x27;</span>;</span><br><span class="line"><span class="built_in">exports</span>.c = c;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">default_1</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&#x27;6666&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">exports</span>[<span class="string">&quot;default&quot;</span>] = default_1;</span><br></pre></td></tr></table></figure>
+<p>CommonJS 本身不支持默认导出，所以 CommonJS 中转换 ES Module 默认导出的方案是给 exports 添加 default 属性， 因此默认导入也会相应的发生变更：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> * <span class="keyword">as</span> All <span class="keyword">from</span> <span class="string">&#x27;./action&#x27;</span>;</span><br><span class="line"><span class="built_in">console</span>.log(All);</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> &#123; a &#125; <span class="keyword">from</span> <span class="string">&#x27;./action&#x27;</span>;</span><br><span class="line"><span class="built_in">console</span>.log(a);</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> &#123; getA <span class="keyword">as</span> get &#125; <span class="keyword">from</span> <span class="string">&#x27;./action&#x27;</span>;</span><br><span class="line"><span class="built_in">console</span>.log(get);</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> defaultFuc <span class="keyword">from</span> <span class="string">&#x27;./action&#x27;</span>;</span><br><span class="line"><span class="built_in">console</span>.log(defaultFuc);</span><br></pre></td></tr></table></figure>
+<p>编译后：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&quot;use strict&quot;</span>;</span><br><span class="line"><span class="built_in">exports</span>.__esModule = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> All = <span class="built_in">require</span>(<span class="string">&quot;./action&quot;</span>);</span><br><span class="line"><span class="built_in">console</span>.log(All); <span class="comment">// &#123;__esModule: true, a: 1223, getA: [Function: getA], b: &#x27;b&#x27;, c: &#x27;c&#x27;, default: [Function: default_1]&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> action_1 = <span class="built_in">require</span>(<span class="string">&quot;./action&quot;</span>);</span><br><span class="line"><span class="built_in">console</span>.log(action_1.a); <span class="comment">// 1223</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> action_2 = <span class="built_in">require</span>(<span class="string">&quot;./action&quot;</span>);</span><br><span class="line"><span class="built_in">console</span>.log(action_2.getA); <span class="comment">// [Function: getA]</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> action_3 = <span class="built_in">require</span>(<span class="string">&quot;./action&quot;</span>);</span><br><span class="line"><span class="built_in">console</span>.log(action_3[<span class="string">&quot;default&quot;</span>]); <span class="comment">// [Function: default_1]</span></span><br></pre></td></tr></table></figure>
+<p>因此 ES Module 中的默认导出向 CommonJS 转换对于我们开发者来说其实是无感知的，因为它的引入的时候会自动获取导出模块的 default 属性，因此我们可以在 CommonJS 模块中通过获取导出对象的 default 属性获取默认导出，举个🌰:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// a.ts</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&#x27;default&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// b.ts</span></span><br><span class="line"><span class="keyword">const</span> a = <span class="built_in">require</span>(<span class="string">&#x27;./a&#x27;</span>);</span><br><span class="line">a.default(); <span class="comment">// &quot;default&quot;</span></span><br></pre></td></tr></table></figure>
+<p>但是 CommonJS 模块中通过 default 属性调用显得有些格格不入，而且很容易产生错误，那么如何解决两个模块系统之间的不兼容性问题呢？TypeScript 为了解决兼容性问题给我们提供了一些其他语法糖，举个🌰:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// a.ts</span></span><br><span class="line"><span class="keyword">export</span> = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;I am module A&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// b.ts</span></span><br><span class="line"><span class="keyword">import</span> a = <span class="built_in">require</span>(<span class="string">&#x27;./a&#x27;</span>);</span><br><span class="line"><span class="comment">// import a from &#x27;./a&#x27;;</span></span><br><span class="line">a(); <span class="comment">// &quot;I am module A&quot;</span></span><br></pre></td></tr></table></figure>
+<p><code>export = ***</code> 语法本身会被编译成 CommonJS 模块中的 module.exports 语法糖，所以在文件 a.ts 中不能再导入其他模块，否则会编译报错。在 b.ts 文件中我们可以通过 TypeScript 提供的 <code>import moduleName = require('***')</code> 语法导入，需要注意当 tsconfig.json 中的 esModuleInterop 属性如果为 true，这儿也可以通过 ES6 提供的普通导入方法导入，如果为 false 则只能通过 <code>import moduleName = require('***')</code> 语法导入。</p>
+<h2 id="命名空间">命名空间</h2>
+<p>在 JavaScript 中命名空间能有效的避免全局污染，但是在 ES6 引入模块系统之后命名空间就很少被提及了，但是 TypeScript 中依然实现了这个特性，尽管在模块化系统中我们完全不用考虑命名空间了，但是如果使用了一些全局的类库，命名空间仍然是一个比较好的解决方案。</p>
+<h3 id="一定义">一、定义</h3>
+<p>TypeScript 中命名空间可以通过关键字 namespace 声明，命名空间内可以定义任意多变量，这些变量仅在命名空间内可见，如果想要部分成员在全局模块内可见的话则需要使用 export 关键字将其导出，举个🌰:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// a.ts</span></span><br><span class="line"><span class="keyword">namespace</span> Shape &#123;</span><br><span class="line">  <span class="keyword">const</span> pi = <span class="built_in">Math</span>.PI;</span><br><span class="line">  <span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">circle</span>(<span class="params">r: <span class="built_in">number</span></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> pi * r ** <span class="number">2</span> </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// b.ts</span></span><br><span class="line">Shape.circle(<span class="number">2</span>); <span class="comment">// 12.566370614359172</span></span><br></pre></td></tr></table></figure>
+<p>随着我们程序的不断扩张这个命名空间也可能会随着不断扩大，所以需要将命名空间进行进一步的拆分，TypeScript中将命名空间进行拆分极为简单，举个🌰:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// a.ts</span></span><br><span class="line"><span class="keyword">namespace</span> Shape &#123;</span><br><span class="line">  <span class="keyword">const</span> pi = <span class="built_in">Math</span>.PI;</span><br><span class="line">  <span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">circle</span>(<span class="params">r: <span class="built_in">number</span></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> pi * r ** <span class="number">2</span> </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// b.ts</span></span><br><span class="line"><span class="comment">/// &lt;reference path=&quot;a.ts&quot; /&gt;</span></span><br><span class="line"><span class="comment">// a.ts的相对路径</span></span><br><span class="line"><span class="keyword">namespace</span> Shape &#123;</span><br><span class="line">  <span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">square</span>(<span class="params">x: <span class="built_in">number</span></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> x ** <span class="number">2</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Shape.circle(<span class="number">2</span>);</span><br><span class="line">Shape.square(<span class="number">2</span>);</span><br></pre></td></tr></table></figure>
+<p>在文件 a.ts 和 b.ts 中都通过 namespace 关键字命名了同名的命名空间，那么这个命名空间就分布在了这两个文件中，它们之间是共享一个命名空间的，此处需要注意由于在 b.ts 文件中调用了 a.ts 文件中声明的 circle 方法，所以需要在 b.ts 文件中通过三斜线指令 <code>/// &lt;reference path="a.ts" /&gt;</code> 来调用 a.ts 文件，此时我们编译成 JavaScript 代码并查看：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// a.js</span></span><br><span class="line"><span class="keyword">var</span> Shape;</span><br><span class="line">(<span class="function"><span class="keyword">function</span> (<span class="params">Shape</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> pi = <span class="built_in">Math</span>.PI;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">circle</span>(<span class="params">r</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> pi * <span class="built_in">Math</span>.pow(r, <span class="number">2</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    Shape.circle = circle;</span><br><span class="line">&#125;)(Shape || (Shape = &#123;&#125;));</span><br><span class="line"></span><br><span class="line"><span class="comment">// b.js</span></span><br><span class="line"><span class="comment">/// &lt;reference path=&quot;a.ts&quot; /&gt;</span></span><br><span class="line"><span class="keyword">var</span> Shape;</span><br><span class="line">(<span class="function"><span class="keyword">function</span> (<span class="params">Shape</span>) </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">square</span>(<span class="params">x</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">Math</span>.pow(x, <span class="number">2</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    Shape.square = square;</span><br><span class="line">&#125;)(Shape || (Shape = &#123;&#125;));</span><br><span class="line">Shape.square(<span class="number">2</span>);</span><br><span class="line">Shape.circle(<span class="number">2</span>);</span><br></pre></td></tr></table></figure>
+<p>从编译后的代码中我们可以看到 TypeScript 中的命名空间本质上依然是通过 JavaScript 的立即执行匿名函数实现的，这在 JavaScript 确保创建的变量不会泄漏至全局命名空间时是极为常见的一种做法，接下来我们一起看一下 TypeScript 命名空间成员的别名。</p>
+<h3 id="二成员别名">二、成员别名</h3>
+<p>在上述示例中我们每次通过 Shape.circle 或 Shape.square 方法调用难免有些繁杂累赘，TypeScript 为我们提供了更为简便的调用，举个🌰:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> Shape &#123;</span><br><span class="line">  <span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">square</span>(<span class="params">x: <span class="built_in">number</span></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> x ** <span class="number">2</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> square = Shape.square;</span><br><span class="line">square(<span class="number">2</span>);</span><br></pre></td></tr></table></figure>
+<p>需要注意这里的 import 与模块系统中的 import 没有任何关系，通过这种方法将命名空间中的部分成员导入后我们就可以直接调用了，由于我们在导入的过程中还可以为导入变量或函数重命名，因此这种命名空间中导出变量或函数的导入方法的使用更为普遍与广泛。</p>
+<h3 id="三命名空间与函数的合并">三、命名空间与函数的合并</h3>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">lib</span> (<span class="params"></span>) </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">namespace</span> lib &#123;</span><br><span class="line">    <span class="keyword">export</span> <span class="keyword">let</span> version = <span class="string">&#x27;0.1.0&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在上述示例中我们通过命名空间与同名函数的合并实现了向函数 lib 中添加属性 version，这在 JavaScript 中是极为常见的，TypeScript 为我们提供了这种更为优雅的实现，我们查看其编译后的 JavaScript 代码是怎样的？</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&quot;use strict&quot;</span>;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">lib</span>(<span class="params"></span>) </span>&#123; &#125;</span><br><span class="line">(<span class="function"><span class="keyword">function</span> (<span class="params">lib</span>) </span>&#123;</span><br><span class="line">    lib.version = <span class="string">&#x27;0.1.0&#x27;</span>;</span><br><span class="line">&#125;)(lib || (lib = &#123;&#125;));</span><br></pre></td></tr></table></figure>
+<p>与之类似命名空间还可以与类合并为其添加静态属性，与枚举类型合并为其添加方法，举个🌰:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span> </span>&#123;&#125;</span><br><span class="line"><span class="keyword">namespace</span> C &#123;</span><br><span class="line">    <span class="keyword">export</span> <span class="keyword">let</span> version = <span class="string">&#x27;0.1.0&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">console</span>.log(C.version) <span class="comment">// &#x27;0.1.0&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">enum</span> Color &#123;</span><br><span class="line">  Red,</span><br><span class="line">  Yellow</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">namespace</span> Color &#123;</span><br><span class="line">  <span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">mix</span>(<span class="params"></span>) </span>&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">console</span>.log(Color.mix) <span class="comment">// function mix() &#123; &#125; </span></span><br></pre></td></tr></table></figure>
+<p>此处需要注意命名空间与类或与函数合并时，函数或类的定义必须在命名空间前面，否则会报错，而枚举类型与命名空间的定义之间的位置先后是没有要求的，</p>
+<h2 id="声明合并">声明合并</h2>
+<p>TypeScript 中的声明合并实际上就是指编译器会把程序中的多个地方具有相同名称的多个声明合并为一个声明，这样做的好处在于可以把程序中散落各处的声明合并在一起，进而避免对程序声明的遗漏，举个🌰:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> A &#123;</span><br><span class="line">  x: <span class="built_in">number</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">interface</span> A &#123;</span><br><span class="line">  y: <span class="built_in">number</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> a: A = &#123;</span><br><span class="line">  x: <span class="number">12</span>,</span><br><span class="line">  y: <span class="number">14</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>TypeScript 要求声明合并中非函数成员必须具有唯一性，即最好没有相同的属性名，如果两处声明具有相同的属性则必须类型一致，举个🌰:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> A &#123;</span><br><span class="line">  x: <span class="built_in">number</span>;</span><br><span class="line">  y: <span class="built_in">string</span> | <span class="built_in">number</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">interface</span> A &#123;</span><br><span class="line">  <span class="comment">// Property &#x27;y&#x27; must be of type &#x27;string | number&#x27;, but here has type &#x27;number&#x27;.</span></span><br><span class="line">  y: <span class="built_in">number</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么函数成员会怎么处理呢？实际上 TypeScript 会将每个函数看作函数重载，举个🌰:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> A &#123;</span><br><span class="line">  x: <span class="built_in">number</span>;</span><br><span class="line">  func(x: <span class="built_in">string</span>): <span class="built_in">string</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">interface</span> A &#123;</span><br><span class="line">  y: <span class="built_in">number</span>;</span><br><span class="line">  func(x: <span class="built_in">number</span>): <span class="built_in">number</span>;</span><br><span class="line">  func(x: <span class="built_in">number</span>[]): <span class="built_in">number</span>[];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> a: A = &#123;</span><br><span class="line">  x: <span class="number">12</span>,</span><br><span class="line">  y: <span class="number">14</span>,</span><br><span class="line">  <span class="function"><span class="title">func</span>(<span class="params">x: <span class="built_in">any</span></span>)</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> x</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么声明合并的时候函数重载列表的顺序是如何确定的呢？实际上这里主要会遵循两个原则：</p>
+<ol type="1">
+<li>接口内部按照书写先后顺序确定</li>
+<li>不同接口间后面的会排在前面</li>
+</ol>
+<p>因此上述示例中 func 属性的排列顺序如下所示：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> A &#123;</span><br><span class="line">  x: <span class="built_in">number</span>;</span><br><span class="line">  func(x: <span class="built_in">string</span>): <span class="built_in">string</span>; <span class="comment">// 5</span></span><br><span class="line">  func(x: <span class="string">&#x27;b&#x27;</span>): <span class="built_in">string</span>; <span class="comment">// 2</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">interface</span> A &#123;</span><br><span class="line">  y: <span class="built_in">number</span>;</span><br><span class="line">  func(x: <span class="built_in">number</span>): <span class="built_in">number</span>; <span class="comment">// 3</span></span><br><span class="line">  func(x: <span class="built_in">number</span>[]): <span class="built_in">number</span>[]; <span class="comment">// 4</span></span><br><span class="line">  func(x: <span class="string">&#x27;a&#x27;</span>): <span class="built_in">string</span>; <span class="comment">// 1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>不过上面的原则也有一个例外，如果函数的参数为字符串的字面量的话那么这个声明就会被提升到整个函数声明的最顶端，举个🌰:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> A &#123;</span><br><span class="line">  x: <span class="built_in">number</span>;</span><br><span class="line">  func(x: <span class="built_in">string</span>): <span class="built_in">string</span>; <span class="comment">// 3</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">interface</span> A &#123;</span><br><span class="line">  y: <span class="built_in">number</span>;</span><br><span class="line">  func(x: <span class="built_in">number</span>): <span class="built_in">number</span>; <span class="comment">// 1</span></span><br><span class="line">  func(x: <span class="built_in">number</span>[]): <span class="built_in">number</span>[]; <span class="comment">// 2</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="声明文件">声明文件</h2>
+<h3 id="一声明语法">一、声明语法</h3>
+<h4 id="全局变量">1、全局变量</h4>
+<p>使用 declare var 声明变量。 如果变量是只读的，那么可以使用 declare const。 你还可以使用 declare let 变量拥有块级作用域。</p>
+<p>代码:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(<span class="string">&quot;Half the number of widgets is &quot;</span> + (foo / <span class="number">2</span>))</span><br></pre></td></tr></table></figure>
+<p>声明:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">declare <span class="keyword">var</span> foo: number</span><br></pre></td></tr></table></figure>
+<p>一般来说，全局变量都是禁止修改的常量，所以大部分情况都应该使用 const 而不是 var 或 let。</p>
+<h4 id="全局函数">2、全局函数</h4>
+<p>使用 declare function 声明函数</p>
+<p>代码:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">greet(<span class="string">&quot;hello, world&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>声明:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">declare</span> <span class="function"><span class="keyword">function</span> <span class="title">greet</span>(<span class="params">greeting: <span class="built_in">string</span></span>): <span class="title">void</span></span></span><br></pre></td></tr></table></figure>
+<p>在声明语句中，支持函数重载</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">declare</span> <span class="function"><span class="keyword">function</span> <span class="title">greet</span>(<span class="params">greeting: <span class="built_in">string</span></span>): <span class="title">void</span></span></span><br><span class="line"><span class="function"><span class="title">declare</span> <span class="function"><span class="keyword">function</span> <span class="title">greet</span>(<span class="params">greeting: <span class="built_in">number</span></span>): <span class="title">void</span></span></span></span><br></pre></td></tr></table></figure>
+<h4 id="带属性的对象">3、带属性的对象</h4>
+<p>使用 declare namespace 描述用点表示法访问的类型或值</p>
+<p>代码:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> result = myLib.makeGreeting(<span class="string">&quot;hello, world&quot;</span>)</span><br><span class="line"><span class="built_in">console</span>.log(<span class="string">&quot;The computed greeting is:&quot;</span> + result)</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> count = myLib.numberOfGreetings</span><br></pre></td></tr></table></figure>
+<p>声明:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">declare</span> <span class="keyword">namespace</span> myLib &#123;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">makeGreeting</span>(<span class="params">s: <span class="built_in">string</span></span>): <span class="title">string</span></span></span><br><span class="line"><span class="function">    <span class="title">let</span> <span class="title">numberOfGreetings</span>: <span class="title">number</span></span></span><br><span class="line"><span class="function">&#125;</span></span><br></pre></td></tr></table></figure>
+<h4 id="可重用类型接口或类型">4、可重用类型接口或类型</h4>
+<p>除了全局变量之外，可能有一些类型我们也希望能暴露出来。在类型声明文件中，我们可以直接使用 interface 或 type 来声明一个全局的接口或类型。</p>
+<p>代码:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">greet(&#123;</span><br><span class="line">  greeting: <span class="string">&quot;hello world&quot;</span>,</span><br><span class="line">  duration: <span class="number">4000</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>声明:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> GreetingSettings &#123;</span><br><span class="line">  greeting: <span class="built_in">string</span></span><br><span class="line">  duration?: <span class="built_in">number</span></span><br><span class="line">  color?: <span class="built_in">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">declare</span> <span class="function"><span class="keyword">function</span> <span class="title">greet</span>(<span class="params">setting: GreetingSettings</span>): <span class="title">void</span></span></span><br></pre></td></tr></table></figure>
+<p>type 与 interface 类似.</p>
+<h4 id="组织类型">5、组织类型</h4>
+<p>代码：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> g = <span class="keyword">new</span> Greeter(<span class="string">&quot;Hello&quot;</span>)</span><br><span class="line">g.log(&#123; <span class="attr">verbose</span>: <span class="literal">true</span> &#125;)</span><br><span class="line">g.alert(&#123; <span class="attr">modal</span>: <span class="literal">false</span>, <span class="attr">title</span>: <span class="string">&quot;Current Greeting&quot;</span> &#125;)</span><br></pre></td></tr></table></figure>
+<p>使用命名空间组织类型</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">declare</span> <span class="keyword">namespace</span> Greeter &#123;</span><br><span class="line">  <span class="keyword">interface</span> LogOptions &#123;</span><br><span class="line">    verbose?: <span class="built_in">boolean</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">interface</span> AlertOptions &#123;</span><br><span class="line">    modal: <span class="built_in">boolean</span></span><br><span class="line">    title?: <span class="built_in">string</span></span><br><span class="line">    color?: <span class="built_in">string</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>也可以在一个声明中创建嵌套的命名空间</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">declare</span> <span class="keyword">namespace</span> Greeter.Options &#123;</span><br><span class="line">  <span class="comment">// Refer to via Greeter.Options.Log</span></span><br><span class="line">  <span class="keyword">interface</span> Log &#123;</span><br><span class="line">    verbose?: <span class="built_in">boolean</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">interface</span> Alert &#123;</span><br><span class="line">    modal: <span class="built_in">boolean</span></span><br><span class="line">    title?: <span class="built_in">string</span></span><br><span class="line">    color?: <span class="built_in">string</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="全局类">6、全局类</h4>
+<p>使用 declare class 描述一个类或像类一样的对象。 类可以有属性和方法，就和构造函数一样，但不能用来定义具体的实现。</p>
+<p>代码:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> myGreeter = <span class="keyword">new</span> Greeter(<span class="string">&quot;hello, world&quot;</span>)</span><br><span class="line">myGreeter.greeting = <span class="string">&quot;howdy&quot;</span></span><br><span class="line">myGreeter.showGreeting()</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SpecialGreeter</span> <span class="keyword">extends</span> <span class="title">Greeter</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="title">constructor</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">    <span class="built_in">super</span>(<span class="string">&quot;Very special greetings&quot;</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>声明:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">declare</span> <span class="class"><span class="keyword">class</span> <span class="title">Greeter</span> </span>&#123;</span><br><span class="line">  <span class="title">constructor</span>(<span class="params">greeting: <span class="built_in">string</span></span>)</span><br><span class="line">  <span class="title">greeting</span>: <span class="title">string</span></span><br><span class="line">  <span class="title">showGreeting</span>(<span class="params"></span>): <span class="title">void</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="二声明文件">二、声明文件</h3>
+<p>在开发过程中不可避免的要引用其他第三方 JavaScript 库，但是在 Typescript 项目中直接引用 JavaScript 库无法通过 TypeScript 的严格类型检查机制，需要我们为其类型声明，即引入声明文件，举个🌰:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> $ <span class="keyword">from</span> <span class="string">&#x27;jquery&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Error: Try `npm install @types/jquery` if it exists or add a new declaration (.d.ts) file containing `declare module &#x27;jquery&#x27;;`</span></span><br></pre></td></tr></table></figure>
+<p>这儿我们通过模块化方式引用 jquery 库，但是由于其是一个 JavaScript 库，所以 TypeScript 的类型检查机制提示类型声明文件不存在，jquery 库的声明文件是单独提供的，我们这儿安装一下就好：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install @types/jquery -D</span><br></pre></td></tr></table></figure>
+<p>安装完之后，就可以正常在 ts 文件中使用 jquery 了。但是部分类库没有提供声明文件的话就需要我们自己编写声明文件，那么声明文件该如何编写呢？</p>
+<h4 id="编写声明文件">1、编写声明文件</h4>
+<p>我们平时引用的第三方库主要由三种类型构成：</p>
+<ul>
+<li>全局类库</li>
+<li>模块类库</li>
+<li>UMD类库</li>
+</ul>
+<p>全局类库是指能在全局命名空间下访问，不需要 import、require等指令导入，主要在 HTML 中通过 <code>&lt;script&gt;</code> 标签引入；而模块类库只能工作在模块加载器的环境下，遵循不同模块化方案的模块类库有着不同的引入和导出方式，而UMD模块既可以作为模块引入又可以作为全局使用。</p>
+<p><strong>（1）全局类库</strong></p>
+<p>编写 js 文件，如下所示：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">globalLib</span> (<span class="params">options</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(options)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">globalLib.version = <span class="string">&#x27;1.0.0&#x27;</span></span><br><span class="line"></span><br><span class="line">globalLib.doSomething = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;global lib do something&#x27;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述代码中，定义了一个函数，为函数添加了两个元素。接下来我们用 script 标签引入该文件，让该函数作用在全局。</p>
+<p>我们在 ts 中调用该函数，如下所示：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">globalLib(&#123; <span class="attr">a</span>: <span class="number">1</span> &#125;) <span class="comment">// Error: Cannot find name &#x27;globalLib&#x27;.</span></span><br></pre></td></tr></table></figure>
+<p>提示未找到该函数。解决办法为它添加一个声明文件，在同级目录下创建一个同名 d.ts 文件，如下所示：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">declare</span> <span class="function"><span class="keyword">function</span> <span class="title">globalLib</span> (<span class="params">options: globalLib.Options</span>): <span class="title">void</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">declare</span> <span class="title">namespace</span> <span class="title">globalLib</span> </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> version: <span class="built_in">string</span></span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">doSomething</span> (<span class="params"></span>): <span class="title">void</span></span></span><br><span class="line"><span class="function">  <span class="title">interface</span> <span class="title">Options</span> </span>&#123;</span><br><span class="line">    [key: <span class="built_in">string</span>]: <span class="built_in">any</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>定义了一个同名函数和命名空间，在上一篇声明合并中有介绍过函数与命名空间合并，相当于为函数添加了一些默认属性。函数参数定义了一个接口，参数指定为可索引类型，接受任意属性。declare 关键字可以为外部变量提供声明。</p>
+<p><strong>（2）模块类库</strong></p>
+<p>以下为 CommonJS 模块编写的文件：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> version = <span class="string">&#x27;1.0.0&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">doSomething</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;moduleLib do something&#x27;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">moduleLib</span> (<span class="params">options</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(options)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">moduleLib.version = version</span><br><span class="line">moduleLib.doSomething = doSomething</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = moduleLib</span><br></pre></td></tr></table></figure>
+<p>同样我们将它引入 ts 文件中使用。</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="built_in">module</span> <span class="keyword">from</span> <span class="string">&#x27;./module-lib/index.js&#x27;</span></span><br><span class="line"><span class="comment">// Error: Could not find a declaration file for module &#x27;./module-lib/index.js&#x27;. </span></span><br></pre></td></tr></table></figure>
+<p>提示未找到该模块，同样我们需要为它编写文件声明。</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">declare</span> <span class="function"><span class="keyword">function</span> <span class="title">moduleLib</span> (<span class="params">options: Options</span>): <span class="title">void</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">interface</span> <span class="title">Options</span> </span>&#123;</span><br><span class="line">  [key: <span class="built_in">string</span>]: <span class="built_in">any</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">declare</span> <span class="keyword">namespace</span> moduleLib &#123;</span><br><span class="line">  <span class="keyword">const</span> version: <span class="built_in">string</span></span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">doSomething</span>(<span class="params"></span>): <span class="title">void</span></span></span><br><span class="line"><span class="function">&#125;</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">export</span> = <span class="title">moduleLib</span></span></span><br></pre></td></tr></table></figure>
+<p>上述 ts 与刚刚编写的全局类库声明文件大致相同，唯一的区别这里需要 export 输出。</p>
+<p><strong>（3）UMD类库</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">(<span class="function"><span class="keyword">function</span> (<span class="params">root, factory</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> define === <span class="string">&#x27;function&#x27;</span> &amp;&amp; define.amd) &#123;</span><br><span class="line">    define(factory)</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="keyword">typeof</span> <span class="built_in">module</span> === <span class="string">&#x27;object&#x27;</span> &amp;&amp; <span class="built_in">module</span>.exports) &#123;</span><br><span class="line">    <span class="built_in">module</span>.exports = factory()</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    root.umdLib = factory()</span><br><span class="line">  &#125;</span><br><span class="line">&#125;(<span class="built_in">this</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> &#123;</span><br><span class="line">    version: <span class="string">&#x27;1.0.0&#x27;</span>,</span><br><span class="line">    doSomething () &#123;</span><br><span class="line">      <span class="built_in">console</span>.log(<span class="string">&#x27;umd lib do something&#x27;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;))</span><br></pre></td></tr></table></figure>
+<p>同样我们将它引入 ts 文件中使用，如果没有声明文件也会提示错误，我们直接看 ts 声明文件</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">declare</span> <span class="keyword">namespace</span> umdLib &#123;</span><br><span class="line">  <span class="keyword">const</span> version: <span class="built_in">string</span></span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">doSomething</span> (<span class="params"></span>): <span class="title">void</span></span></span><br><span class="line"><span class="function">&#125;</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">export</span> <span class="title">as</span> <span class="title">namespace</span> <span class="title">umdLib</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">export</span> = <span class="title">umdLib</span></span></span><br></pre></td></tr></table></figure>
+<p>我们声明了一个命名空间，命名空间内有两个成员 version 和 doSomething，分别对应 umd 中的两个成员。这里与其他类库不同的是，多添加了一条语句 export as namespace umdLib，如果为 umd 库声明，这条语句必不可少。</p>
+<p>umd 同样可以使用全局方式引用。</p>
+<h4 id="声明文件放哪儿">2、声明文件放哪儿</h4>
+<p>在介绍声明文件如何编写之前，列举一下一般声明文件存放的方式。</p>
+<ol type="1">
+<li>目录 src/<span class="citation" data-cites="types">@types</span>/，在 src 目录新建 <span class="citation" data-cites="types">@types</span> 目录，在其中编写 .d.ts 声明文件，声明文件会自动被识别，可以在此为一些没有声明文件的模块编写自己的声明文件，实际上在 tsconfig.json 中 include 字段包含的范围内编写 .d.ts，都将被自动识别；</li>
+<li>与被声明的 js 文件同级目录内，创建相同名称的 .d.ts 文件，这样也会被自动识别，前面示例都采用了此方案；</li>
+<li>设置 package.json 中的 typings 属性值，如 ./index.d.ts. 这样系统会识别该地址的声明文件。同样当我们把自己的js库发布到 npm 上时，按照该方法绑定声明文件。</li>
+<li>通过 npm 模块安装，如 <span class="citation" data-cites="type/react">@type/react</span> ，它将被存放在 node_modules/<span class="citation" data-cites="types">@types</span>/ 路径下。</li>
+</ol>
+<h4 id="如何发布声明文件">3、如何发布声明文件</h4>
+<p>如果我们自己实现了一个js库，如何来写声明文件呢？目前有两种方式用来发布声明文件到 npm 上：</p>
+<ol type="1">
+<li>与你的 npm 包同时捆绑在一起；</li>
+<li>发布到 npm 上的 <span class="citation" data-cites="types">[@types organization]</span>(https://www.npmjs.com/~types)</li>
+</ol>
+<p><strong>（1）npm包含声明文件</strong></p>
+<p>在 package.json 中，你的需要指定 npm 包的主 js 文件，那么你还需要指定主声明文件。如下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;name&quot;</span>: <span class="string">&quot;owl-redux&quot;</span>,</span><br><span class="line">  <span class="string">&quot;version&quot;</span>: <span class="string">&quot;0.0.1&quot;</span>,</span><br><span class="line">  <span class="string">&quot;description&quot;</span>: <span class="string">&quot;A simple version of redux&quot;</span>,</span><br><span class="line">  <span class="string">&quot;main&quot;</span>: <span class="string">&quot;dist/owl-redux.js&quot;</span>,</span><br><span class="line">  <span class="string">&quot;typings&quot;</span>: <span class="string">&quot;index.d.ts&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>有的 npm 包设置的 types 属性，它和 typings 具有相同意义。</p>
+<p><strong>（2）发布到@types</strong></p>
+<p><span class="citation" data-cites="types">@types</span> 下面的包是从 <a target="_blank" rel="noopener" href="https://github.com/DefinitelyTyped/DefinitelyTyped">DefinitelyTyped</a> 里自动发布的，通过 types-publisher 工具。 如果想让你的包发布为@types包，只需要提交一个pull request到 https://github.com/DefinitelyTyped/DefinitelyTyped。</p>
+<h4 id="插件">4、插件</h4>
+<p>有时候，我们想给一个第三方类库添加一些自定义的方法。以下介绍如何在模块插件或全局插件中添加自定义方法。</p>
+<p><strong>（1）模块插件</strong></p>
+<p>我们使用 moment 插件，为它添加一个自定义方法。 关键字 declare module。</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> m <span class="keyword">from</span> <span class="string">&#x27;moment&#x27;</span></span><br><span class="line"><span class="keyword">declare</span> <span class="built_in">module</span> <span class="string">&#x27;moment&#x27;</span> &#123;</span><br><span class="line">  <span class="keyword">export</span> <span class="function"><span class="keyword">function</span> <span class="title">myFunction</span> (<span class="params"></span>): <span class="title">void</span></span></span><br><span class="line"><span class="function">&#125;</span></span><br><span class="line"><span class="function"><span class="title">m</span>.<span class="title">myFunction</span> = (<span class="params"></span>) =&gt; </span>&#123; <span class="built_in">console</span>.log(<span class="string">&#x27;I am a Fn&#x27;</span>) &#125;</span><br></pre></td></tr></table></figure>
+<p><strong>（2）全局插件</strong></p>
+<p>在上面我们有介绍全局类库，我们为它添加一个自定义方法。关键字 declare global。</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">declare</span> <span class="built_in">global</span> &#123;</span><br><span class="line">  <span class="keyword">namespace</span> globalLib &#123;</span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">doAnyting</span> (<span class="params"></span>): <span class="title">void</span></span></span><br><span class="line"><span class="function">  &#125;</span></span><br><span class="line"><span class="function">&#125;</span></span><br><span class="line"><span class="function"><span class="title">globalLib</span>.<span class="title">doAnyting</span> = (<span class="params"></span>) =&gt; </span>&#123;&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="声明文件依赖">5、声明文件依赖</h4>
+<p>在为一个大型项目编写声明文件其实是极为复杂的，那么如何更好的管理这些声明文件呢？我们以 <span class="citation" data-cites="types/jquery">@types/jquery</span> 类型声明库为例，其在 package.json 配置文件中先通过 types 字段指定了类型声明入口文件：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;types&quot;: &quot;index.d.ts&quot;,</span><br></pre></td></tr></table></figure>
+<p>然后在 index.d.ts 文件中依赖了其他类型声明文件：</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// index.d.ts</span></span><br><span class="line"><span class="comment">/// &lt;reference types=&quot;sizzle&quot; /&gt;</span></span><br><span class="line"><span class="comment">/// &lt;reference path=&quot;JQueryStatic.d.ts&quot; /&gt;</span></span><br><span class="line"><span class="comment">/// &lt;reference path=&quot;JQuery.d.ts&quot; /&gt;</span></span><br><span class="line"><span class="comment">/// &lt;reference path=&quot;misc.d.ts&quot; /&gt;</span></span><br><span class="line"><span class="comment">/// &lt;reference path=&quot;legacy.d.ts&quot; /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> = jQuery;</span><br></pre></td></tr></table></figure>
+<p>这儿的三斜线指令其本质是包含单个XML标签的单行注释。 注释的内容会做为编译器指令使用，在 TypeScript 中编译器会对输入文件进行预处理来解析所有三斜线引用指令。 在这个过程中，额外的文件会加到编译过程中。这个过程会以一些根文件开始； 它们是在命令行中指定的文件或是在 tsconfig.json中的"files"列表里的文件。 这些根文件按指定的顺序进行预处理。 在一个文件被加入列表前，它包含的所有三斜线引用都要被处理，还有它们包含的目标。 三斜线引用以它们在文件里出现的顺序，使用深度优先的方式解析。</p>
+<p><code>/// &lt;reference path="..." /&gt;</code> 指令是三斜线指令中最常见的一种，它用于声明文件间的依赖，参数是目标文件的相对路径，需要注意这儿的引用路径是相对于包含它的文件的，而不是根文件。</p>
+<p><code>/// &lt;reference types="..." /&gt;</code> 指令声明了对某个包的依赖。对这些包的名字的解析与在 import语句里对模块名的解析类似。 可以简单地把三斜线类型引用指令当做 import 声明的包。例如，把 <code>/// &lt;reference types="node" /&gt;</code> 引入到声明文件，表明这个文件使用了 <span class="citation" data-cites="types/node/index.d.ts">@types/node/index.d.ts</span> 里面声明的名字，并且这个包需要在编译阶段与声明文件一起被包含进来。对于那些在编译阶段生成的声明文件，编译器会自动地添加 <code>/// &lt;reference types="..." /&gt;</code> 但是当且仅当结果文件中使用了引用的包里的声明时才会在生成的声明文件里添加。</p>
+<p>需要注意如果指定了我们在 tsc 指令中指定了 --noResolve 编译选项，三斜线引用会被忽略，它们不会增加新文件，也不会改变给定文件的顺序。当使用 --out 或 --outFile 选项时，它也可以做为调整输出内容顺序的一种方法。 文件在输出文件内容中的位置与经过预处理后的输入顺序一致。</p>
+<h2 id="参考资料">参考资料</h2>
+<p>极客时间《TypeScript开发实战》专栏</p>
+<p>《深入理解TypeScript》</p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6844903598480965646">CommonJs 和 ESModule 的 区别整理</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.dengwb.com/typescript/">TypeScript开发教程</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/weixin.png" alt="kyleezhang 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/alipay.png" alt="kyleezhang 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>kyleezhang
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://kyleezhang.com/2021/01/06/typescript-02/" title="TypeScript工程化实践笔记">http://kyleezhang.com/2021/01/06/typescript-02/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/assets/config/wechat.png">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/TypeScript/" rel="tag"><i class="fa fa-tag"></i>TypeScript</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/01/03/webpack-codesplitting/" rel="prev" title="Webpack中的CodeSplitting">
+      <i class="fa fa-chevron-left"></i> Webpack中的CodeSplitting
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/01/11/javascript-meta/" rel="next" title="JavaScript中的元编程">
+      JavaScript中的元编程 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A3%B0%E6%98%8E%E7%A9%BA%E9%97%B4"><span class="nav-text">声明空间</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E7%B1%BB%E5%9E%8B%E5%A3%B0%E6%98%8E%E7%A9%BA%E9%97%B4"><span class="nav-text">一、类型声明空间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E5%8F%98%E9%87%8F%E5%A3%B0%E6%98%8E%E7%A9%BA%E9%97%B4"><span class="nav-text">二、变量声明空间</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E5%9D%97%E7%B3%BB%E7%BB%9F"><span class="nav-text">模块系统</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E5%85%A8%E5%B1%80%E6%A8%A1%E5%9D%97"><span class="nav-text">一、全局模块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E6%96%87%E4%BB%B6%E6%A8%A1%E5%9D%97"><span class="nav-text">二、文件模块</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#es-module"><span class="nav-text">1、ES Module</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#commonjs"><span class="nav-text">2、CommonJS</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#commonjs%E4%B8%8Ees-module%E4%B9%8B%E9%97%B4%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-text">3、CommonJS与ES Module之间的区别</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%BC%E5%AE%B9%E6%80%A7%E5%A4%84%E7%90%86"><span class="nav-text">4、兼容性处理</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4"><span class="nav-text">命名空间</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E5%AE%9A%E4%B9%89"><span class="nav-text">一、定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E6%88%90%E5%91%98%E5%88%AB%E5%90%8D"><span class="nav-text">二、成员别名</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E4%B8%8E%E5%87%BD%E6%95%B0%E7%9A%84%E5%90%88%E5%B9%B6"><span class="nav-text">三、命名空间与函数的合并</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A3%B0%E6%98%8E%E5%90%88%E5%B9%B6"><span class="nav-text">声明合并</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A3%B0%E6%98%8E%E6%96%87%E4%BB%B6"><span class="nav-text">声明文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E5%A3%B0%E6%98%8E%E8%AF%AD%E6%B3%95"><span class="nav-text">一、声明语法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F"><span class="nav-text">1、全局变量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%A8%E5%B1%80%E5%87%BD%E6%95%B0"><span class="nav-text">2、全局函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B8%A6%E5%B1%9E%E6%80%A7%E7%9A%84%E5%AF%B9%E8%B1%A1"><span class="nav-text">3、带属性的对象</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%AF%E9%87%8D%E7%94%A8%E7%B1%BB%E5%9E%8B%E6%8E%A5%E5%8F%A3%E6%88%96%E7%B1%BB%E5%9E%8B"><span class="nav-text">4、可重用类型接口或类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BB%84%E7%BB%87%E7%B1%BB%E5%9E%8B"><span class="nav-text">5、组织类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%A8%E5%B1%80%E7%B1%BB"><span class="nav-text">6、全局类</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E5%A3%B0%E6%98%8E%E6%96%87%E4%BB%B6"><span class="nav-text">二、声明文件</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BC%96%E5%86%99%E5%A3%B0%E6%98%8E%E6%96%87%E4%BB%B6"><span class="nav-text">1、编写声明文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A3%B0%E6%98%8E%E6%96%87%E4%BB%B6%E6%94%BE%E5%93%AA%E5%84%BF"><span class="nav-text">2、声明文件放哪儿</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%8F%91%E5%B8%83%E5%A3%B0%E6%98%8E%E6%96%87%E4%BB%B6"><span class="nav-text">3、如何发布声明文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6"><span class="nav-text">4、插件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A3%B0%E6%98%8E%E6%96%87%E4%BB%B6%E4%BE%9D%E8%B5%96"><span class="nav-text">5、声明文件依赖</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="kyleezhang"
+      src="/assets/config/avatar.png">
+  <p class="site-author-name" itemprop="name">kyleezhang</p>
+  <div class="site-description" itemprop="description">学源于思</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/kyleezhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;kyleezhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/2942181559@qq.com" title="E-Mail → 2942181559@qq.com"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/u/6998903195" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;u&#x2F;6998903195" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">kyleezhang</span>
+</div>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">365k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">5:32</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  <!-- 背景动画 -->
+<script src="/js/particle.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/config/favicon.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kyleezhang.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"enable":false,"style":"tabs","active":false,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="类型检查机制 类型检查机制是指TypeScript在做类型检查时所秉承的一些原则，以及表现出的一些行为，其作用主要是辅助开发，提升开发效率。TypeScript的类型检查机制主要包括如下三个部分：  类型推断 类型兼容性 类型保护">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TypeScript学习笔记（六）——类型检查机制">
+<meta property="og:url" content="http://kyleezhang.com/2020/11/26/typescript-07/index.html">
+<meta property="og:site_name" content="大熊猫的五分裤">
+<meta property="og:description" content="类型检查机制 类型检查机制是指TypeScript在做类型检查时所秉承的一些原则，以及表现出的一些行为，其作用主要是辅助开发，提升开发效率。TypeScript的类型检查机制主要包括如下三个部分：  类型推断 类型兼容性 类型保护">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-11-26T02:41:45.000Z">
+<meta property="article:modified_time" content="2021-07-03T06:14:14.595Z">
+<meta property="article:author" content="kyleezhang">
+<meta property="article:tag" content="TypeScript">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://kyleezhang.com/2020/11/26/typescript-07/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>TypeScript学习笔记（六）——类型检查机制 | 大熊猫的五分裤</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2KR3NK700N"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-2KR3NK700N');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?f1621cb3fb0792bb294fce1b938d5eef";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="大熊猫的五分裤" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+    <a target="_blank" rel="noopener" href="https://github.com/kyleezhang " class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#fff; color:#151513; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    </div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">大熊猫的五分裤</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://kyleezhang.com/2020/11/26/typescript-07/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/assets/config/avatar.png">
+      <meta itemprop="name" content="kyleezhang">
+      <meta itemprop="description" content="学源于思">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="大熊猫的五分裤">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          TypeScript学习笔记（六）——类型检查机制
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-26 10:41:45" itemprop="dateCreated datePublished" datetime="2020-11-26T10:41:45+08:00">2020-11-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-07-03 14:14:14" itemprop="dateModified" datetime="2021-07-03T14:14:14+08:00">2021-07-03</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%89%8D%E7%AB%AF/" itemprop="url" rel="index"><span itemprop="name">前端</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>8.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="类型检查机制">类型检查机制</h2>
+<p>类型检查机制是指TypeScript在做类型检查时所秉承的一些原则，以及表现出的一些行为，其作用主要是辅助开发，提升开发效率。TypeScript的类型检查机制主要包括如下三个部分：</p>
+<ul>
+<li>类型推断</li>
+<li>类型兼容性</li>
+<li>类型保护</li>
+</ul>
+<a id="more"></a>
+<h3 id="一类型推断">一、类型推断</h3>
+<p>类型推断指的是有时候我们不需要指定变量的类型（函数的返回值类型），TypeScript可以根据某些规则自动地为其推断出某些类型，类型推断主要分为如下三部分内容：</p>
+<ul>
+<li>基础类型推断</li>
+<li>最佳通用类型推断</li>
+<li>上下文类型推断</li>
+</ul>
+<h4 id="基础类型推断">1、基础类型推断</h4>
+<p>基础类型推断也是TypeScript出现最普遍的类型推断，通常发生在以下场景：初始化变量、设置函数默认参数、确定函数返回值，举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> a; <span class="comment">// 自动推断为any类型</span></span><br><span class="line"><span class="keyword">let</span> b = <span class="number">1</span>; <span class="comment">// 自动推断为number类型</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> fuc1 = <span class="function">(<span class="params">c: <span class="number">1</span></span>) =&gt;</span> &#123;&#125; <span class="comment">// c被自动推断为number类型</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> func2 = <span class="function">(<span class="params">x: <span class="number">1</span></span>) =&gt;</span> x + <span class="number">1</span> <span class="comment">// func2被推断为(x?: number) =&gt; number类型</span></span><br></pre></td></tr></table></figure>
+<h4 id="最佳通用类型推断">2、最佳通用类型推断</h4>
+<p>当需要从几个表达式中推断类型的时候，会使用这些表达式的类型来推断出一个最合适的通用类型。默认情况下，会查看所有的表达式，检查它们是否有共同的类型，比如是否都有同一个父类。如果有，就会被推断为该类型 如果没有共同的类型，比如全部是基础类型，默认会使用联合类型，形如例如<code>string | number</code>。举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> arr = [<span class="number">1</span>, <span class="string">&#x27;1&#x27;</span>] <span class="comment">// arr被自动推断为[number | string]类型</span></span><br></pre></td></tr></table></figure>
+<h4 id="上下文类型推断">3、上下文类型推断</h4>
+<p>上述两种类型推断都是从右向左的类型推断，即根据右侧表达式的值推测左侧表达式的类型，而上下文类型推断的方向与其是恰好相反的，它通常发生在事件处理中，举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// (parameter) event: KeyboardEvent</span></span><br><span class="line"><span class="built_in">window</span>.document.onkeydown = <span class="function">(<span class="params">event</span>) =&gt;</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>在上述的示例中就发生了上下文类型推断，TypeScript会根据左侧的事件绑定来推断出右侧的事件类型，在这儿event就被推断成了KeyboardEvent。</p>
+<h3 id="二类型兼容性">二、类型兼容性</h3>
+<p>当一个类型Y可以被赋值给另一个类型X时我们就可以说类型X兼容类型Y，即 X兼容Y：X(目标类型) = Y(源类型) 举个🌰，当我们关闭tsconfig.json中的strictNullChecks选项时我们可以将null赋值给其他基本类型：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> s: <span class="built_in">string</span> = <span class="string">&#x27;a&#x27;</span>;</span><br><span class="line">s = <span class="literal">null</span>;</span><br></pre></td></tr></table></figure>
+<p>此时我们也可以说字符类型是兼容null类型的，或null类型是字符类型的子类型，之所以我们在此讨论类型兼容性是因为TypeScript是允许不同类型的变量间的相互赋值，虽然在某种程度上讲这会造成一定程度不可靠的行为，但是极大程度上提高了代码的灵活性。类型兼容性的例子广泛存在于接口、函数和类中，下面我们分别进行介绍：</p>
+<h4 id="接口兼容性">1、接口兼容性</h4>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> X &#123;</span><br><span class="line">  a: <span class="built_in">any</span>;</span><br><span class="line">  b: <span class="built_in">any</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">interface</span> Y &#123;</span><br><span class="line">  a: <span class="built_in">any</span>;</span><br><span class="line">  b: <span class="built_in">any</span>;</span><br><span class="line">  c: <span class="built_in">any</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> x: X = &#123; <span class="attr">a</span>: <span class="number">1</span>, <span class="attr">b</span>: <span class="number">2</span> &#125;</span><br><span class="line"><span class="keyword">let</span> y: Y = &#123; <span class="attr">a</span>: <span class="number">1</span>, <span class="attr">b</span>: <span class="number">2</span>, <span class="attr">c</span>: <span class="number">3</span> &#125;</span><br><span class="line"></span><br><span class="line">x = y <span class="comment">// ok</span></span><br><span class="line">y = x <span class="comment">// Property &#x27;c&#x27; is missing in type &#x27;X&#x27; but required in type &#x27;Y&#x27;.</span></span><br></pre></td></tr></table></figure>
+<p>在上述示例中我们可以看到如果接口Y具备X接口的所有属性，也就是属性a和b，及时拥有额外的属性c也依然可以被认为是X类型，也就是说X类型兼容Y类型，这里再次体现了Typescript的类型检查原则，即鸭式辩形法。</p>
+<h4 id="函数兼容性">2、函数兼容性</h4>
+<p>函数的兼容性与接口不同，函数之间要实现兼容必须要具备如下三个条件：</p>
+<p>(1)<strong>参数个数</strong></p>
+<p>如果一个函数x的参数列表中，每一个参数的位置和类型，都能在另一个函数y的参数列表中一一对应（y中多余的参数不做限制），那么x就是对y参数类型兼容的。简单来说就是，参数需求少的函数，允许在提供更多的参数的函数类型上使用。典型的应用场景就是，Array的原型方法，map, forEach等等的回调目标函数中，它们被定义为接收三个参数，当前遍历的元素，元素索引，整个数组，但通常提供只接收前几个的参数的回调源函数。举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Handler = <span class="function">(<span class="params">a: <span class="built_in">number</span>, b: <span class="built_in">number</span></span>) =&gt;</span> <span class="built_in">void</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">func</span>(<span class="params">handler: Handler</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> handler</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 当我们给func函数传入参数时TypeScript引擎就会判断传入参数与Handler类型是否兼容，因此在本例中传入参数为源类型，Handler类型为目标类型，因此此处传入源函数的参数个数必须少于两个</span></span><br><span class="line"><span class="keyword">let</span> handler1 = <span class="function">(<span class="params">a: <span class="built_in">number</span></span>) =&gt;</span> &#123;&#125;</span><br><span class="line">func(handler1)</span><br><span class="line"><span class="keyword">let</span> handler2 = <span class="function">(<span class="params">a: <span class="built_in">number</span>, b: <span class="built_in">number</span>, c: <span class="built_in">number</span></span>) =&gt;</span> &#123;&#125;</span><br><span class="line">func(handler2) <span class="comment">// 类型&quot;(a: number, b: number, c: number) =&gt; void&quot;的参数不能赋给类型&quot;Handler&quot;的参数</span></span><br></pre></td></tr></table></figure>
+<p>上述的示例展示的是固定参数的情形，当函数中拥有可选参数或剩余参数时兼容原则却又有所不同，举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> a = <span class="function">(<span class="params">p1: <span class="built_in">number</span>, p2: <span class="built_in">number</span></span>) =&gt;</span> &#123;&#125;</span><br><span class="line"><span class="keyword">let</span> b = <span class="function">(<span class="params">p1?: <span class="built_in">number</span>, p2?: <span class="built_in">number</span></span>) =&gt;</span> &#123;&#125;</span><br><span class="line"><span class="keyword">let</span> c = <span class="function">(<span class="params">...args: <span class="built_in">number</span>[]</span>) =&gt;</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 固定参数可以兼容剩余参数与可选参数</span></span><br><span class="line">a = b;</span><br><span class="line">a = c;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 可选参数不兼容固定参数与剩余参数</span></span><br><span class="line">b = a; <span class="comment">// Type &#x27;number | undefined&#x27; is not assignable to type &#x27;number&#x27;.</span></span><br><span class="line">b = c; <span class="comment">// Type &#x27;number | undefined&#x27; is not assignable to type &#x27;number&#x27;.</span></span><br><span class="line"><span class="comment">// 注：此时我们可以将tsconfig.json中的strictFunctionTypes属性设为false来使其兼容</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 剩余参数可以兼容固定参数与可选参数</span></span><br><span class="line">c = a;</span><br><span class="line">c = b;</span><br></pre></td></tr></table></figure>
+<p>(2)<strong>参数类型</strong></p>
+<p>如果参数为基本类型，源函数类型的参数必须与目标函数类型相同或为其子类型，举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> handler3 = <span class="function">(<span class="params">a: <span class="built_in">string</span></span>) =&gt;</span> &#123;&#125;</span><br><span class="line">func(handler3) <span class="comment">//  Type &#x27;number&#x27; is not assignable to type &#x27;string&#x27;.</span></span><br></pre></td></tr></table></figure>
+<p>当参数类型为对象时情况有所不同，举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> Point3D &#123;</span><br><span class="line">  x: <span class="built_in">number</span>;</span><br><span class="line">  y: <span class="built_in">number</span>;</span><br><span class="line">  z: <span class="built_in">number</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> Point2D &#123;</span><br><span class="line">  x: <span class="built_in">number</span>;</span><br><span class="line">  y: <span class="built_in">number</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> p3d = <span class="function">(<span class="params">point: Point3D</span>) =&gt;</span> &#123;&#125;</span><br><span class="line"><span class="keyword">let</span> p2d = <span class="function">(<span class="params">point: Point2D</span>) =&gt;</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line">p3d = p2d; <span class="comment">// ok</span></span><br><span class="line">p2d = p3d; <span class="comment">// Property &#x27;z&#x27; is missing in type &#x27;Point2D&#x27; but required in type &#x27;Point3D&#x27;.</span></span><br><span class="line"><span class="comment">// 注：此时我们依然可以将tsconfig.json中的strictFunctionTypes属性设为false来使其兼容</span></span><br></pre></td></tr></table></figure>
+<p>我们可以观察到当函数参数类型为对象且一个对象的每一个属性都可以在另一个对象中找到时属性个数多的兼容属性个数少的，这正好与我们之前接口之间的兼容恰好相反。</p>
+<p>(3)<strong>返回值类型</strong></p>
+<p>一个函数x的返回值类型，如果是另一个函数的返回值类型的子类型，即x的返回值对象的每一个属性都能在y返回值中找到（y中多余的属性不做限制），那么x是对y返回值类型兼容的。简单来说就是，提供返回值更少的兼容更多的，举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> x = <span class="function">() =&gt;</span> (&#123; <span class="attr">name</span>: <span class="string">&#x27;Double&#x27;</span> &#125;);</span><br><span class="line"><span class="keyword">let</span> y = <span class="function">() =&gt;</span> (&#123; <span class="attr">name</span>: <span class="string">&#x27;Float&#x27;</span>, <span class="attr">location</span>: <span class="string">&#x27;Home&#x27;</span> &#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// x的返回值的属性，在y中全存在</span></span><br><span class="line">x = y;</span><br></pre></td></tr></table></figure>
+<p>在了解了函数兼容性的前提下我们再来看函数重载：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">overload</span>(<span class="params">a: <span class="built_in">number</span>, b: <span class="built_in">number</span></span>): <span class="title">number</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">overload</span>(<span class="params">a: <span class="built_in">string</span>, b: <span class="built_in">string</span></span>): <span class="title">string</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">overload</span>(<span class="params">a: <span class="built_in">any</span>, b: <span class="built_in">any</span></span>): <span class="title">any</span> </span>&#123;&#125;;</span><br></pre></td></tr></table></figure>
+<p>在文章的前面我们已经介绍过，函数的重载分为两个部分，分别是函数重载的列表和函数的具体实现，这里重载列表中的函数就是目标函数，而具体的实现就是源函数，函数在运行的时候编译器会查找重载列表，然后使用第一个匹配的定义来执行下面的函数，所以在函数重载中实现函数的参数个数必须少于或等于重载列表中的函数参数的个数，而且返回值类型也要符合相应的要求。</p>
+<h4 id="枚举类型兼容性">3、枚举类型兼容性</h4>
+<p>(1)<strong>数字枚举类型与数字类型完全兼容</strong></p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">enum</span> Fruit &#123; Apple, Banana &#125;</span><br><span class="line"><span class="keyword">let</span> fruit: Fruit.Apple = <span class="number">3</span>;</span><br><span class="line"><span class="keyword">let</span> num: <span class="built_in">number</span> = Fruit.Banana;</span><br></pre></td></tr></table></figure>
+<p>(2)<strong>字符类型兼容字符串枚举类型</strong></p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">enum</span> Select &#123; NoA = <span class="string">&#x27;AAA&#x27;</span>, NoB = <span class="string">&#x27;BBB&#x27;</span> &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> str: <span class="built_in">string</span> = Select.NoA;</span><br><span class="line"><span class="keyword">let</span> a: Select.NoA = <span class="string">&#x27;AAA&#x27;</span>; <span class="comment">// Type &#x27;&quot;AAA&quot;&#x27; is not assignable to type &#x27;Select.NoA&#x27;.</span></span><br></pre></td></tr></table></figure>
+<p>(3)<strong>不同枚举类型之间互不兼容</strong></p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">enum</span> Fruit &#123; Apple, Banana &#125;</span><br><span class="line"><span class="built_in">enum</span> Color &#123; Red, Green, Blue &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> val: Fruit.Apple = Color.Blue; <span class="comment">// Type &#x27;Color.Blue&#x27; is not assignable to type &#x27;Fruit.Apple&#x27;.</span></span><br></pre></td></tr></table></figure>
+<h4 id="类兼容性">4、类兼容性</h4>
+<p>类的兼容性与接口类似，它们也是只比较结构，不过需要注意的是在比较两个类是否兼容的时候静态成员与构造函数是不参与比较的，如果两个类具有相同的实例成员，那它们的实例就可以完全相互兼容，举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="title">constructor</span>(<span class="params">p: <span class="built_in">number</span>, q: <span class="built_in">number</span></span>)</span> &#123;&#125;</span><br><span class="line">  id: <span class="built_in">number</span> = <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span> </span>&#123;</span><br><span class="line">  <span class="keyword">static</span> s = <span class="number">1</span></span><br><span class="line">  <span class="function"><span class="title">constructor</span>(<span class="params">p: <span class="built_in">number</span></span>)</span> &#123;&#125;;</span><br><span class="line">  id: <span class="built_in">number</span> = <span class="number">3</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> aa = <span class="keyword">new</span> A(<span class="number">1</span>, <span class="number">2</span>);</span><br><span class="line"><span class="keyword">let</span> bb = <span class="keyword">new</span> B(<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">aa = bb <span class="comment">// ok</span></span><br><span class="line">bb = aa <span class="comment">// ok</span></span><br></pre></td></tr></table></figure>
+<p>不过需要注意如果类中存在私有成员，无论这两个成员属性是否相等，两者都不再兼容，这个时候只有父类与子类之间相互兼容。举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="title">constructor</span>(<span class="params">p: <span class="built_in">number</span>, q: <span class="built_in">number</span></span>)</span> &#123;&#125;</span><br><span class="line">  id: <span class="built_in">number</span> = <span class="number">1</span></span><br><span class="line">  <span class="keyword">private</span> name: <span class="built_in">string</span> = <span class="string">&#x27;&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">B</span> </span>&#123;</span><br><span class="line">  <span class="keyword">static</span> s = <span class="number">1</span></span><br><span class="line">  <span class="function"><span class="title">constructor</span>(<span class="params">p: <span class="built_in">number</span></span>)</span> &#123;&#125;;</span><br><span class="line">  id: <span class="built_in">number</span> = <span class="number">3</span></span><br><span class="line">  <span class="keyword">private</span> name: <span class="built_in">string</span> = <span class="string">&#x27;&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> aa = <span class="keyword">new</span> A(<span class="number">1</span>, <span class="number">2</span>);</span><br><span class="line"><span class="keyword">let</span> bb = <span class="keyword">new</span> B(<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">aa = bb <span class="comment">// Types have separate declarations of a private property &#x27;name&#x27;.</span></span><br><span class="line">bb = aa <span class="comment">// Types have separate declarations of a private property &#x27;name&#x27;.</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span> <span class="keyword">extends</span> <span class="title">A</span> </span>&#123;&#125;</span><br><span class="line"><span class="keyword">let</span> cc = <span class="keyword">new</span> C(<span class="number">1</span>, <span class="number">2</span>);</span><br><span class="line">aa = cc <span class="comment">// ok</span></span><br><span class="line">cc = aa <span class="comment">// ok</span></span><br></pre></td></tr></table></figure>
+<h4 id="泛型兼容性">5、泛型兼容性</h4>
+<p>在使用泛型时，我们通常是传入一个类型，返回一个泛型包装的结果类型。也就是说，真正影响到后续程序和运算的，是结果类型。因此，泛型的类型兼容性判断上，仅考虑结果类型，即便泛型名称，泛型变量不同，只要结果类型一致，那么它们就是类型兼容的。举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> GenericInterface&lt;T&gt; &#123;</span><br><span class="line">    data: T</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> x: GenericInterface&lt;<span class="built_in">number</span>&gt; = &#123; <span class="attr">data</span>: <span class="number">1</span> &#125;;</span><br><span class="line"><span class="keyword">let</span> y: GenericInterface&lt;<span class="built_in">string</span>&gt; = &#123; <span class="attr">data</span>: <span class="string">&#x27;1&#x27;</span> &#125;;</span><br><span class="line">x = y; <span class="comment">// Type &#x27;GenericInterface&lt;string&gt;&#x27; is not assignable to type &#x27;GenericInterface&lt;number&gt;&#x27;.</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> EmptyInterface&lt;T&gt; &#123; &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> a: EmptyInterface&lt;<span class="built_in">number</span>&gt; = <span class="number">1</span></span><br><span class="line"><span class="keyword">let</span> b: EmptyInterface&lt;<span class="built_in">string</span>&gt; = <span class="string">&#x27;1&#x27;</span></span><br><span class="line"></span><br><span class="line">a = b;</span><br></pre></td></tr></table></figure>
+<p>下面我们来看泛型函数：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> log1 = &lt;T&gt;(x: T): <span class="function"><span class="params">T</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(x);</span><br><span class="line">  <span class="keyword">return</span> x;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">let</span> log2 = &lt;U&gt;(y: U): <span class="function"><span class="params">U</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(y);</span><br><span class="line">  <span class="keyword">return</span> y;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">log1 = log2; <span class="comment">// ok</span></span><br><span class="line">log2 = log1; <span class="comment">// ok</span></span><br></pre></td></tr></table></figure>
+<p>从上面示例我们可以看出如果两个泛型函数的定义相同，但是没有指定类型参数，那么它们之间也是可以相互兼容的。</p>
+<h3 id="三类型保护">三、类型保护</h3>
+<p>所谓的类型保护就是TypeScript能够在特定的区块中保证变量属于某种确定的类型，可以在此区块中放心地引用此类型的属性，或者调用此类型的方法。下面我们介绍四种创建这种特殊区块的方法：</p>
+<h4 id="instanceof关键字">1、instanceof关键字</h4>
+<p>instanceof关键字常用于判断实例对象属于某个类，举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> Padder &#123;</span><br><span class="line">  getPaddingString(): <span class="built_in">string</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SpaceRepeatingPadder</span> <span class="title">implements</span> <span class="title">Padder</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="title">constructor</span>(<span class="params"><span class="keyword">private</span> numSpaces: <span class="built_in">number</span></span>)</span> &#123;&#125;</span><br><span class="line">  <span class="function"><span class="title">getPaddingString</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">Array</span>(<span class="built_in">this</span>.numSpaces + <span class="number">1</span>).join(<span class="string">&quot; &quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">StringPadder</span> <span class="title">implements</span> <span class="title">Padder</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="title">constructor</span>(<span class="params"><span class="keyword">private</span> value: <span class="built_in">string</span></span>)</span> &#123;&#125;</span><br><span class="line">  <span class="function"><span class="title">getPaddingString</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">this</span>.value;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> padder: Padder = <span class="keyword">new</span> SpaceRepeatingPadder(<span class="number">6</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (padder <span class="keyword">instanceof</span> SpaceRepeatingPadder) &#123;</span><br><span class="line">  <span class="comment">// padder的类型收窄为 &#x27;SpaceRepeatingPadder&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="in关键字">2、in关键字</h4>
+<p>in关键字用于判断某个属性是否属于某个对象，举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> Admin &#123;</span><br><span class="line">  name: <span class="built_in">string</span>;</span><br><span class="line">  privileges: <span class="built_in">string</span>[];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">interface</span> Employee &#123;</span><br><span class="line">  name: <span class="built_in">string</span>;</span><br><span class="line">  startDate: <span class="built_in">Date</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> UnknownEmployee = Employee | Admin;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">printEmployeeInformation</span>(<span class="params">emp: UnknownEmployee</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&quot;Name: &quot;</span> + emp.name);</span><br><span class="line">  <span class="keyword">if</span> (<span class="string">&quot;privileges&quot;</span> <span class="keyword">in</span> emp) &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&quot;Privileges: &quot;</span> + emp.privileges);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (<span class="string">&quot;startDate&quot;</span> <span class="keyword">in</span> emp) &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&quot;Start Date: &quot;</span> + emp.startDate);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="typeof关键字">3、typeof关键字</h4>
+<p>typeof关键字可以帮我们判断基本类型，举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">padLeft</span>(<span class="params">value: <span class="built_in">string</span>, padding: <span class="built_in">string</span> | <span class="built_in">number</span></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> padding === <span class="string">&quot;number&quot;</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">Array</span>(padding + <span class="number">1</span>).join(<span class="string">&quot; &quot;</span>) + value;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> padding === <span class="string">&quot;string&quot;</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> padding + value;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">`Expected string or number, got &#x27;<span class="subst">$&#123;padding&#125;</span>&#x27;.`</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>typeof 类型保护只支持两种形式：<code>typeof v === "typename"</code> 和 <code>typeof v !== typename</code>，"typename"必须是"number"，"string"，"boolean"或"symbol"。 但是TypeScript并不会阻止你与其它字符串比较，语言不会把那些表达式识别为类型保护。</p>
+<h4 id="自定义类型保护的类型谓词">4、自定义类型保护的类型谓词</h4>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isNumber</span>(<span class="params">x: <span class="built_in">any</span></span>): <span class="title">x</span> <span class="title">is</span> <span class="title">number</span> </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">typeof</span> x === <span class="string">&quot;number&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">isString</span>(<span class="params">x: <span class="built_in">any</span></span>): <span class="title">x</span> <span class="title">is</span> <span class="title">string</span> </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">typeof</span> x === <span class="string">&quot;string&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="参考资料">参考资料</h2>
+<p>极客时间《TypeScript开发实战》专栏</p>
+<p>《深入理解TypeScript》</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/weixin.png" alt="kyleezhang 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/alipay.png" alt="kyleezhang 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>kyleezhang
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://kyleezhang.com/2020/11/26/typescript-07/" title="TypeScript学习笔记（六）——类型检查机制">http://kyleezhang.com/2020/11/26/typescript-07/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/assets/config/wechat.png">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/TypeScript/" rel="tag"><i class="fa fa-tag"></i>TypeScript</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/11/25/typescript-06/" rel="prev" title="TypeScript学习笔记（五）——装饰器及相关应用">
+      <i class="fa fa-chevron-left"></i> TypeScript学习笔记（五）——装饰器及相关应用
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/11/28/typescript-08/" rel="next" title="TypeScript学习笔记（七）——高级类型">
+      TypeScript学习笔记（七）——高级类型 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B1%BB%E5%9E%8B%E6%A3%80%E6%9F%A5%E6%9C%BA%E5%88%B6"><span class="nav-text">类型检查机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E7%B1%BB%E5%9E%8B%E6%8E%A8%E6%96%AD"><span class="nav-text">一、类型推断</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E7%B1%BB%E5%9E%8B%E6%8E%A8%E6%96%AD"><span class="nav-text">1、基础类型推断</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%80%E4%BD%B3%E9%80%9A%E7%94%A8%E7%B1%BB%E5%9E%8B%E6%8E%A8%E6%96%AD"><span class="nav-text">2、最佳通用类型推断</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8A%E4%B8%8B%E6%96%87%E7%B1%BB%E5%9E%8B%E6%8E%A8%E6%96%AD"><span class="nav-text">3、上下文类型推断</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E7%B1%BB%E5%9E%8B%E5%85%BC%E5%AE%B9%E6%80%A7"><span class="nav-text">二、类型兼容性</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8E%A5%E5%8F%A3%E5%85%BC%E5%AE%B9%E6%80%A7"><span class="nav-text">1、接口兼容性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E5%85%BC%E5%AE%B9%E6%80%A7"><span class="nav-text">2、函数兼容性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9E%9A%E4%B8%BE%E7%B1%BB%E5%9E%8B%E5%85%BC%E5%AE%B9%E6%80%A7"><span class="nav-text">3、枚举类型兼容性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%B1%BB%E5%85%BC%E5%AE%B9%E6%80%A7"><span class="nav-text">4、类兼容性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B3%9B%E5%9E%8B%E5%85%BC%E5%AE%B9%E6%80%A7"><span class="nav-text">5、泛型兼容性</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E7%B1%BB%E5%9E%8B%E4%BF%9D%E6%8A%A4"><span class="nav-text">三、类型保护</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#instanceof%E5%85%B3%E9%94%AE%E5%AD%97"><span class="nav-text">1、instanceof关键字</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#in%E5%85%B3%E9%94%AE%E5%AD%97"><span class="nav-text">2、in关键字</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#typeof%E5%85%B3%E9%94%AE%E5%AD%97"><span class="nav-text">3、typeof关键字</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E7%B1%BB%E5%9E%8B%E4%BF%9D%E6%8A%A4%E7%9A%84%E7%B1%BB%E5%9E%8B%E8%B0%93%E8%AF%8D"><span class="nav-text">4、自定义类型保护的类型谓词</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="kyleezhang"
+      src="/assets/config/avatar.png">
+  <p class="site-author-name" itemprop="name">kyleezhang</p>
+  <div class="site-description" itemprop="description">学源于思</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/kyleezhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;kyleezhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/2942181559@qq.com" title="E-Mail → 2942181559@qq.com"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/u/6998903195" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;u&#x2F;6998903195" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">kyleezhang</span>
+</div>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">365k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">5:32</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  <!-- 背景动画 -->
+<script src="/js/particle.js"></script>
+
+</body>
+</html>

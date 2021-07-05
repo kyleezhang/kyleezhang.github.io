@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/config/favicon.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kyleezhang.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"enable":false,"style":"tabs","active":false,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="什么是元编程？ 维基百科对其的定义如下：  元编程（英语：Metaprogramming），又译超编程，是指某类计算机程序的编写，这类计算机程序编写或者操纵其它程序（或者自身）作为它们的资料，或者在运行时完成部分本应在编译时完成的工作。多数情况下，与手工编写全部代码相比，程序员可以获得更高的工作效率，或者给与程序更大的灵活度去处理新的情形而无需重新编译。 编写元程序的语言称之为元语言。被操纵的程序">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaScript中的元编程">
+<meta property="og:url" content="http://kyleezhang.com/2021/01/11/javascript-meta/index.html">
+<meta property="og:site_name" content="大熊猫的五分裤">
+<meta property="og:description" content="什么是元编程？ 维基百科对其的定义如下：  元编程（英语：Metaprogramming），又译超编程，是指某类计算机程序的编写，这类计算机程序编写或者操纵其它程序（或者自身）作为它们的资料，或者在运行时完成部分本应在编译时完成的工作。多数情况下，与手工编写全部代码相比，程序员可以获得更高的工作效率，或者给与程序更大的灵活度去处理新的情形而无需重新编译。 编写元程序的语言称之为元语言。被操纵的程序">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://kyleezhang.com/assets/javascript-meta/01.jpg">
+<meta property="article:published_time" content="2021-01-11T02:44:29.000Z">
+<meta property="article:modified_time" content="2021-06-30T01:12:12.943Z">
+<meta property="article:author" content="kyleezhang">
+<meta property="article:tag" content="javascript">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://kyleezhang.com/assets/javascript-meta/01.jpg">
+
+<link rel="canonical" href="http://kyleezhang.com/2021/01/11/javascript-meta/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>JavaScript中的元编程 | 大熊猫的五分裤</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2KR3NK700N"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-2KR3NK700N');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?f1621cb3fb0792bb294fce1b938d5eef";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="大熊猫的五分裤" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+    <a target="_blank" rel="noopener" href="https://github.com/kyleezhang " class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#fff; color:#151513; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    </div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">大熊猫的五分裤</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://kyleezhang.com/2021/01/11/javascript-meta/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/assets/config/avatar.png">
+      <meta itemprop="name" content="kyleezhang">
+      <meta itemprop="description" content="学源于思">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="大熊猫的五分裤">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JavaScript中的元编程
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-01-11 10:44:29" itemprop="dateCreated datePublished" datetime="2021-01-11T10:44:29+08:00">2021-01-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-30 09:12:12" itemprop="dateModified" datetime="2021-06-30T09:12:12+08:00">2021-06-30</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%89%8D%E7%AB%AF/" itemprop="url" rel="index"><span itemprop="name">前端</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>什么是元编程？</p>
+<p>维基百科对其的定义如下：</p>
+<blockquote>
+<p>元编程（英语：Metaprogramming），又译超编程，是指某类计算机程序的编写，这类计算机程序编写或者操纵其它程序（或者自身）作为它们的资料，或者在运行时完成部分本应在编译时完成的工作。多数情况下，与手工编写全部代码相比，程序员可以获得更高的工作效率，或者给与程序更大的灵活度去处理新的情形而无需重新编译。 编写元程序的语言称之为元语言。被操纵的程序的语言称之为“目标语言”。一门编程语言同时也是自身的元语言的能力称之为“反射”或者“自反”。 反射是促进元编程的一种很有价值的语言特性。把编程语言自身作为一级资料类型（如LISP、Forth或Rebol）也很有用。支持泛型编程的语言也使用元编程能力。 元编程通常通过两种方式实现。一种是通过应用程序编程接口（APIs）将运行时引擎的内部信息暴露于编程代码。另一种是动态执行包含编程命令的字符串表达式。因此，“程序能够编写程序”。虽然两种方式都能用于同一种语言，但大多数语言趋向于偏向其中一种。</p>
+</blockquote>
+<a id="more"></a>
+<p>从上面定义我们可以看到<strong>一门语言拥有对自身的元编程能力就表现在反射</strong>，反射又有三个子分支：</p>
+<ul>
+<li>自省（Introspection）：代码能够自我检查、访问内部属性，我们可以据此获得代码的底层信息。</li>
+<li>自我修改（Self-Modification）：顾名思义，代码可以修改自身。</li>
+<li>调解（Intercession）：字面意思是“代他人行事”。在元编程中，调解的概念类似于包装（wrapping）、捕获（trapping）、拦截（intercepting）。</li>
+</ul>
+<p>ES6为我们提供了Reflect对象（Reflect API）来实现自省，还提供了Proxy对象帮助我们实现调解，不过元编程并不是由ES6引入的，JavaScript 语言从一开始就支持元编程，ES6 只是让它变得更易于使用。</p>
+<h2 id="es6之前的元编程">ES6之前的元编程</h2>
+<p>JavaScript 中的 eval 语法糖是 ES6 之前 JavaScript 元编程最简单朴素的实现方式，举个🌰:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> blog = &#123;</span><br><span class="line">    name: <span class="string">&#x27;meta-javascript&#x27;</span>,</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">const</span> key = <span class="string">&quot;author&quot;</span>;</span><br><span class="line"><span class="keyword">const</span> value = <span class="string">&quot;kylee&quot;</span>;</span><br><span class="line">testEval = <span class="function">() =&gt;</span> <span class="built_in">eval</span>(<span class="string">`blog.<span class="subst">$&#123;key&#125;</span> = &#x27;<span class="subst">$&#123;value&#125;</span>&#x27;`</span>);</span><br><span class="line">testEval();</span><br><span class="line"><span class="built_in">console</span>.log(blog); <span class="comment">// &#123;name: &quot;meta-javascript&quot;, author: &quot;kylee&quot;&#125;</span></span><br></pre></td></tr></table></figure>
+<p>eval生成了额外的代码。示例代码执行时为blog对象增加了一个author属性。</p>
+<h3 id="自省">自省</h3>
+<p>在ES6引入Reflect对象之前，我们也可以实现自省。举个🌰:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> users = &#123;</span><br><span class="line">    <span class="string">&#x27;Tom&#x27;</span>: <span class="number">20</span>,</span><br><span class="line">    <span class="string">&#x27;Bill&#x27;</span>: <span class="number">21</span>,</span><br><span class="line">    <span class="string">&#x27;Sam&#x27;</span>: <span class="number">22</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">Object</span>.keys(users).forEach(<span class="function"><span class="params">name</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> age = users[name];</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">`User <span class="subst">$&#123;name&#125;</span> is <span class="subst">$&#123;age&#125;</span> years old`</span>);</span><br><span class="line">&#125;)</span><br><span class="line"><span class="comment">// User Tom is 20 years old</span></span><br><span class="line"><span class="comment">// User Bill is 21 years old</span></span><br><span class="line"><span class="comment">// User Sam is 22 years old</span></span><br></pre></td></tr></table></figure>
+<h3 id="自我修改">自我修改</h3>
+<p>举个🌰:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> obj = &#123;</span><br><span class="line">    value: <span class="number">12</span>,</span><br><span class="line">    <span class="function"><span class="title">addValue</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.value ++</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>示例中的 obj 对象就可以调用自身的 addValue 方法修改自身属性：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">obj.addValue();</span><br><span class="line"><span class="built_in">console</span>.log(obj.value); <span class="comment">// 13</span></span><br></pre></td></tr></table></figure>
+<h3 id="调解">调解</h3>
+<p>元编程中的调解指的是改变其他对象的语义，在 ES6 之前，可以用 Object.defineProperty 方法改变对象的语义，举个🌰:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> blog = &#123;</span><br><span class="line">    name: <span class="string">&#x27;meta-javascript&#x27;</span>,</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">Object</span>.defineProperty(blog, <span class="string">&#x27;name&#x27;</span>, &#123;</span><br><span class="line">    value: <span class="string">&#x27;meta&#x27;</span>,</span><br><span class="line">    enumerable: <span class="literal">false</span>,</span><br><span class="line">    configurable: <span class="literal">false</span>,</span><br><span class="line">    writable: <span class="literal">false</span>,</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">blog.name = <span class="string">&quot;javascript&quot;</span>;</span><br><span class="line"><span class="built_in">console</span>.log(blog.name) <span class="comment">// meta</span></span><br></pre></td></tr></table></figure>
+<p>示例中我们创建了 blog 对象，但是我们在后面通过 Object.defineProperty 方法将其 name 属性设为不可写，这儿就是元编程中调解的具体体现。</p>
+<h2 id="reflect">Reflect</h2>
+<p>在 ES6 中，Reflect 是一个新的全局对象（像 math 一样），它提供了一些工具函数，如下为 Reflect 对象提供的方法列表：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Reflect</span>.apply();</span><br><span class="line"><span class="built_in">Reflect</span>.construct();</span><br><span class="line"><span class="built_in">Reflect</span>.get();</span><br><span class="line"><span class="built_in">Reflect</span>.has();</span><br><span class="line"><span class="built_in">Reflect</span>.ownKeys();</span><br><span class="line"><span class="built_in">Reflect</span>.set();</span><br><span class="line"><span class="built_in">Reflect</span>.setPrototypeOf();</span><br><span class="line"><span class="built_in">Reflect</span>.getPrototypeOf();</span><br><span class="line"><span class="built_in">Reflect</span>.defineProperty();</span><br><span class="line"><span class="built_in">Reflect</span>.deleteProperty();</span><br><span class="line"><span class="built_in">Reflect</span>.getOwnPropertyDescriptor();</span><br><span class="line"><span class="built_in">Reflect</span>.isExtensible();</span><br></pre></td></tr></table></figure>
+<p>这些都是自省方法，可以用它们在运行时获取程序内部信息，其中一些方法与 Object 或 Function 对象中的同名方法功能是相同的，那么为什么我们还要引入新的 API 呢？</p>
+<h3 id="集中在一个命名空间">集中在一个命名空间</h3>
+<p>JavaScript 已经支持对象反射，但是这些API没有集中到一个命名空间中。从ES6开始，它们被集中到 Reflect对象中。</p>
+<p>与其他全局对象不同，Reflect 不是一个构造函数，不能使用 new 操作符来调用它，也不能将它当做函数来调用。Reflect对象中的方法和 math 对象中的方法一样是<strong>静态</strong>的。</p>
+<h3 id="易于使用">易于使用</h3>
+<p>Object对象中的自省方法在操作失败的时候会抛出异常，这给开发者增加了处理异常的负担，借助 Reflect 对象我们就可以将操作结果当作布尔值来处理，举个🌰:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Object.defineProperty</span></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="built_in">Object</span>.defineProperty(obj, name, desc);</span><br><span class="line">    <span class="comment">// 执行成功</span></span><br><span class="line">&#125; <span class="keyword">catch</span> (e) &#123;</span><br><span class="line">    <span class="comment">// 执行失败</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Reflect.defineProperty</span></span><br><span class="line"><span class="keyword">if</span> (<span class="built_in">Reflect</span>.defineProperty(obj, name, desc)) &#123;</span><br><span class="line">    <span class="comment">// 执行成功</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// 执行失败</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="一等函数的魅力">一等函数的魅力</h3>
+<p>我们可以通过(prop in obj) 操作来判断对象中是否存在某个属性。如果多次用到这个操作，我们需要把它封装成函数。在 ES6 的Reflect API中已经包含了这些方法，例如，Reflect.has(obj, prop) 和 (prop in obj) 功能是一样的。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> obj = &#123; <span class="attr">bar</span>: <span class="literal">true</span>, <span class="attr">baz</span>: <span class="string">&#x27;baz&#x27;</span> &#125;</span><br><span class="line"><span class="comment">// 自定义函数</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">deleteProperty</span>(<span class="params">object, key</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">delete</span> object[key]</span><br><span class="line">&#125;</span><br><span class="line">deleteProperty(obj, <span class="string">&#x27;baz&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Reflect.deleteProperty</span></span><br><span class="line">deleteProperty(obj, <span class="string">&#x27;bar&#x27;</span>);</span><br></pre></td></tr></table></figure>
+<h3 id="以更可靠的方法来使用apply方法">以更可靠的方法来使用apply方法</h3>
+<p>在 ES5 中，我们可以使用apply()方法来调用一个函数，并指定this上下文、传入一个参数数组。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Function</span>.prototype.apply.call(func, obj, arr);</span><br><span class="line"><span class="comment">// or</span></span><br><span class="line">func.apply(obj, arr);</span><br></pre></td></tr></table></figure>
+<p>这种方式比较不可靠，因为func可能是一个具有自定义 apply 方法的对象。ES6 提供了一个更加可靠、优雅的方式来解决这个问题：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Reflect</span>.apply(func, obj, arr);</span><br></pre></td></tr></table></figure>
+<p>这样，如果 func 不是可调用对象，会抛出 TypeError，此外Reflect.apply()也更简洁、易于理解。</p>
+<h2 id="proxy对象">Proxy对象</h2>
+<p>ES6 的 Proxy 对象可以用于调解（intercession）。Proxy 对象允许我们自定义一些基本操作的行为（例如属性查找、赋值、枚举、函数调用等），它主要包含如下内容：</p>
+<ul>
+<li>target：代理为其提供自定义行为的对象。</li>
+<li>handler：包含“捕获器”方法的对象。</li>
+<li>trap：“捕获器”方法，提供了访问目标对象属性的途径，这是通过 Reflect API 中的方法实现的。每个“捕获器”方法都对应着 Reflect API 中的一个方法。</li>
+</ul>
+<p>它们的关系如图所示：</p>
+<p><img src="/assets/javascript-meta/01.jpg" width="536px" /></p>
+<p>先定义一个包含“捕获器”函数的 handler 对象，再使用这个 handler 和目标对象来创建一个代理对象，这个代理对象会应用 handler 中的自定义行为，handler 方法列表如下所示：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">handler.apply()</span><br><span class="line">handler.construct()</span><br><span class="line">handler.get()</span><br><span class="line">handler.has()</span><br><span class="line">handler.ownKeys()</span><br><span class="line">handler.set()</span><br><span class="line">handler.setPrototypeOf()</span><br><span class="line">handler.getPrototypeOf()</span><br><span class="line">handler.defineProperty()</span><br><span class="line">handler.deleteProperty()</span><br><span class="line">handler.getOwnPropertyDescriptor()</span><br><span class="line">handler.preventExtensions()</span><br><span class="line">handler.isExtensible()</span><br></pre></td></tr></table></figure>
+<p>注意每个捕获器都对应着 Reflect 对象的方法，也就是说可以在许多场景下同时使用 Reflect 和 Proxy。</p>
+<h3 id="自定义对象行为">自定义对象行为</h3>
+<p>我们使用 Proxy 可以为对象添加一些自定义行为，举个🌰:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> employee = &#123;</span><br><span class="line">    name: <span class="string">&quot;kyle&quot;</span>,</span><br><span class="line">    age: <span class="number">24</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>步骤一： 创建一个handler</strong></p>
+<p>我们使用名为 get 的捕获器，可以通过它来获取对象的属性值。handler 代码如下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> handler = &#123;</span><br><span class="line">    get: <span class="function"><span class="keyword">function</span>(<span class="params">target, key</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (key === <span class="string">&#x27;info&#x27;</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="string">`name: <span class="subst">$&#123;target.name&#125;</span>, age: <span class="subst">$&#123;target.age&#125;</span>`</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> key <span class="keyword">in</span> target ? target[key] : <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以上 handler 代码创建了 info 属性的值，还将属性不存在的情况改为返回 null。</p>
+<p><strong>步骤二： 创建 Proxy 对象</strong></p>
+<p>目标对象 employee 和 handler 都准备好了，可以这样来创建 Proxy 对象：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> proxy = <span class="keyword">new</span> <span class="built_in">Proxy</span>(employee, handler);</span><br></pre></td></tr></table></figure>
+<p><strong>步骤三：访问 Proxy 对象属性</strong></p>
+<p>proxy 对象创建后我们就可以通过 proxy 对象访问 employee 的属性，举个🌰:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(proxy.name) <span class="comment">// &#x27;kyle&#x27;</span></span><br><span class="line"><span class="built_in">console</span>.log(proxy.age) <span class="comment">// 24</span></span><br><span class="line"><span class="built_in">console</span>.log(proxy.info) <span class="comment">// &#x27;name: kyle, age: 24&#x27;</span></span><br><span class="line"><span class="built_in">console</span>.log(proxy.full) <span class="comment">// null</span></span><br></pre></td></tr></table></figure>
+<h3 id="与reflect相结合">与Reflect相结合</h3>
+<p>我们可以在上述案例中再与Reflect API相结合：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> handler = &#123;</span><br><span class="line">    get: <span class="function"><span class="keyword">function</span>(<span class="params">target, key</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (key === <span class="string">&#x27;info&#x27;</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="string">`name: <span class="subst">$&#123;target.name&#125;</span>, age: <span class="subst">$&#123;target.age&#125;</span>`</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">Reflect</span>.get(target, key);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="参考资料">参考资料</h2>
+<p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/1E8d5jYb0sFGPRk3pMLaHA">JavaScript元编程</a></p>
+<p><a target="_blank" rel="noopener" href="https://draveness.me/metaprogramming/">谈元编程与表达能力</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/weixin.png" alt="kyleezhang 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/alipay.png" alt="kyleezhang 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>kyleezhang
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://kyleezhang.com/2021/01/11/javascript-meta/" title="JavaScript中的元编程">http://kyleezhang.com/2021/01/11/javascript-meta/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/assets/config/wechat.png">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/javascript/" rel="tag"><i class="fa fa-tag"></i>javascript</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/01/06/typescript-02/" rel="prev" title="TypeScript工程化实践笔记">
+      <i class="fa fa-chevron-left"></i> TypeScript工程化实践笔记
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/01/22/client-render-flow/" rel="next" title="浏览器如何渲染页面">
+      浏览器如何渲染页面 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#es6%E4%B9%8B%E5%89%8D%E7%9A%84%E5%85%83%E7%BC%96%E7%A8%8B"><span class="nav-text">ES6之前的元编程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E7%9C%81"><span class="nav-text">自省</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E6%88%91%E4%BF%AE%E6%94%B9"><span class="nav-text">自我修改</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B0%83%E8%A7%A3"><span class="nav-text">调解</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#reflect"><span class="nav-text">Reflect</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9B%86%E4%B8%AD%E5%9C%A8%E4%B8%80%E4%B8%AA%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4"><span class="nav-text">集中在一个命名空间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%98%93%E4%BA%8E%E4%BD%BF%E7%94%A8"><span class="nav-text">易于使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E7%AD%89%E5%87%BD%E6%95%B0%E7%9A%84%E9%AD%85%E5%8A%9B"><span class="nav-text">一等函数的魅力</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A5%E6%9B%B4%E5%8F%AF%E9%9D%A0%E7%9A%84%E6%96%B9%E6%B3%95%E6%9D%A5%E4%BD%BF%E7%94%A8apply%E6%96%B9%E6%B3%95"><span class="nav-text">以更可靠的方法来使用apply方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#proxy%E5%AF%B9%E8%B1%A1"><span class="nav-text">Proxy对象</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E5%AF%B9%E8%B1%A1%E8%A1%8C%E4%B8%BA"><span class="nav-text">自定义对象行为</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8Ereflect%E7%9B%B8%E7%BB%93%E5%90%88"><span class="nav-text">与Reflect相结合</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="kyleezhang"
+      src="/assets/config/avatar.png">
+  <p class="site-author-name" itemprop="name">kyleezhang</p>
+  <div class="site-description" itemprop="description">学源于思</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">31</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/kyleezhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;kyleezhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/2942181559@qq.com" title="E-Mail → 2942181559@qq.com"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/u/6998903195" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;u&#x2F;6998903195" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">kyleezhang</span>
+</div>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">365k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">5:32</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  <!-- 背景动画 -->
+<script src="/js/particle.js"></script>
+
+</body>
+</html>
