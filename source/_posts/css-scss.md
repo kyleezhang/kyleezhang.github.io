@@ -853,11 +853,47 @@ Class 选择器并不是唯一可以被延伸 (extend) 的，Sass 允许延伸�
 
 译文：@at root指令使一个或多个规则在文档的根发出，而不是嵌套在其父选择器下。它可以与单个内联选择器一起使用
 
-且@at-root 使多个规则跳出嵌套
+在SCSS中嵌套，使用 @at-root 内联选择器模式，可以使多个规则跳出嵌套，编译出来的 CSS 无任何嵌套，让代码更加的简单。回到 SCSS 中的嵌套中，如果不使用 @at-root 内联选择器模式，将会按代码的层级关系一层一层往下嵌套
 
-@at-root默认情况下并不能使规则或者选择器跳出指令，通过使用without和with可以解决该问题
+```scss
+// example1
+.foo {
+  @at-root .bar {
+    color:gray;
+  }
+}
 
-了解即可
+// 编译后
+.bar {
+  color: gray; 
+}
+```
+
+```scss
+// example1
+.foo {
+  @at-root & .bar {
+    color:gray;
+  }
+}
+
+.foo {
+  @at-root &.bar {
+    color:gray;
+  }
+}
+
+// 编译后
+.foo .bar {
+  color: gray; 
+}
+
+.foo.bar {
+  color: gray; 
+}
+```
+
+注：@at-root 默认情况下并不能使规则或者选择器跳出指令，通过使用 without 和 with 可以解决该问题
 
 #### 5.`@debug`
 

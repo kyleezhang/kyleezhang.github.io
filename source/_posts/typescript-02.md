@@ -234,9 +234,9 @@ const test = require("./foo")
 
 #### 3、CommonJS与ES Module之间的区别
 
-- CommonJs是被加载的时候运行，ES Module是编译的时候运行
-- CommonJs输出的是值的浅拷贝，ES Module输出值的引用
-- CommentJs具有缓存。在第一次被加载时，会完整运行整个文件并输出一个对象，拷贝（浅拷贝）在内存中。下次加载文件时，直接从内存中取值
+- CommonJS 是被加载的时候运行，ES Module 是编译的时候运行
+- CommonJS 输出的是值的浅拷贝，ES Module 输出值的引用
+- CommonJS 具有缓存。在第一次被加载时，会完整运行整个文件并输出一个对象，拷贝（浅拷贝）在内存中。下次加载文件时，直接从内存中取值
 
 **CommonJS输出值拷贝**
 
@@ -245,8 +245,8 @@ const test = require("./foo")
 let count = 0
 exports.count = count; // 输出值的拷贝
 exports.add = ()=>{
-    //这里改变count值，并不会将module.exports对象的count属性值改变
-    count++;
+  //这里改变count值，并不会将module.exports对象的count属性值改变
+  count++;
 }
 
 // b.js
@@ -257,11 +257,12 @@ console.log(count) // 0
 ```
 
 **ES Module输出值引用**
+
 ```js
 // a.js
 export let count = 0; // 输出的是值的引用，指向同一块内存
 export const add = ()=>{
-    count++; // 此时引用指向的内存值发生改变
+  count++; // 此时引用指向的内存值发生改变
 }
 
 
@@ -269,7 +270,7 @@ export const add = ()=>{
 import { count, add } from './a.js'
 console.log(count) // 0
 add();
-console.log(count)// 1
+console.log(count) // 1
 ```
 
 **CommonJS输出浅拷贝验证**
@@ -279,19 +280,19 @@ console.log(count)// 1
 const foo = {
 	count: 0
 }
-// module.exports的foo属性为 foo 对象的浅拷贝，指向同一个内存中
+// module.exports的foo属性为foo对象的浅拷贝，指向同一个内存中
 exports.foo=foo;
 
 window.setTimeout(()=>{
 	foo.count += 1
 	console.log('changed foo')
-},1000)
+}, 1000)
 
 // b.js
-const  { foo }  = require('./a.js')
-console.log('foo', foo); // 'foo',{count: 0}
+const { foo } = require('./a.js')
+console.log('foo', foo); // 'foo', {count: 0}
 window.setTimeout(()=>{
-  console.log('after 2s foo', foo); //'after 2s foo ',{count: 1}
+  console.log('after 2s foo', foo); // 'after 2s foo ', {count: 1}
 }, 2000)
 ```
 
@@ -302,10 +303,10 @@ window.setTimeout(()=>{
 const foo = {
 	count: 0
 }
-exports.foo=foo; // 此时 foo 指向 {count: 0} 的内存地址
+exports.foo = foo; // 此时 foo 指向 {count: 0} 的内存地址
 window.setTimeout(()=>{
   //改变 foo 的内存指向
-	exports.foo='haha';
+	exports.foo = 'haha';
 },1000)
 
 // b.js
@@ -344,7 +345,7 @@ setTimeout(()=>{
 exports.foo = foo
 
 // b.js
-var test = require('./b.js');
+var test = require('./a.js');
 console.log(test.foo); // 1
 setTimeout(()=>{
   console.log(test.foo); // 2
@@ -357,13 +358,13 @@ setTimeout(()=>{
 // a.js
 let foo = 1
 setTimeout(()=>{
-  foo=2;
-  module.exports={foo}; //注意：指向新内存 {foo:2}
+  foo = 2;
+  module.exports = { foo }; // 注意：指向新内存 { foo:2 }
 },1000)
-module.exports={foo}; //指向内存 {foo:1}
+module.exports = { foo }; // 指向内存 { foo:1 }
 
 // b.js
-var test =require('./a.js'); // 浅拷贝，指向的还是{foo:1}的内存，并缓存在内存中
+var test = require('./a.js'); // 浅拷贝，指向的还是 { foo:1 } 的内存，并缓存在内存中
 //从缓存的内存中取值
 console.log(test.foo); // 1
 
@@ -375,13 +376,13 @@ setTimeout(()=>{
 
 #### 4、兼容性处理
 
-我们在 tsconfig.json 中通过配置 target 和 module 属性可以实现不同版本、不同模块化方案代码的编译生成，需要注意的是如果 target 属性设为 ES3 或 ES5 时及时 module 指定为 es2015 也依然会编译成CommonJS 模块，举个🌰:
+我们在 tsconfig.json 中通过配置 target 和 module 属性可以实现不同版本、不同模块化方案代码的编译生成，需要注意的是如果 target 属性设为 ES3 或 ES5 时及时 module 指定为 es2015 也依然会编译成 CommonJS 模块，举个🌰:
 
 ```ts
 export const a: number = 1223;
 
 export function getA() {
-    return a;
+  return a;
 }
 
 const b: string = 'b';
@@ -389,7 +390,7 @@ const c: string = 'c';
 export { b, c }
 
 export default function () {
-    console.log('6666');
+  console.log('6666');
 }
 ```
 
@@ -458,7 +459,7 @@ console.log(action_3["default"]); // [Function: default_1]
 ```ts
 // a.ts
 export default function () {
-    console.log('default');
+  console.log('default');
 }
 // b.ts
 const a = require('./a');
@@ -574,7 +575,7 @@ square(2);
 function lib () {}
 
 namespace lib {
-    export let version = '0.1.0'
+  export let version = '0.1.0'
 }
 ```
 
@@ -593,7 +594,7 @@ function lib() { }
 ```ts
 class C {}
 namespace C {
-    export let version = '0.1.0'
+  export let version = '0.1.0'
 }
 console.log(C.version) // '0.1.0'
 
@@ -604,7 +605,7 @@ enum Color {
 namespace Color {
   export function mix() {}
 }
-console.log(Color.mix) // function mix() { } 
+console.log(Color.mix) // function mix() {} 
 ```
 
 此处需要注意命名空间与类或与函数合并时，函数或类的定义必须在命名空间前面，否则会报错，而枚举类型与命名空间的定义之间的位置先后是没有要求的，
@@ -627,7 +628,7 @@ const a: A = {
 }
 ```
 
-TypeScript 要求声明合并中非函数成员必须具有唯一性，即最好没有相同的属性名，如果两处声明具有相同的属性则必须类型一致，举个🌰:
+TypeScript 要求声明合并中非函数成员必须具有唯一性，即最好没有相同的属性名，如果两处声明具有相同的属性则必须类型一致，否则编译器会报错，举个🌰:
 
 ```ts
 interface A {
@@ -657,7 +658,7 @@ const a: A = {
   x: 12,
   y: 14,
   func(x: any) {
-      return x
+    return x
   }
 }
 ```
@@ -672,14 +673,12 @@ const a: A = {
 ```ts
 interface A {
   x: number;
-  func(x: string): string; // 5
-  func(x: 'b'): string; // 2
+  func(x: string): string; // 3
 }
 interface A {
   y: number;
-  func(x: number): number; // 3
-  func(x: number[]): number[]; // 4
-  func(x: 'a'): string; // 1
+  func(x: number): number; // 1
+  func(x: number[]): number[]; // 2
 }
 ```
 
@@ -688,12 +687,14 @@ interface A {
 ```ts
 interface A {
   x: number;
-  func(x: string): string; // 3
+  func(x: string): string; // 5
+  func(x: 'b'): string; // 2
 }
 interface A {
   y: number;
-  func(x: number): number; // 1
-  func(x: number[]): number[]; // 2
+  func(x: number): number; // 3
+  func(x: number[]): number[]; // 4
+  func(x: 'a'): string; // 1
 }
 ```
 
@@ -1109,7 +1110,173 @@ export = jQuery;
 
 需要注意如果指定了我们在 tsc 指令中指定了 --noResolve 编译选项，三斜线引用会被忽略，它们不会增加新文件，也不会改变给定文件的顺序。当使用 --out 或 --outFile 选项时，它也可以做为调整输出内容顺序的一种方法。 文件在输出文件内容中的位置与经过预处理后的输入顺序一致。
 
+## 配置文件
 
+### 一、概述
+
+如果一个目录下存在一个 tsconfig.json 文件，那么它意味着这个目录是 TypeScript 项目的根目录。 tsconfig.json文件中指定了用来编译这个项目的根文件和编译选项。 一个项目可以通过以下方式之一来编译：
+
+- 不带任何输入文件的情况下调用tsc，编译器会从当前目录开始去查找tsconfig.json文件，逐级向上搜索父目录。
+- 不带任何输入文件的情况下调用tsc，且使用命令行参数--project（或-p）指定一个包含tsconfig.json文件的目录。
+
+当命令行上指定了输入文件时，tsconfig.json文件会被忽略。
+
+### 二、配置属性
+
+#### 1、文件选项
+
+（1）**files**: 包含相对或绝对文件路径的数组，指定编译器可以编译的文件列表。
+
+（2）**include**: 文件glob匹配模式的数组，指定编译器可以编译的目录或文件列表。
+
+（3）**enclude**: 文件glob匹配模式的数组，指定编译器可以编译的目录或文件列表，如果没有特殊指定，"exclude" 默认情况下会排除 node_modules，bower_components，jspm_packages和 "outDir" 目录。
+
+"include" 和 "exclude" 属性指定一个文件 glob 匹配模式列表。 支持的 glob 通配符有：
+
+- '*' 匹配0或多个字符（不包括目录分隔符）
+- '?' 匹配一个任意字符（不包括目录分隔符）
+- '**/' 递归匹配任意子目录
+
+如果一个 glob 模式里的某部分只包含 '*' 或 '.*'，那么仅有支持的文件扩展名类型被包含在内（比如默认 .ts，.tsx，和 .d.ts， 如果 "allowJs" 设置为 true 还包含.js 和 .jsx）。
+
+如果 "files" 和 "include" 都没有被指定，编译器默认包含当前目录和子目录下所有的 TypeScript 文件（.ts, .d.ts 和 .tsx），排除在 "exclude" 里指定的文件。如果 "allowJs" 属性被设为 true 那么 JS 文件（.js 和 .jsx）也被包含进来。 如果指定了 "files" 或 "include"，编译器会将它们结合一并包含进来。 使用 "outDir" 指定的目录下的文件永远会被编译器排除，除非你明确地使用 "files" 将其包含进来（这时就算用exclude指定也没用）。
+
+使用 "include" 引入的文件可以使用 "exclude" 属性过滤。 然而，通过 "files" 属性明确指定的文件却总是会被包含在内，不管 "exclude" 如何设置。
+任何被 "files" 或 "include" 指定的文件所引用的文件也会被包含进来。 A.ts 引用了 B.ts，因此 B.ts 不能被排除，除非引用它的 A.ts 在 "exclude" 列表中。
+
+需要注意编译器不会去引入那些可能做为输出的文件；比如，假设我们包含了 index.ts，那么 index.d.ts 和 index.js 会被排除在外。 通常来讲，不推荐只有扩展名的不同来区分同目录下的文件。
+
+（4）**extends**: 指定继承的配置文件路径
+
+extends的值是一个字符串，包含指向另一个要继承文件的路径。在原文件里的配置先被加载，然后被来至继承文件里的配置重写。 如果发现循环引用，则会报错。
+
+（5）**compileOnSave**: 在最顶层设置compileOnSave标记，可以让IDE在保存文件的时候根据tsconfig.json重新生成文件（VSCode 不支持）。
+
+#### 2、编译选项
+
+（1）**incremental**: 是否开启增量编译，如果开启编译时会生成增量编译文件，下次编译时会基于此文件进行增量编译。
+
+（2）**toBuildIntoFile**: 包含绝对或相对文件路径的字符串，指明增量编译文件的存储位置。
+
+（3）**diagnostics**: 是否打印诊断信息
+
+--------
+
+（4）**target**: 编译生成语言的版本
+
+（5）**module**: 编译生成语言的模块标准
+
+（6）**outFile**: 将相互依赖的多个文件生成一个文件，可以用在AMD模块中
+
+-------
+
+（7）**lib**: TypeScript需要声明的一些类库，即声明文件，es5 默认 "dom", "es5", "scripthost"
+
+-------
+
+（8）**allowJs**: 允许编译 JS 文件（js、jsx）
+
+（9）**checkJs**: 允许在 JS 文件中报错，可以提示相应的错误信息，通常与 allowJs 搭配使用
+
+（10）**outDir**: 指定输出文件目录
+
+（11）**rootDir**: 指定输入文件目录，默认就是当前目录（用于控制输出目录结构）
+
+-------
+
+（12）**declaration**: 是否生成声明文件
+
+（13）**declarationDir**: 声明文件的路径
+
+（14）**emitDeclarationOnly**: 是否只生成声明文件
+
+（15）**sourceMap**: 是否生成目标文件的 sourceMap
+
+（16）**inlineSourceMap**: 是否生成目标文件的 inline sourceMap
+
+（17）**declarationMap**: 是否生成声明文件的 sourceMap
+
+（18）**typeRoots**: 数组，指定声明文件目录，默认包含 node_modules/@types
+
+（19）**types**: 数组，声明文件包
+
+-------
+
+（20）**removeComments**: 是否删除注释
+
+-------
+
+（21）**noEmit**: 不输出文件
+
+（22）**noEmitOnError**: 发生错误时不输出文件
+
+-------
+
+（23）**noEmitHelpers**: TypeScript 中发生类的继承时编译生成的 JavaScript 代码中会生成 helper 函数，通过 "noEmitHelpers" 选项我们可以指定不生成 helper 函数，但同时也需要我们额外安装 ts-helpers，除此之外我们还可以通过开启 "importHelpers" 选项解决。
+
+（24）**importHelpers**: 选项开启后编译生成的代码将通过 TypeScript 内置的 tslib 引入 helper 函数，但是需要注意文件必须是模块。
+
+-------
+
+（25）**downlevelInteration**: 是否使用降级遍历器（es3/5）
+
+-------
+
+（26）**strict**: 开启所有严格的类型检查，即开启该选项默认开启了下面所有选项 
+
+（27）**alwaysStrict**: 在代码中注入 "use strict"
+
+（28）**noImplictAny**: 不允许隐式的 any 类型
+
+（29）**strictNullChecks**: 不允许把 null、undefined 赋值给其他类型变量
+
+（30）**strictFunctiontypes**: 不允许函数参数双向协变
+
+（31）**strictPropertyInitialization**: 类的实例属性必须初始化
+
+（32）**strictBindCallApply**: 严格的 bind/call/apply 检查
+
+（33）**noImplicitThis**: 不允许 this 有隐式的 any 类型
+
+-------
+
+以下配置与函数的执行有关，开启会对异常情况报错但不会阻碍编译的进行
+
+（34）**noUnusedLocals**: 检查只声明未使用的局部变量
+
+（35）**noUnusedParameters**: 检查未使用的函数参数
+
+（36）**noFallthroughCaseInSwitch**: 防止 switch 语句贯穿
+
+（37）**noImplicitReturns**: if/else 每个分支都要有返回值
+
+------
+
+（38）**esModuleInterop**: 允许 "export =" 导出，既可以通过 "import from" 导入，也可以通过 "import =" 的方式导入
+
+（39）**allowUmdGlobalAccess**: 允许模块中访问 umd 全局变量
+
+（40）**moduleResolution**: 模块解析策略，默认采用 node
+
+TypeScript 中的解析策略分为 classic 和 node，classic 用于 AMD、System、ES2015 模块系统， 其路径解析策略如下图所示：
+
+<img src="/assets/typescript-02/01.jpeg" width="600" />
+
+如果解析策略是 node 则路径解析策略有所不同：
+
+<img src="/assets/typescript-02/02.jpeg" width="600" />
+
+（41）**baseUrl**: 解析非相对模块的基地址
+
+（42）**path**: 路径映射，相对于 "baseUrl"
+
+（43）**rootDirs**: 将多个目录放在一个虚拟目录下，用于运行时
+
+------
+
+（44）**listEmitted**: 打印输出的文件
+
+（45）**listFiles**: 打印编译的文件（包括引用的声明文件）
 
 
 ## 参考资料
