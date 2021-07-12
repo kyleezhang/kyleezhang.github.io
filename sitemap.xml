@@ -2,9 +2,37 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://kyleezhang.com/2021/01/06/typescript-02/</loc>
+    
+    <lastmod>2021-07-11</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://kyleezhang.com/2021/07/21/sourcemap/</loc>
+    
+    <lastmod>2021-07-11</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://kyleezhang.com/2020/12/16/webpack-runtime/</loc>
+    
+    <lastmod>2021-07-10</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://kyleezhang.com/2021/03/17/client-security/</loc>
+    
+    <lastmod>2021-07-10</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://kyleezhang.com/2021/06/03/css-scss/</loc>
     
-    <lastmod>2021-07-05</lastmod>
+    <lastmod>2021-07-06</lastmod>
     
   </url>
   
@@ -100,13 +128,6 @@
   </url>
   
   <url>
-    <loc>http://kyleezhang.com/2021/01/06/typescript-02/</loc>
-    
-    <lastmod>2021-07-03</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://kyleezhang.com/2020/11/15/typescript-01/</loc>
     
     <lastmod>2021-07-03</lastmod>
@@ -163,13 +184,6 @@
   </url>
   
   <url>
-    <loc>http://kyleezhang.com/2020/12/16/webpack-runtime/</loc>
-    
-    <lastmod>2021-06-30</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://kyleezhang.com/2021/05/15/vue-cli-02/</loc>
     
     <lastmod>2021-06-30</lastmod>
@@ -192,13 +206,6 @@
   
   <url>
     <loc>http://kyleezhang.com/2020/12/21/essay-02/</loc>
-    
-    <lastmod>2021-06-30</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://kyleezhang.com/2021/03/17/client-security/</loc>
     
     <lastmod>2021-06-30</lastmod>
     
@@ -235,7 +242,7 @@
 
   <url>
     <loc>http://kyleezhang.com/</loc>
-    <lastmod>2021-07-05</lastmod>
+    <lastmod>2021-07-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -243,56 +250,56 @@
   
   <url>
     <loc>http://kyleezhang.com/tags/Chrome/</loc>
-    <lastmod>2021-07-05</lastmod>
+    <lastmod>2021-07-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kyleezhang.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%8E%9F%E7%90%86/</loc>
-    <lastmod>2021-07-05</lastmod>
+    <lastmod>2021-07-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kyleezhang.com/tags/CSS/</loc>
-    <lastmod>2021-07-05</lastmod>
+    <lastmod>2021-07-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kyleezhang.com/tags/%E9%9A%8F%E7%AC%94/</loc>
-    <lastmod>2021-07-05</lastmod>
+    <lastmod>2021-07-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kyleezhang.com/tags/JavaScript/</loc>
-    <lastmod>2021-07-05</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://kyleezhang.com/tags/TypeScript/</loc>
-    <lastmod>2021-07-05</lastmod>
+    <lastmod>2021-07-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kyleezhang.com/tags/%E5%89%8D%E7%AB%AF%E5%B7%A5%E7%A8%8B%E5%8C%96/</loc>
-    <lastmod>2021-07-05</lastmod>
+    <lastmod>2021-07-12</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://kyleezhang.com/tags/TypeScript/</loc>
+    <lastmod>2021-07-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kyleezhang.com/tags/Node/</loc>
-    <lastmod>2021-07-05</lastmod>
+    <lastmod>2021-07-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
@@ -301,21 +308,21 @@
   
   <url>
     <loc>http://kyleezhang.com/categories/%E5%89%8D%E7%AB%AF/</loc>
-    <lastmod>2021-07-05</lastmod>
+    <lastmod>2021-07-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kyleezhang.com/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%B8%8E%E7%BD%91%E7%BB%9C/</loc>
-    <lastmod>2021-07-05</lastmod>
+    <lastmod>2021-07-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://kyleezhang.com/categories/%E9%9A%8F%E7%AC%94/</loc>
-    <lastmod>2021-07-05</lastmod>
+    <lastmod>2021-07-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
