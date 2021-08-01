@@ -346,14 +346,14 @@ module.exports = MyBasicPlugin;
 // 正常执行返回
 process.exitCode = 0;
 /**
- * 运行某个命令
+ * 通过 child_process 快速的运行某个命令
  * @param {string} command process to run
  * @param {string[]} args commandline arguments
  * @returns {Promise<void>} promise
  */
 const runCommand = (command, args) => {...};
 /**
- * 判断某个包是否安装
+ * 通过require.resolve判断某一个包是否存在
  * @param {string} packageName name of the package
  * @returns {boolean} is the package installed?
  */
@@ -385,14 +385,17 @@ const CLIs = [
 const installedClis = CLIs.filter(cli=>cli.installed);
 // 根据安装数量进行处理
 if (installedClis.length === 0) {
+  // 终端询问用户是否安装 webpack-cli
   ...
 } else if (installedClis.length === 1) {
+  // 直接通过require方法调用已安装 CLI
   ...
 } else {
+  // 终端提示安装了两个CLI，只能使用一个，请移除另一个
   ...
 }
 ```
-这儿的 node_modules/.bin/webpack.js 实际上就是 Webpack 打包流程的入口文件，启动后 Webpack 最终会找到 webpack-cli / webpack-command 的npm包（大部分项目都采用webpack-cli），并且执行CLI。
+这儿的 node_modules/.bin/webpack.js 实际上就是 Webpack 打包流程的入口文件，启动后 Webpack 会判断是否安装了可用的CLI: webpack-cli 或 webpack-command（webpack-cli功能更加丰富），并根据安装数量进行相应的处理，最终 webpack 会找到 webpack-cli(webpack-command) 这个 npm 包并且执行 CLI。
 
 ### 二、webpack-cli
 
@@ -449,18 +452,7 @@ yargs.parse(process.argv.slice(2), (err, argv, output) => {
 })
 ```
 
-我们发现在 yargs.parse 的回调函数中还调用了 bin/utils/convert-argv.js 模块，将得到的命令行参数转换为 Webpack 的配置选项对象，具体操作如下：
-
-```typescript
-let options;
-try {
-  options = require("./convert-argv")(argv);
-} catch (err) {
-  ...
-}
-```
-
-在 convert-argv.js 工作过程中，首先为传递过来的命令行参数设置了默认值:
+我们发现在 yargs.parse 的回调函数中还调用了 bin/utils/convert-argv.js 模块，将得到的命令行参数转换为 Webpack 的配置选项对象，在 convert-argv.js 工作过程中，首先为传递过来的命令行参数设置了默认值:
 
 <img src="/assets/webpack-runtime/04.png" />
 
@@ -523,9 +515,18 @@ const webpack = (options, callback) => {
 };
 ```
 
-在这个函数中，首先校验了外部传递过来的 options 参数是否符合要求，紧接着判断了 options 的类型。如果传入的是一个数组，那么 Webpack 内部创建的就是一个 MultiCompiler，也就是同时开启多路打包，配置数组中的每一个成员就是一个独立的配置选项。而如果我们传入的是普通的对象，流程主要分为五步：1.处理options -> 2. 创建compiler -> 3.绑定自定义插件 -> 4. 触发特定的Hook -> 5. 处理options. 我们可以看到第1和第5步都是处理options。那到底有啥不同呢？
-1. `new WebpackOptionsDefaulter().process(options)`：WebpackOptionsDefaulter 顾名思义，是设置 webpack 的默认参数的地方，比如说默认入口路径，默认 rule, 默认 optimize 策略。这行的作用就是设置默认参数，并将用户自定义参数覆盖上去。
-2. `new WebpackOptionsApply().process(options, compiler)`：WebpackOptionsApply 的主要功能是根据 options 中的配置，注册各种内部插件如 SingleEntryPlugin，以及负责解析的各类钩子，以及负责优化的 SplitChunksPlugin 等等。
+在这个函数中，首先校验了外部传递过来的 options 参数是否符合要求，紧接着判断了 options 的类型。如果传入的是一个数组，那么 Webpack 内部创建的就是一个 MultiCompiler，也就是同时开启多路打包，配置数组中的每一个成员就是一个独立的配置选项。而如果我们传入的是普通的对象，流程主要分为五步：
+
+1. 处理options
+2. 创建compiler
+3. 绑定自定义插件
+4. 触发特定的Hook
+5. 处理options.
+
+我们可以看到第1和第5步都是处理options。那到底有啥不同呢？
+
+- `new WebpackOptionsDefaulter().process(options)`：WebpackOptionsDefaulter 顾名思义，是设置 webpack 的默认参数的地方，比如说默认入口路径，默认 rule, 默认 optimize 策略。这行的作用就是设置默认参数，并将用户自定义参数覆盖上去。
+- `new WebpackOptionsApply().process(options, compiler)`：WebpackOptionsApply 的主要功能是根据 options 中的配置，注册各种内部插件如 SingleEntryPlugin，以及负责解析的各类钩子，以及负责优化的 SplitChunksPlugin 等等。
 
 可以注意到在创建了 Compiler 对象过后，Webpack 就开始注册我们配置中的每一个插件了，这是因为再往后 Webpack 工作过程的生命周期就要开始了，所以必须先注册，这样才能确保插件中的每一个钩子都能被命中。
 
@@ -1033,6 +1034,55 @@ for (const fileManifest of manifest) {
 
 webpack 的整体打包流程主要还是依赖于 compilation 和 module 这两个对象，compiliation 对象负责协调整个构建过程， module 是 webpack 构建的核心实体，由这两者合作完成了整体项目的打包，由 tapable 控制各插件在 webpack 事件流上运行，最终成就了 Webpack 这目前使用最广泛的打包工具。
 
+整个流程主要完成了**内容转换 + 资源合并**两种功能，实现上包含三个阶段：
+
+#### 1、初始化阶段
+
+- 初始化参数：从配置文件、 配置对象、Shell 参数中读取，与默认配置结合得出最终的参数
+- 创建编译器对象：用上一步得到的参数创建 Compiler 对象
+- 初始化编译环境：包括注入内置插件、注册各种模块工厂、初始化 RuleSet 集合、加载配置的插件等
+- 开始编译：执行 compiler 对象的 run 方法
+- 确定入口：根据配置中的 entry 找出所有的入口文件，调用 compilition.addEntry 将入口文件转换为 dependence 对象
+
+<img src="/assets/webpack-runtime/16.jpg">
+
+#### 2、构建阶段
+
+- 编译模块(make)：根据 entry 对应的 dependence 创建 module 对象，调用 loader 将模块转译为标准 JS 内容，调用 JS 解释器将内容转换为 AST 对象，从中找出该模块依赖的模块，再递归本步骤直到所有入口依赖的文件都经过了本步骤的处理
+- 完成模块编译：上一步递归处理所有能触达到的模块后，得到了每个模块被翻译后的内容以及它们之间的依赖关系图
+
+<img src="/assets/webpack-runtime/17.jpg">
+
+1. 调用 handleModuleCreate ，根据文件类型构建 module 子类
+2. 调用 loader-runner 仓库的 runLoaders 转译 module 内容，通常是从各类资源类型转译为 JavaScript 文本
+3. 调用 acorn 将 JS 文本解析为AST
+4. 遍历 AST，触发各种钩子：在 HarmonyExportDependencyParserPlugin 插件监听 exportImportSpecifier 钩子，解读 JS 文本对应的资源依赖；调用 module 对象的 addDependency 将依赖对象加入到 module 依赖列表中
+5. AST 遍历完毕后，调用 module.handleParseResult 处理模块依赖
+6. 对于 module 新增的依赖，调用 handleModuleCreate ，控制流回到第一步
+7. 所有依赖都解析完毕后，构建阶段结束
+
+这个过程中数据流 module => ast => dependences => module ，先转 AST 再从 AST 找依赖。这就要求 loaders 处理完的最后结果必须是可以被 acorn 处理的标准 JavaScript 语法，比如说对于图片，需要从图像二进制转换成类似于 `export default "data:image/png;base64,xxx"` 这类 base64 格式或者 `export default "http://xxx"` 这类 url 格式。
+
+compilation 按这个流程递归处理，逐步解析出每个模块的内容以及 module 依赖关系，后续就可以根据这些内容打包输出。
+
+#### 3、生成阶段
+
+- 输出资源(seal)：根据入口和模块之间的依赖关系，组装成一个个包含多个模块的 Chunk，再把每个 Chunk 转换成一个单独的文件加入到输出列表，这步是可以修改输出内容的最后机会
+- 写入文件系统(emitAssets)：在确定好输出内容后，根据配置确定输出的路径和文件名，把文件内容写入到文件系统
+
+<img src="/assets/webpack-runtime/18.jpeg">
+
+1. 构建本次编译的 ChunkGraph 对象；
+2. 遍历 compilation.modules 集合，将 module 按 entry/动态引入 的规则分配给不同的 Chunk 对象；
+3. compilation.modules 集合遍历完毕后，得到完整的 chunks 集合对象，调用 createXxxAssets 方法
+4. createXxxAssets 遍历 module/chunk ，调用 compilation.emitAssets 方法将 assets 信息记录到 compilation.assets 对象中
+5. 触发 seal 回调，控制流回到 compiler 对象
+
+这一步的关键逻辑是将 module 按规则组织成 chunks ，webpack 内置的 chunk 封装规则比较简单：
+
+- entry 及 entry 触达到的模块，组合成一个 chunk
+- 使用动态引入语句引入的模块，各自组合成一个 chunk
+
 ## 参考资料
 
 [编写一个webpack的loader（1）](https://juejin.cn/post/6844903861451227150)
@@ -1042,3 +1092,5 @@ webpack 的整体打包流程主要还是依赖于 compilation 和 module 这两
 [Webpack 核心知识有哪些？](https://mp.weixin.qq.com/s/xT12rUsYOkypXS8YFYQEzQ)
 
 [细说 webpack 之流程篇](https://developer.aliyun.com/article/61047)
+
+[[万字总结] 一文吃透 Webpack 核心原理](https://zhuanlan.zhihu.com/p/363928061)
