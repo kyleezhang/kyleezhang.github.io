@@ -741,6 +741,7 @@ buildModule(module, optional, origin, dependencies, thisCallback) {
   )
 }
 ```
+
 那么剩下的资源加载，解析过程都是交给了 NormalModule.js 完成的。
 
 ```js
@@ -783,7 +784,8 @@ doBuild(options, compilation, resolver, fs, callback) {
   );
 }
 ```
-doBuild 方法中又调用了 runLoaders 方法，并在参数中通过将 fs.readFile.bind(fs) 将 loader 资源文件传入。在runLoaders的回调中，可以看到用 createSource 给this._source 赋值。证明我们之前的推测是正确的，buildModule 方法中执行具体的 Loader，处理特殊资源加载。
+
+doBuild 方法中又调用了 runLoaders 方法，并在参数中通过将 fs.readFile.bind(fs) 将 loader 资源文件传入。在 runLoaders 的回调中，可以看到用 createSource 给this._source 赋值。证明我们之前的推测是正确的，buildModule 方法中执行具体的 Loader，处理特殊资源加载。
 
 当 buildModule 方法执行具体的 Loader 之后我们再看 build 方法中给 doBuild 方法传入的回调函数：
 
@@ -1067,7 +1069,7 @@ compilation 按这个流程递归处理，逐步解析出每个模块的内容�
 
 #### 3、生成阶段
 
-- 输出资源(seal)：根据入口和模块之间的依赖关系，组装成一个个包含多个模块的 Chunk，再把每个 Chunk 转换成一个单独的文件加入到输出列表，这步是可以修改输出内容的最后机会
+- 输出资源(seal)：根据入口和模块之间的依赖关系，组装成一个个包含多个模块的 Chunk，再把每个 Chunk 转换成一个单独的文件加入到输出列表，这步是可以修改输出内容的最后机会，因此打包的优化主要就在这个阶段
 - 写入文件系统(emitAssets)：在确定好输出内容后，根据配置确定输出的路径和文件名，把文件内容写入到文件系统
 
 <img src="/assets/webpack-runtime/18.jpeg">
@@ -1082,6 +1084,7 @@ compilation 按这个流程递归处理，逐步解析出每个模块的内容�
 
 - entry 及 entry 触达到的模块，组合成一个 chunk
 - 使用动态引入语句引入的模块，各自组合成一个 chunk
+
 
 ## 参考资料
 
