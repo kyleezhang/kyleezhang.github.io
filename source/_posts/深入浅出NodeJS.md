@@ -41,16 +41,17 @@ tags:
 
 在 Node 中模块分为两类：一类是 Node 提供的模块，称为核心模块；另一类是用户编写的模块，称为文件模块。核心模块在 Node 源码编译的过程中编译进了二进制执行文件。在 Node 进程启动时，部分核心模块就被直接加载进内存中，因此核心模块引入时会忽略掉文件定位与编译执行的两步，而且路径分析的优先级也是最高的，因此其加载速度要比文件模块快很多。文件模块则是在运行时动态加载，需要完整的路径分析、文件定位、编译执行过程。
 
+
 详细的模块加载过程如下：
 
-（1）**优先从缓存加载**
+#### (1)**优先从缓存加载**
 
 需要注意以下两点：
 
 - 浏览器仅仅缓存文件而 Node 缓存的是编译和执行后的对象；
 - 核心模块的缓存检查会优于文件模块。
 
-（2）**路径分析**
+#### (2)**路径分析**
 
 - 核心模块：优先级仅次于缓存加载，加载过程最快
 - 路径形式的文件模块：require 方法会将路径转换为真实路径，并以真实路径为索引将编译结果存放到缓存中，由于指明了确切的文件位置，因此加载速度仅次于核心模块
@@ -58,12 +59,12 @@ tags:
 
 > 注：模块路径是 Node 在定位文件模块的具体文件时指定的查找策略，具体表现为一个路径组成的数组，在代码中我们可以通过 module.paths 属性查看。
 
-（3）**文件定位**
+#### (3)**文件定位**
 
 - 文件扩展名分析：CommonJS 模块规范允许标识符中不包含文件扩展名的情况，这时 Node 会按照 .js、.json、.node 的次序补足扩展名并调用 fs 模块同步阻塞式地判断文件是否存在。
 - 目录分析和包：Node 会首先在当前目录下查找 package.json 文件并通过 JSON.parse 方法解析，获取到包描述对象后会根据 main 属性指定的文件名进行定位。
 
-（4）**模块编译**
+#### (4)**模块编译**
 
 在定位到文件后首先是文件的读取，对于不同的文件扩展名其载入方式也有很大的不同：
 
@@ -72,9 +73,9 @@ tags:
 - .json 文件：通过 fs 模块同步读取文件后，用 JSON.parse 解析返回的结果
 - 其余扩展名文件：都被当作 .js 文件载入
 
-> 注：通过 require.extensions 属性可知道系统中已有的扩展加载方式，我们也可通过类似 require.extensions['.ext'] 的方式来实现加载，但是官方更支持先将其他语言编译成 js 文件后再加载，这样可避免将繁琐的编译加载等过程引入 Node 的执行过程中。
+> 注：通过 require.extensions 属性可知道系统中已有的扩展加载方式，我们也可通过类似 `require.extensions['.ext'] = function(module, filename) { ... }` 的方式来实现加载，但是官方更支持先将其他语言编译成 js 文件后再加载，这样可避免将繁琐的编译加载等过程引入 Node 的执行过程中。
 
-在读取到文件内容后紧接着就是根据不同的文件扩展名进行对应模块的编译
+在读取到文件内容后紧接着就是根据不同的文件扩展名进行对应模块的编译：
 
 **JavaScript 文件**：
 
@@ -114,3 +115,153 @@ function Module(id, parent) {
 JSON 文件的编译在 Node 中是最简单的，Node 利用 fs 模块同步读取 JSON 文件的内容之后再调用 JSON.parse 方法得到对象，然后将它赋给模块对象的 exports 以供外部调用。
 
 ### 2、核心模块
+
+Node 的核心模块可分为 C/C++ 编写的和 JavaScript 编写的两部分：
+
+#### (1)JavaScript核心模块的编译过程
+
+在编译所有的 C/C++ 文件之前，编译程序需要将所有的 JavaScript 模块文件编译为 C/C++ 代码，因此 JavaScript 的完整编译过程如下：
+
+**转存为 C/C++ 代码**
+
+Node 采用了 V8 附带的 js2c.py 工具，将所有内置的 JavaScript 代码转换为 C++ 里的数组并生成 node_natives.h 头文件，这个过程中 JavaScript 以**字符串**的形式存储在 node 的命名空间中，是不可以直接执行的。在启动 Node 进程时，JavaScript 代码直接加载进内存中。在加载的过程中，JavaScript 核心模块经过标识符分析后直接定位到内存中，这比普通的文件模块从磁盘中读取要快得多。
+
+**编译 JavaScript 核心模块**
+
+在引入 JavaScript 核心模块的过程中也同样会经历头尾包装过程，然后再执行并导出 exports 对象，与文件模块有区别的地方主要在于：**获取源代码的方式**和**缓存执行结果的位置**：
+
+- JavaScript 核心模块的源文件主要通过 process.bingding('natives') 从内存的 node 命名空间中取出，而 JavaScript 文件模块主要是通过 fs 模块在磁盘上读取。
+- 编译成功的 JavaScript 核心模块会缓存到 NativeModule._cache 对象上，文件模块则会缓存到 Module._cache 对象上。
+
+```js
+function NativeModule(id) {
+    this.filename = id + '.js';
+    this.id = id;
+    this.exports = {};
+    this.loaded = false;
+}
+NativeModule._source = process.binding('natives');
+NativeModule._cache = {}
+```
+
+#### (2)C/C++核心模块的编译过程
+
+在核心模块中有些模块全部由 C/C++ 编写，有些模块则由 C/C++ 完成核心部分，其他部分则由 JavaScript 实现包装或向外导出，以满足性能的要求。Node 中这种复合模式使得其在开发速度和性能之间找到平衡点。
+
+通常将那些由 C/C++ 编写的部分统称为**内建模块**，它们通常不被用户直接调用，Node 中的 buffer、cypto、fs 等模块都是部分由 C/C++ 编写的复合模块。
+
+**内建模块的组织形式**
+
+在 Node 中内建模块的内部结构定义如下：
+
+```cpp
+struct node_module_struct {
+    int version;
+    void *dso_handle;
+    const char *filename;
+    void (*register_func) (v8::Handle<v8::Object> target);
+    const char *modname;
+}
+```
+
+每一个内建模块在定义之后都通过 NODE_MODULE 宏将模块定义到 node 命名空间中，模块的具体初始化方法挂在为结构的 register_func 成员：
+
+```cpp
+#define NODE_MODULE(modname, regfunc) {
+    extern "C" {
+        NODE_MODULE_EXPORT node::node_module_struct modname ## _module = {
+            NODE_STANDARD_MODULE_STUFF,
+            regfunc,
+            NODE_STRINGIFY(modname)
+        }
+    }
+}
+```
+
+node_extensions.h 文件将这些散列的内建模块统一放进了一个叫 node_module_list 的数组中，这些模块有 node_buffer、node_crypto、node_evals...，这些内建模块的取出也非常简单，Node 提供了 get_builin_module() 方法从 node_module_list 数组中取出这些模块。
+
+内建模块的优势在于：
+- 它们本身由 C/C++ 编写，性能上优于脚本语言
+- 在进行文件编译时，它们被编译进二进制文件，一旦 Node 开始执行，它们被直接加载进内存中，无需再次做标识符定位、文件定位、编译等过程，直接就可执行。
+
+**内建模块的导出**
+
+在 Node 的所有模块类型中存在着依赖层级关系：文件模可能会依赖核心模块、核心模块可能会依赖内建模块。通常不推荐文件模块直接调用内建模块而是直接调用核心模块即可，那么内建模块是如何将内部变量或方法导出以供外部 JavaScript 核心模块调用呢？
+
+Node 在启动时会生成一个全局变量 process，并提供 Binding() 方法来协助加载内建模块，方法内会首先判断 binding_cache 缓存对象中是否存在，如果存在直接读取，如果不存在则先创建一个 exports 空对象，然后调用 get_builtin_module() 方法取出内建模块对象，通过执行 register_func() 填充 exports 对象，最后将 exports 对象按模块名缓存，并返回给调用方完成导出。
+
+前文提到的 JavaScript 核心文件被转换为 C/C++ 数组存储后便也是通过 process.binding('natives') 取出放置在 NativeModule._source 中的，此方法将通过 js2c.py 工具转换出的字符串数组取出然后重新转换为普通字符串，以对 JavaScript 核心模块进行编译和执行。
+
+#### (3)核心模块的引入流程
+
+虽然对于用户而言 require 方法十分简洁但是核心模块的引入往往要经历 C/C++ 层面的内建模块的定义、(JavaScript)核心模块的定义和引入及(JavaScript)文件模块层面的引入，我们以 os 原生模块的引入为例：
+
+<img src="/assets/深入浅出NodeJS/01.png" width="400">
+
+#### (4)编写核心模块
+
+核心模块中 JavaScript 部分的开发与文件模块几乎相同，遵循 CommonJS 规范，编写核心模块的主要难点在于内建模块：
+
+编写内建模块的主要分两步：编写头文件和 C/C++ 文件。
+
+```cpp
+// node_hello.h
+#ifndef NODE_HELLO_H_
+#define NODE_HELLO_H_
+#include <v8.h>
+
+namespace node {
+    // 预定义方法
+    v8::Handle<v8::value> SayHello(const v8::Arguments& args)
+}
+#endif
+```
+
+```cpp
+// node_hello.cc
+#include <node.h>
+#include <node_hello.h>
+#include <v8.h>
+
+namespace node {
+    using namespace v8;
+    // 实现预定义的方法
+    Handle<Value> SayHello(const Arguments& args) {
+        HandleScope scope;
+        return scope.Close(String::New("Hello world!"));
+    }
+
+    // 给传入的目标对象添加sayHello方法
+    void Init_Hello(Handle<Object> target) {
+        target->Set(String::NewSymbol("sayHello"), FunctionTemplate::New(SayHello)->GetFunction());
+    }
+}
+// 调用NODE_MODULE()将注册方法定义到内存中
+NODE_MODULE(node_hello, node::Init_Hello)
+```
+
+编写完成以后还需要让 Node 认为它是内建模块，因此还需要更改 src/node_extensions.h，在 NODE_EXT_LIST_END 前添加 NODE_EXT_LIST_ITEM（如 node_hello）,以将 node_hello 模块添加进 node_module_list 数组中。其次还需要让编写的代码文件编译进执行文件，同时需要更改 Node 项目生成文件 node.gyp，并在 'target_name': 'node' 节点的 sources 中添加上新编写的两个文件，然后编译整个 Node 项目。
+
+### 3、C/C++扩展模块
+
+C/C++ 扩展模块属于文件模块中的一类，在编译时会首先被预编译为 .node 文件，然后调用 process.dlopen() 方法加载执行。不过在详细展开讲解之前我们先需要了解到 Node 的原生模块一定程度上是可以跨平台的，其前提条件是源代码可以支持在 *nix 和 Windows 上编译，其中 *.nix 下通过 g++/gcc 等编译器编译为动态链接共享对象文件(.so)，在 Windows 下则需要通过 Visual C++ 的编译器编译为动态链接库文件(.dll)，因此 .node 文件在 Windows 下实际上是一个 .dll 文件，在 *.nix 下是一个 .so 文件，dlopen 方法在内部实现时再根据平台进行区分，分别采用加载 .so 和 .dll 的方式。具体过程如下图所示：
+
+<img src="/assets/深入浅出NodeJS/02.png" width="700">
+
+#### (1)C/C++扩展模块的编写
+
+普通的扩展模块与内建模块的区别在于无需将源代码编译进 Nod，而是通过 dlopen 方法动态加载，所以在编写普通扩展模块时无需将源代码写进 node 命名空间，也不需要提供头文件，其写法与内建模块一样，都是将方法挂载在 target 对象上，然后通过 NODE_MODULE 声明即可。
+
+#### (2)C/C++扩展模块的编译
+
+从 0.8 版本以后 Node 官方采用 GYP 工具生成各个平台下的项目文件，极大程度的减小了开发者的工作量，Node 官方也基于 GYP 工具专门推出了专有的扩展构建工具 node-gyp，因此我们编译 C/C++ 扩展模块只需要编写 .gyp 项目文件 binding.gyp 并在终端分别执行命令 `node-gyp configure` 和 `node-gyp build` 即可。编译过程会根据平台不同分别编译处理并生成对应的 .node 文件。
+
+#### (3)C/C++扩展模块的加载
+
+在编译得到 .node 文件后我们在代码中只需要通过 require() 方法调用即可，不过这个具体的调用过程却远比这个方法复杂，具体如下图所示：
+
+<img src="/assets/深入浅出NodeJS/03.png" width="500">
+
+如上图所示加载 .node 文件实际上经历了两个步骤，第一个步骤是调用 uv_dlopen() 方法去打开动态链接库，第二个步骤是调用 uv_dlsym() 方法找到动态链接库中通过 NODE_MODULE 宏定义的方法地址，这两个过程都是通过 libuv 库进行封装的：在 *nix 平台下实际上调用的是 dlfcn.h 头文件中定义的 dlopen() 和 dlsym() 两个方法，在 Windows 平台下则是通过 LoadLibraryExW()和 GetProcAddress() 这两个方法实现的，他们分别加载 .so 和 .dll 文件。
+
+由于编写模块时通过 NODE_MODULE 将模块定义为 node_module_struct 结构，所以在获取函数地址之后，将它映射为 node_module_struct 结构几乎是无缝对接的，接下来就是将传入的 exports 对象作为入参传入，将 C++ 中定义的方法挂载在 exports 对象上，然后调用者就可以轻松调用了。
