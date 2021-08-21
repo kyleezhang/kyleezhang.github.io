@@ -381,3 +381,105 @@ setImmediate延迟执行2
 
 这样设计可以保证每轮循环可以较快的执行结束，防止 CPU 占用过多而阻塞后续 I/O 调用的情况。
 
+## 四、异步编程
+
+### 1、异步编程解决方案
+
+利用事件循环的方式 Node 实现了异步模型，使得异步编程首次大规模出现在业务层面，目前异步编程的主要解决方案有如下三种：
+
+- 事件发布/订阅模式
+- Promise/Defered 模式
+- 流程控制库
+
+#### (1)事件发布/订阅模式
+
+事件监听器模式是一种广泛用于异步编程的模式，是回调函数的事件化，又称发布/订阅模式。
+
+Node 自身提供的 events 模块是发布/订阅的一个简单实现，发布/订阅模式可以实现一个事件与多个回调函数的关联，这些回调函数又被称为事件侦听器。通过 emit() 发布事件后消息会立即传递给当前事件的所有侦听器执行。侦听器可以很灵活的添加删除，使得事件和具体的处理逻辑之间可以很轻松地关联和解耦。
+
+值得注意的是 Node 对事件发布/订阅的机制做了一些额外的处理，这大多是基于健壮性考虑的：
+
+- 如果对一个事件添加超过 10 个侦听器将会得到一个警告，这是因为设计者任务侦听器太多容易造成内存泄漏，通过调用 emitter.setMaxListeners(0) 可以取消这个限制。另一方面，由于事件发布会引起一系列侦听器执行，如果事件相关的侦听器过多，可能存在过多占用 CPU 的场景。
+- 为了处理异常，EventEmitter 对象对 error 事件进行了特殊对待。如果运行期间错误触发了 error 事件，EventEmitter 会检查是否有对 error 事件添加过侦听器。如果添加了，这个错误会交由侦听器处理，否则这个错误会做为异常抛出。如果外部没有捕获这个异常将会引起线程退出。
+
+Node 中对于事件发布/订阅模式的使用主要有如下几种：
+
+**1.继承events模块**
+
+实现一个继承 EventEmitter 的类是十分简单的，Node 在 util 模块封装了继承的方法可以很便利的使用：
+
+```js
+var events = require('events')
+const util = require('util')
+
+function Stream() {
+    events.EventEmitter.call(this)
+}
+util.inherits(Stream, events.EventEmitter)
+
+const stream = new Stream()
+stream.on('hi', () => {
+    console.log('hi')
+})
+stream.emit('hi')
+```
+
+**2.利用事件队列解决雪崩问题**
+
+在事件发布/订阅模式中，通常也有一个 once() 方法，通过它添加的侦听器只能执行一次，在执行之后就会将它与事件的关联移除，这个特性可以帮助我们过滤一些重复性的事件响应，比如雪崩问题：
+
+```js
+var proxy = new events.EventEmitter();
+var status = "ready"
+var select = function (callback) {
+    proxy.once("selected", callback);
+    if (status === "ready") {
+        status = "pending";
+        db.select("SQL", function (results) {
+            proxy.emit("selected", results);
+            status = "ready"
+        })
+    }
+}
+```
+
+**3.多异步之间的协作方案**
+
+一般而言事件发布/订阅模式中事件与侦听器的关系是一对多，但在异步编程中也会出现事件与侦听器的关系是多对一的情况，所以往往会出现一直被诟病的函数嵌套过深的问题，例如：
+
+```js
+fs.readFile(template_path, 'utf8', function (err, template) {
+    db.query(sql, function(er, data) {
+        l10n.get(function (err, response) {
+            // TODO
+        })
+    })
+})
+```
+
+但是这种编程方式一方面导致回调函数嵌套过深，而且导致了可以并行调用但实际上只能并行执行的问题，我们可以通过引入**哨兵变量**来解决这个问题：
+
+```js
+var count = 0;
+var results = {};
+var done = function (key, value) {
+    results[key] = value;
+    count++;
+    if (count === 3) {
+        render(results);
+    }
+}
+
+fs.readFile(template_path, 'utf8', function(err, template) {
+    done("template", template)
+})
+db.query(sql, function (err, data) {
+    done("data", data)
+})
+l10n.get(function (err, resource) {
+    done("resource", resource)
+})
+```
+
+除了这种方式之外我们还可以通过 [EventProxy](https://github.com/JacksonTian/eventproxy) 来实现。
+
