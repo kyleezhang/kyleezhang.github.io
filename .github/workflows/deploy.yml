@@ -13,17 +13,19 @@ jobs:
           rm -f .yarnclean
           yarn --frozen-lockfile --ignore-engines --ignore-optional --non-interactive --silent --ignore-scripts --production=false
           rm -rf ./public
-      - name: Checkout 🛎️
-        uses: actions/checkout@v2 # If you're using actions/checkout@v2 you must set persist-credentials to false in most cases for the deployment to work correctly.
-        with:
-          persist-credentials: false
-
-      - name: Install and Build 🔧 # This example project is built using npm and outputs the result to the 'build' folder. Replace with the commands required to build your project, or remove this step entirely if your site is pre-built.
-        run: |
-          npm install
+          npm run clean
           npm run build
-        env:
-          CI: false
+#       - name: Checkout 🛎️
+#         uses: actions/checkout@v2 # If you're using actions/checkout@v2 you must set persist-credentials to false in most cases for the deployment to work correctly.
+#         with:
+#           persist-credentials: false
+
+#       - name: Install and Build 🔧 # This example project is built using npm and outputs the result to the 'build' folder. Replace with the commands required to build your project, or remove this step entirely if your site is pre-built.
+#         run: |
+#           npm install
+#           npm run build
+#         env:
+#           CI: false
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@releases/v3
