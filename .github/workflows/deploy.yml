@@ -6,7 +6,7 @@ jobs:
     steps:
       - name: Install Pandoc
         run: | # install pandoc
-        curl -s -L https://github.com/jgm/pandoc/releases/download/2.9.2/pandoc-2.9.2-linux-amd64.tar.gz | tar xvzf - -C $RUNNER_TOOL_CACHE/
+          curl -s -L https://github.com/jgm/pandoc/releases/download/2.9.2/pandoc-2.9.2-linux-amd64.tar.gz | tar xvzf - -C $RUNNER_TOOL_CACHE/
       - name: Hexo Generate
         run: | # add pandoc to PATH
           export PATH="$PATH:$RUNNER_TOOL_CACHE/pandoc-2.9.2/bin"
