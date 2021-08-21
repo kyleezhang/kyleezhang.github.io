@@ -13,8 +13,6 @@ jobs:
           rm -f .yarnclean
           yarn --frozen-lockfile --ignore-engines --ignore-optional --non-interactive --silent --ignore-scripts --production=false
           rm -rf ./public
-          yarn run hexo clean
-          yarn run hexo generate
       - name: Checkout 🛎️
         uses: actions/checkout@v2 # If you're using actions/checkout@v2 you must set persist-credentials to false in most cases for the deployment to work correctly.
         with:
