@@ -448,7 +448,7 @@ var select = function (callback) {
 一般而言事件发布/订阅模式中事件与侦听器的关系是一对多，但在异步编程中也会出现事件与侦听器的关系是多对一的情况，所以往往会出现一直被诟病的函数嵌套过深的问题，例如：
 
 ```js
-fs.readFile(template_path, 'utf8', function (err, template) {
+fs.readFile(template_path, 'utf-8', function (err, template) {
     db.query(sql, function(er, data) {
         l10n.get(function (err, response) {
             // TODO
@@ -470,7 +470,7 @@ var done = function (key, value) {
     }
 }
 
-fs.readFile(template_path, 'utf8', function(err, template) {
+fs.readFile(template_path, 'utf-8', function(err, template) {
     done("template", template)
 })
 db.query(sql, function (err, data) {
@@ -482,4 +482,165 @@ l10n.get(function (err, resource) {
 ```
 
 除了这种方式之外我们还可以通过 [EventProxy](https://github.com/JacksonTian/eventproxy) 来实现。
+
+#### (2)Promise/Deferred模式
+
+**1.Promise/A**
+
+Promise/Deferred 模式其实包含两部分，即 Promise 和 Defered，Deferred 主要是用于内部，用于维护异步模型的状态，Promise 则用于外部，通过 then() 方法暴露给外部以添加自定义逻辑，整体关系如图所示：
+
+<img src="/assets/深入浅出NodeJS/08.png" width="700">
+
+我们根据规范可以实现一个简易版本：
+
+```js
+// Promise
+const { EventEmitter } = require("events")
+const util = require("util")
+
+var Promise = function () {
+    EventEmitter.call(this);
+}
+util.inherits(Promise, EventEmitter)
+
+Promise.prototype.then = function (fulfilledHandler, errorHandler, progresssHandler) {
+    if (typeof fulfilledHandler === 'function') {
+        this.once('success', fulfilledHandler)
+    }
+    if (typeof errorHandler === 'function') {
+        this.once('error', errorHandler)
+    }
+    if (typeof progresssHandler === 'function') {
+        this.once('progress', progresssHandler)
+    }
+    return this
+}
+
+// Deferred
+var Deferred = function () {
+    this.state = "unfilled";
+    this.promise = new Promise()
+}
+Deferred.prototype.resolve = function (obj) {
+    this.state = 'fulfilled';
+    this.promise.emit('success', obj);
+}
+Deferred.prototype.reject = function (obj) {
+    this.state = 'failed';
+    this.promise.emit('error', obj);
+}
+Deferred.prototype.progress = function (obj) {
+    this.state = 'progress';
+    this.promise.emit('progress', obj);
+}
+```
+
+通过 Promise/Deferred 模式我们可以很轻松的完成对响应对象的封装：
+
+```js
+var promisify = function (res) {
+    var deferred = new Defferred();
+    var result = '';
+    res.on('data', function (chunk) {
+        result += chunk;
+        deferred.progress(chunk);
+    })
+    res.on('end', function () {
+        deferred.resolve(result)
+    })
+    res.on('error', function (err) {
+        deferred.reject(err)
+    })
+    return deferred.promise;
+}
+```
+
+需要注意这里返回 deferred.promise 的目的是为了不让外部程序调用 resolve() 和 reject() 方法，更改状态的行为交由定义者控制。这样我们就可以通过下述方法实现对响应对象的调用：
+
+```js
+promisify(res).then(function (result) {
+    // TODO
+}, function (error) {
+    // TODO
+}, function (chunk) {
+    // TODO
+})
+```
+
+**2.Promise中的多异步协作**
+
+在 promise 的介绍中说过主要解决的是单个异步中存在的问题，那么当我们需要处理多个异步调用时又该如何处理呢？
+
+```js
+Deferred.prototype.all = function (promises) {
+    var count = promises.length;
+    var that = this;
+    var results = [];
+    promises.forEach(function (promise, i) {
+        promise.then(function (data) {
+            count--;
+            results[i] = data;
+            if (count === 0) {
+                that.resolve(result);
+            }
+        }, function (err) {
+            that.reject(err)
+        })
+    })
+    return this.promise
+}
+```
+
+这里通过 all() 方法抽象多个异步操作，只有所有的异步操作成功这个异步操作才算成功。
+
+#### (3)流程控制库
+
+**1.尾触发与Next**
+
+除了事件和 Promise 外还有一类方法是需要手工调用才能继续执行后续调用的，我们将此类方法叫做尾触发，常见的关键词是next。尾触发目前应用得最多的地方是中间件，尾触发十分适合处理网络请求的场景，将复杂的逻辑拆解成简洁、单一的处理单元，逐层次的处理请求对象和相应对象。
+
+但是需要注意的是虽然中间件这种尾触发模式并不要求每个中间件方法都是异步的，但是如果每个步骤都采用异步完成，实际上只是串行化的处理，没办法通过并行的异步调用来提升业务的处理效率。流式处理可以将一些串行的逻辑扁平化，但是并行逻辑处理还是需要搭配事件或者 Promise 完成的。
+
+**2.async**
+
+[async](https://www.npmjs.com/package/async)是最知名的流程控制模块，下面是它的几种典型用法：
+
+- 异步的串行执行：`async.series([func1, func2, ...], callback)`
+- 异步的并行执行：`async.parallel([func1, func2, ...], callback)`
+- 异步调用的依赖处理：`async.waterfall([func1, func2, ...], callback)`
+- 自动依赖处理：`async.auto(depsConfig)`
+
+除此之外还有第三方库 [step](https://www.npmjs.com/package/step) 和 [wind](https://www.npmjs.com/package/wind)，此处不再详细介绍，可以查看官方文档资料。
+
+### 2、异步并发控制
+
+在 Node 中我们可以很轻易的利用异步发起并行调用，但是如果并发量过大我们的下层服务器会吃不消，如果是对文件系统进行大量并发调用，操作系统的文件描述符将会被瞬间用光。因此我们需要对异步并发做一定的控制，下面介绍两种解决方案：
+
+#### (1)bagpipe的解决方案
+
+- 通过一个队列来控制并发量
+- 如果当前活跃（指调用发起但未执行回调）的异步调用量小于限定值，从队列中取出执行
+- 如果活跃度调用达到限定值，调用暂时存放在队列中。
+- 每个异步调用结束时，从队列中取出新的异步调用执行
+
+#### (2)async的解决方案
+
+async 提供了 parallelLimit() 方法来处理异步调用的限制，举个例子：
+
+```js
+async.parallelLimit([
+    function (callback) {
+        fs.readFile('file1.text', 'utf-8', callback);
+    },
+    function (callback) {
+        fs.readFile('file2.text', 'utf-8', callback);
+    },
+], 1, function (err, results) {
+    // TODO
+})
+```
+
+parallelLimit() 方法提供了一个用于限制并发数量的参数，使得任务只能同时并发一定数量，而不是无限制并发。
+
+
 
