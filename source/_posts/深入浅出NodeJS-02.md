@@ -598,3 +598,152 @@ sendPing() {
 **关闭连接**
 
 客户端直接调用close方法，服务器端可以使用socket.end方法。
+
+
+## 八、构建 Web应用
+
+### 1、基础功能
+
+#### (1)请求方法
+
+HTTP_Parser 在解析请求报文时会将报文头中的请求方法抽取出来设置为 req.method。
+
+#### (2)路径解析
+
+HTTP_Parser 将其解析为 req.url。一般而言，完整的 URL 地址是如下这样的：
+
+```
+http://user:pass@host.com:8080/p/a/t/h?query=string#hash
+```
+
+但是客户端代理（浏览器）会将这个地址解析成报文，将路径和查询报文放在报文第一行，如下所示：
+
+```
+GET /p/a/t/h?query=string HTTP/1.1
+```
+
+因此最终得到的 req.url 的值为 '/p/a/t/h?query=string'。
+
+#### (3)查询字符串
+
+查询字符串位于路径之后，形成请求报文首行的第二部分，Node 提供了 querystring 模块用于处理这部分数据。
+
+#### (4)Cookie
+
+HTTP 是一个无状态的协议，但现实中的业务却是需要一定的状态的，这就催生了 Cookie 的诞生，客户端发送的 Cookie 在请求报文的 Cookie 字段中，HtTP_Parser 会将所有的报文字段解析到 req.headers 上，Cookie 是 req.headers.cookie。具体内容格式如下所示：
+
+```
+'csrftoken=HpZuyoYbH_hOQWHUv-0bbb9H; Hm_lvt_f1621cb3fb0792bb294fce1b938d5eef=1632186900; Hm_lpvt_f1621cb3fb0792bb294fce1b938d5eef=1633872461'
+```
+
+除此之外我们还可以在服务端通过 Set-Cookie 字段设置客户端 Cookie，除了 name=value 是必须包含的部分还有如下几个主要参数配置项：
+
+- path：表示这个 Cookie 影响到的路径。
+- Expires 和 Max-Age 是用来告诉浏览器这个 Cookie 何时过期的，如果不设置这个该选项在关闭浏览器时会丢失掉这个 Cookie，如果设置了浏览器会把 Cookie 内容写入磁盘中并保存。
+- HttpOnly：告知浏览器不允许通过脚本 document.cookie 来更改 cookie
+- Secure：当 Secure 值为 true 时，在 HTTP 中是无效的，在 HTTPS 中才有效。
+
+#### (5)Session
+
+Session 的数据只保留在服务器端，客户端无法修改，这样数据的安全性得到一定的保障，数据也无须在协议中每次被传递，但是还需要将每个客户和服务器中的数据一一对应起来，这里主要有常见的两种实现方式：
+
+- 基于 Cookie 来实现用户和数据映射。
+- 通过查询字符串来实现浏览器端和服务器端数据的对应。
+
+两种方法实现的思路主要是通过 Cookie 携带 Session 的口令或通过请求中的查询字符串来携带。
+
+除此之外我们还需要注意如下亮点：
+
+- Session 与内存：如果将 Session 数据存放在内存中一方面 Node 有内存大小限制，并且 Node 的进程与进程之间也无法共享内存，因此常用的方案是将 Session 集中化，转移到集中的数据存储中，常用的工具是 Redis、Memcached。
+- Session 与安全：Session 的口令依然保存在客户端，因此会存在口令被盗用的情况，有一种做法是将这个口令通过私钥加密进行签名，这样即使攻击者知道口令也无法伪造签名信息，但是如果攻击者通过某种方式获取了一个真实的口令和签名他就能实现身份的伪装。因此另一种方案是将客户端的某些独有信息与口令作为原值进行签名，这样攻击者一旦不在原始的客户端访问就会导致签名失败。
+
+#### (6)缓存
+
+HTTP 支持的缓存策略主要分为 “强制缓存” 和 “协商缓存”。“强制缓存“ 主要通过 Expires 和 Cache-Control 字段，而 “协商缓存” 主要通过 Last-Modified 和 If-Modified-Since、ETag 和 If-None-Match，更多详情可查看我的博客[浏览器缓存](https://kyleezhang.github.io/2021/03/16/client-cache/)。
+
+除了设置缓存之外我们还需要服务端意外更新后通过客户端及时更新的能力，这使得我们在使用缓存时也要为其设定版本号，所幸浏览器是根据 URL 进行缓存，那么一旦内容有更新时，我们就让浏览器发起新的 URL 请求，使得新内容能够被客户端更新。一般的更新机制有如下两种：
+
+- 每次发布路径中跟随 Web 应用的版本号。
+- 每次发布路径中跟随文件内容的 hash 值。
+
+#### (7)Basic 认证
+
+Basic 认证是当客户端与服务端进行请求时，允许通过用户名和密码实现的一种身份认证方式。如果一个页面需要 Basic 认证，它会检查请求报文头中的 Authorization 字段的内容，该字段的值由认证方式和加密值构成，如下所示：
+
+```
+Authorization: Basic dXNlcjpwYXNz
+```
+
+在 Basic 认证中，它会将用户和密码部分组合：username + ":" + password 。然后进行 base64 编码。
+
+Basic 认证虽然经过 Base64 加密后在网络传送，但是这近乎明文十分危险，一般只有在 HTTPS 的情况下才会使用，不过 Basic 认证的支持范围十分广泛，几乎所有的浏览器都支持它。
+
+### 2、数据上传
+
+Node 的 http 模块只对 HTTP 报文的头部进行了解析，然后触发了 request 事件。如果请求中还带有内容部分，内容部分需要用户自行接收和解析。
+
+我们可以通过报头中的 Transfer-Encoding 或 Content-Length 字段判断请求中是否带有内容。
+
+在 HTTP_Parser 解析报头结束后，报文内容部分会通过 data 事件触发，我们只需要以流的方式处理即可，如下所示：
+
+```js
+const hasBody = (req) => 'transfer-encoding' in req.headers || 'content-length' in req.headers
+
+function (req, res) {
+    if (hasBody(req)) {
+        var buffers = []
+        req.on('data', function (chunk) {
+            buffers.push(chunk)
+        })
+        req.on('end', function () {
+            req.rawBody = Buffer.concat(buffers).toString()
+            handle(req, res)
+        })
+    } else {
+        handle(req, res)
+    }
+}
+```
+
+#### (1)表单数据
+
+通过 form 标签默认的表单提交请求头中的 Content-Type 字段值为 application/x-www-form-urlencoded，而它的报文体内容与查询字符串相同：`foo=bar&baz=val`，因此它的解析非常容易：
+
+```js
+const handle = (req, res) => {
+    if (req.header['content-type'] === 'application/x-www-form-urlencoded') {
+        req.body = querystring.parse(req.rawBody)
+    }
+}
+```
+
+#### (2)其他格式
+
+除了表单数据外常见的提交还有 JSON 和 XML 文件等，判断它们的方式也是通过 Content-Type 字段，值分别为 application/json 和 application/xml。
+
+json 文件的解析是非常简单的，我们可以直接通过 JSON.parse 方法进行解析，XML 文件的解析稍微复杂一些但我们也可以采用 XML 文件到 JSON 对象转换的库，例如 xml2js 模块。
+
+#### (3)附件上传
+
+通常的表单，其内容可以通过 urlencoded 的方式编码内容形成报文体，再发送给服务器端，但是业务场景往往需要用户直接提交文件。在前端 HTML 代码中，特殊表单与普通表单的差异在于该表单中可以含有 file 类型的控件，以及需要指定表单属性 enctype 为 multipart/form-data，如下所示：
+
+```html
+<form action="/upload" method="post" enctype="multipart/form-data">
+  <label for="username">Username:</label><input type="text" name="username" id="username"/>
+  <label for="file">Filename:</label><input type="file" name="file" id="file">
+  <br />
+  <input type="submit" name="submit" value="Submit">
+</form>
+```
+
+浏览器在遇到 multipart/form-data 表单提交时，构造的请求报文与普通报文完全不同。首先它的报头中最为特殊的如下所示：
+
+```
+Content-Type: multipart/form-data; boundary=AaB03x
+Content-Length: 18231
+```
+
+它代表本次提交的内容是由多部分构成的，其中 boundary=AaB03x 是随机生成的一段字符串，制定每部分内容的分界符。报文的内容将通过在它前面添加 '--' 进行分割，报文结束在它前后都加 '--' 表示结束。另外 Content-Length 的值必须确保是报文体的长度。
+
+在知晓了报问题是如何构成之后解析就变得非常容易，但是对于未知大小的数据量进行处理时依然需要小心，我们也可以采用一些第三方库比如 formidable 来协助我们处理。
+
