@@ -887,7 +887,7 @@ Web 应用最终呈现出来的内容都是通过一系列的视图渲染呈现�
 
 **模板编译**
 
-为了能够最终与数据一起执行生成字符串，我们需要将原始的模板字符串转换成一个函数对象，这个过程称为模板编译，生成的中间函数只与模板字符串相关，与具体的数据无关，因此通常我们都会采用模板预编译的方法，预编译缓存模板编译后的结果，以此实现一次编译多次执行。
+为了能够最终与数据一起执行生成字符串，我们需要将原始的模板字符串转换成一个函数对象，这个过程称为模板编译。
 
 ```js
 var compile = function (str) {
@@ -915,11 +915,8 @@ var compile = function (str, data) {
     var tpl = str.replace(/<%=([\s\S]+?)%>/g, function (match, code) {
         return "' + " + code + " + '"
     })
-    console.log(tpl, 1)
     tpl = "tpl = '" + tpl + "'";
-    console.log(tpl, 2)
     tpl = 'var tpl = "";\nwith (obj) {' + tpl + '}\nreturn tpl';
-    console.log(tpl, 3)
     return new Function('obj', tpl)
 }
 ```
@@ -991,4 +988,68 @@ var compile = function (str) {
 ```
 
 ##### 集成文件系统
+
+结合我们之前实现的 compile() 与 render() 方法我们已经能够实现将输入的模板字符串进行编译替换的功能，但是通过模板编译生成的中间函数只与模板字符串相关，与具体的数据无关，因此我们可以采用模板预编译的方法，预编译缓存模板编译后的结果，以此实现一次编译多次执行。这里我们再集成文件系统：
+
+```js
+var cache = {}
+var VIEW_FOLDER = '/path/to/wwwroot/views';
+
+res.render = function (viewname, data) {
+    if (!cache[viewname]) {
+        var text;
+        try {
+            text = fs.readFileSync(path.join(VIEW_FOLDER, viewname), 'utf-8')
+        } catch (e) {
+            res.writeHead(500, { 'Content-Type': 'text/html' });
+            res.end('模板文件错误');
+            return;
+        }
+        cache[viewname] = text;
+    }
+    var compiled = cache[viewname];
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    var html = compiled(data);
+    res.end(html);
+}
+```
+
+与文件系统集成后再引入缓存就可以很好的解决性能问题，接口也得到大大简化。
+
+##### 子模板
+
+有的时候模板太大太过复杂，会增加维护上的困难，这就导致了子模板的诞生，子模板可以嵌套在别的模板中，多个模板可以嵌入同一个子模板中。我们可以采用 include 关键字实现模板的嵌套：
+
+```js
+var files = {};
+
+var preCompile() = function (str) {
+    var replaced = str.replace(/<%\s+(include.*)\s+%>/g, function (match, data) {
+        var partial = code.split(/\s/)[1];
+        if (!files[partial]) {
+            files[partial] = fs.readFileSync(path.join(VIEW_FOLDER, partial), 'utf-8');
+        }
+        return files[partial]
+    })
+
+    // 多层嵌套，继续替换
+    if (str.match(/<%\s+(include.*)\s+%>/)) {
+        return preCompile(replaced);
+    } else {
+        return replaced
+    }
+}
+```
+
+我们在 compile() 方法对字符串解析前先调用 preCompile 方法对数据进行预编译即可实现对子模板的支持。 
+
+#### (4)Bigpipe
+
+Bigpipe 是一个需要前后端配合实现的优化技术，它的主要思路是将页面分割成多个部分，先向用户输出没有数据的布局（框架），将每个部分逐步输出到前端，并最终渲染填充框架，完成整个网页的渲染，这个过程中需要前端 JavaScript 的参与，它负责将后续输出的数据渲染到页面上。
+
+它比较重要的有如下几个点：
+
+- 页面布局框架
+- 后端持续性数据输出
+- 前端渲染
 
