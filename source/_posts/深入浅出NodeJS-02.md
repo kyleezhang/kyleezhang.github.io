@@ -1053,3 +1053,77 @@ Bigpipe 是一个需要前后端配合实现的优化技术，它的主要思路
 - 后端持续性数据输出
 - 前端渲染
 
+
+
+## 九、玩转进程
+
+### 1、服务模型的变迁
+
+<img src="/assets/深入浅出NodeJS/16.jpg" />
+
+### 2、多进程架构
+
+Node 的多进程采用了著名的 Master-Worker 模式，即主从模式，主从模式是典型的分布式架构中用于并行处理业务的模式具备较好的可伸缩性和稳定性。主进程不负责具体的业务逻辑，而是负责调度或管理工作进程，工作进程负责具体的业务处理。
+
+#### (1) 创建子进程
+
+child_process 模块给予了 Node 创建子进程的能力，它提供了 4 个方法用于创建子进程：
+
+- spawn()：启动一个子进程来执行命令
+- exec()：启动一个子进程来执行命令，与 spawn() 不同的是其接口不同，它有一个回调函数获知子进程的状况
+- execFile()：启动一个子进程来执行可执行文件
+- fork()：与 spawn() 类似，不同点在于它创建 Node 的子进程只需要指定要执行的 JavaScript 文件模块即可
+
+注：
+
+1. spawn() 与 exec()、esecFile() 不同的是后两者创建时可以指定 timeout 属性设置超时时间，一旦创建的进程超过设定的时间将会被杀死。
+2. exec() 与 execFile() 不同的是，exec() 适合执行已有的命令，execFile() 适合执行文件。
+
+举个🌰：
+
+```js
+var cp = require('child_process')
+cp.spawn('node', ['worker.js'])
+cp.exec('node worker.js', function (err, stdout, stderr) {
+    // some code
+})
+cp.execFile('worker.js', function (err, stdout, stderr) {
+    // some code
+})
+cp.fork('./worker.js')
+```
+
+<img src="/assets/深入浅出NodeJS/17.jpeg" />
+
+#### (2) 进程间通信
+
+在主从模式中要实现主进程管理和调度工作进程的功能，需要主进程和工作进程之间的通信，进程间通信简称 IPC（Inter-Process Communication），其主要目的是为了让不同的进程能够相互的访问资源并进行协调工作。实现进程间通信的技术有很多，如命名管道、匿名管道、socket、信号量、共享内存、消息队列、Domain Socket等。Node 中实现 IPC 通道的方式如下所示：
+
+<img src="/assets/深入浅出NodeJS/18.jpeg" />
+
+Node 中 IPC 通道的具体细节实现由 libuv 提供，在 Windows 下由命名管道实现 (named pipe) 实现，*nix 系统则采用 Unix Domain Socket 实现。表现在应用层上的进程间通信只有简单的 message 事件和 send 方法，接口十分简洁和消息化。举个🌰：
+
+```js
+// parent.js
+var cp = require('child_precess')
+var n = cp.fork(__dirname + '/sub.js')
+
+n.on('message', function (m) {
+    console.log('PARENT got message:', m)
+})
+n.send({ hello: 'world!' })
+
+// sub.js
+process.on('message', function (m) {
+    console.log('CHILD got message:', m)
+})
+
+process.send({ foo: 'bar' })
+```
+
+那么 Node 创建 IPC 通道的具体实现是怎么样的呢？
+
+父进程在实际创建子进程之前会创建 IPC 通道（在 Node 中 IPC 通道被抽象为 Stream 对象）并**监听**它，然后才真正创建出子进程，并通过环境变量 (Node_CHANNEL_FD) 告诉子进程这个 IPC 通道的文件描述符。子进程在启动的过程中，**根据文件描述符去连接**这个已存在的 IPC 通道，从而完成父子进程之间的连接。
+
+注：只有启动的子进程是 Node 进程时，子进程才会根据环境变量去连接 IPC 通道，对于其他类型的子进程则无法实现进程间通信，除非其他进程也按约定去连接这个创建好的 IPC 通道。
+
