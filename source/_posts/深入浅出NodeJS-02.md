@@ -1099,7 +1099,7 @@ cp.fork('./worker.js')
 
 在主从模式中要实现主进程管理和调度工作进程的功能，需要主进程和工作进程之间的通信，进程间通信简称 IPC（Inter-Process Communication），其主要目的是为了让不同的进程能够相互的访问资源并进行协调工作。实现进程间通信的技术有很多，如命名管道、匿名管道、socket、信号量、共享内存、消息队列、Domain Socket等。Node 中实现 IPC 通道的方式如下所示：
 
-<img src="/assets/深入浅出NodeJS/18.jpeg" />
+<img src="/assets/深入浅出NodeJS/18.jpeg" width="500" />
 
 Node 中 IPC 通道的具体细节实现由 libuv 提供，在 Windows 下由命名管道实现 (named pipe) 实现，*nix 系统则采用 Unix Domain Socket 实现。表现在应用层上的进程间通信只有简单的 message 事件和 send 方法，接口十分简洁和消息化。举个🌰：
 
@@ -1126,4 +1126,79 @@ process.send({ foo: 'bar' })
 父进程在实际创建子进程之前会创建 IPC 通道（在 Node 中 IPC 通道被抽象为 Stream 对象）并**监听**它，然后才真正创建出子进程，并通过环境变量 (Node_CHANNEL_FD) 告诉子进程这个 IPC 通道的文件描述符。子进程在启动的过程中，**根据文件描述符去连接**这个已存在的 IPC 通道，从而完成父子进程之间的连接。
 
 注：只有启动的子进程是 Node 进程时，子进程才会根据环境变量去连接 IPC 通道，对于其他类型的子进程则无法实现进程间通信，除非其他进程也按约定去连接这个创建好的 IPC 通道。
+
+#### (3) 句柄传递
+
+为了解决多个工作进程一个端口的问题通常的做法是**代理模式**，即主进程监听主端口、对外接收所有的网络请求，再将这些请求分别代理到不同的端口的进程上。其优点在于避免了端口不能重复监听的问题，而且我们可以在代理进程上做适当的负载均衡，但是由于**进程每接收到一个连接将会用掉一个文件描述符**，因此这种代理模式需要浪费一倍数量的文件描述符，这极大的影响了系统的扩展能力。
+
+为了解决这个问题 Node 在版本 v0.5.9 引入了进程间发送句柄的功能。首先什么是句柄？
+
+**句柄是一种可以用来标识资源的引用，它的内部包含了指向对象的文件描述符**，因此句柄可以用来标识一个服务器端 socket 对象、一个客户端 socket 对象、一个套接字等。
+
+接下来我们通过发送句柄来实现多进程监听同端口
+
+```js
+// parent.js
+var cp = require('child_process')
+var child1 = cp.fork('child.js')
+var child2 = cp.fork('child.js')
+
+var server = require('net').createServer();
+server.listen(1337, function () {
+    child1.send('server', server)
+    child2.send('server', server)
+    server.close()
+})
+
+// child.js
+var http = require('http')
+var server = http.createServer(function (req, res) {
+    res.writeHead(200, { 'Content-Type': 'text/plain' })
+    res.end('handed by child, pid is ' + process.pid + '\n')
+})
+process.on('message', function (m, tcp) {
+    if (m === 'server') {
+        tcp.on('connection', function (socket) {
+            server.emit('connection', socket)
+        })
+    }
+})
+```
+
+那么我们为什么可以通过发送句柄来实现多进程监听同一端口呢？句柄发送的具体过程是什么样的呢？
+
+目前子进程对象 send() 方法可以发送的句柄类型包括如下几种：
+
+- net.Socket: TCP 套接字
+- net.Server: TCP 服务器
+- net.Native: C++ 层面的 TCP 套接字或 IPC 管道
+- dgram.Socket: UDP 套接字
+- dgram.Native: C++ 层面的 UDP 套接字
+
+send() 方法在将消息发送到 IPC 管道前，将消息组装成两个对象，一个参数是 handle，另一个是 message。message 的参数如下所示：
+
+```js
+{
+    cmd: 'NODE_HANDLE',
+    type: 'net.Server',
+    msg: messsage
+}
+```
+
+这儿的文件描述符 handle 实际上是一个整数值，而这个 message 对象在写入到 IPC 通道时也会通过 JSON.stringify() 进行序列化。所以最终发送到 IPC 通道中的信息都是字符串，**send() 方法能发送消息和句柄并不意味着它能发送任意对象**。
+
+**连接了 IPC 通道的子进程可以读取到父进程发送的消息，将字符串通过 JSON.parse() 解析还原为对象后，才触发 message 事件将消息传递给应用层使用。在这个过程中消息对象还要被进行过滤处理，message.cmd 的值如果以 NODE_ 为前缀，它将响应一个内部事件 internalMessage。如果 message.cmd 的值为 NODE_HANDLE，它将取出 message.type 值和得到的文件描述符一起还原出一个对应的对象**，以 TCP 服务器句柄为例：
+
+```js
+function (message, handle, emit) {
+    var self = this
+
+    var server = new net.Server()
+    server.listen(handle, function() {
+        emit(server)
+    })
+}
+```
+
+上面的示例中，子进程根据 message.type 创建对应 TCP 服务器对象，然后监听到文件描述符上。
 
