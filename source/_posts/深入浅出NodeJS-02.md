@@ -1202,3 +1202,74 @@ function (message, handle, emit) {
 
 上面的示例中，子进程根据 message.type 创建对应 TCP 服务器对象，然后监听到文件描述符上。
 
+我们独立启动的进程中 TCP 服务器端 socket 套接字的文件描述符并不相同，这也是导致监听相同端口时抛出异常的主要原因，但是对于 send() 发送的句柄还原出来的服务而言，它们的文件描述符是相同的，所以监听相同端口不会引起异常。
+
+### 3、集群稳定之路
+
+#### (1) 进程事件
+
+<img src="/assets/深入浅出NodeJS/19.jpg">
+
+#### (2) 自动重启
+
+在有了父子进程之间的相关事件之后，我们就可以在这些关系之间创建出需要的机制了，比如我们可以当监听到子进程退出后重新启动一个工作进程来继续服务。
+
+```js
+// master.js
+var fork = require('child_process').fork
+var cpus = require('os').cpus()
+
+var server = require('net').createServer()
+server.listen(1337)
+
+var workers = {}
+var createWorker = function () {
+    var worker = fork(__dirname + '/worker.js')
+    worker.on('exit', function () {
+        console.log('Worker ' + worker.pid + ' exited.')
+        delete workers[worker.pid]
+        createWorker()
+    })
+    // 句柄转发
+    worker.send('server', server)
+    workers[worker.pid] = worker
+    console.log('Create worker. pid: ' + worker.pid)
+}
+
+for (var i = 0; i < cpus.length; i++) {
+    createWorker()
+}
+
+process.on('exit', function () {
+    for (var pid in workers) {
+        workers[pid].kill()
+    }
+})
+
+// worker.js
+var http = require('http')
+
+var server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' })
+    res.end('handled by child, pid is ' + process.pid + '\n')
+})
+
+var worker;
+
+process.on('message', (m, tcp) => {
+    if (m === 'server') {
+        worker = tcp
+        tcp.on('connection', (socket) => {
+            server.emit('connection', socket)
+        })
+    }
+})
+process.on('uncaughtException', () => {
+    // 停止接收新的连接
+    worker.close(function () {
+        // 所有连接断开后退出进程
+        process.exit(1)
+    })
+})
+```
+
