@@ -1273,3 +1273,51 @@ process.on('uncaughtException', () => {
 })
 ```
 
+**自杀信号**
+
+上述代码的问题是要等到已有的所有连接断开后进程才退出，在极端的情况下，所有工作进程都停止接收新的连接，所有工作进程都停止接收新的连接，全处在等待退出的状态，但在等到进程完全退出才重启的过程中，所有新来的请求可能存在没有工作进程为新用户服务的情景，因此一个重要的优化手段就是**自杀信号**。
+
+自杀信号的具体实现是工作进程在得知要退出时向主进程发送一个自杀信号，然后才停止接收新的连接，当所有连接断开后才退出。主进程在接收到自杀信号后，立即创建新的工作进程服务。这样可以大大提高应用的稳定性和健壮性。
+
+除此之外我们的连接很有可能是长连接而不是 HTTP 服务的这种短连接，等待长连接断开可能需要较久的时间，因此为退出设置一个超时时间是有必要的，至此最终优化代码如下所示：
+
+```js
+// master.js
+...
+process.on('uncaughtException', (err) => {
+    // 记录日志
+    logger.error(err)
+    // 发送自杀信号
+    process.send({ act: 'suicide' })
+    // 停止接收新的连接
+    worker.close(function() {
+        process.exit(1)
+    })
+    // 设置超时时间 5 s，超过强制退出
+    setTimeout(function () {
+        process.exit(1)
+    }, 5000)
+})
+
+// master.js
+...
+var createWorker = function () {
+    var worker = fork(__dirname + '/worker.js')
+    worker.on('message', function (message) {
+        if (message.act === 'suicide') {
+            createWorker()
+        }
+    })
+    worker.on('exit', function () {
+        console.log('Worker ' + worker.pid + ' exited.')
+        delete workers[worker.pid]
+    })
+    // 句柄转发
+    worker.send('server', server)
+    workers[worker.pid] = worker
+    console.log('Create worker. pid: ' + worker.pid)
+}
+...
+```
+
+
