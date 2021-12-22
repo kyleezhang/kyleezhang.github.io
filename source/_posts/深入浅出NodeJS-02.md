@@ -1320,4 +1320,52 @@ var createWorker = function () {
 ...
 ```
 
+**限量重启**
 
+在通过自杀信号告知主进程可以使得新连接总是有进程服务，但是工作进程不能无限制地被重启，因为这种无意义的重启已经不符合预期的设置，极有可能是程序编写的错误。因此更好的解决方案是**限量重启**。
+
+```js
+// 重启次数
+var limit = 10
+// 时间单位
+var during = 6000
+var restart = []
+var isTooFrequently = function () {
+    // 记录重启时间
+    var time = Date.now()
+    var length = restart.push(time)
+    if (length > limit) {
+        // 取出最后10个记录
+        restart = restart.slice(limit * -1)
+    }
+    // 最后一次重启到前10次重启之间的时间间隔
+    return restart.length >= limit && restart[restart.length - 1] - restart[0] < during
+}
+
+var workers = {}
+var createWorker = function () {
+    // 检查是否太过频繁
+    if (isTooFrequently()) {
+        // 触发giveup事件后，不再重启
+        process.emit('giveup', length, during)
+        return
+    }
+    var worker = fork(__dirname + '/worker.js')
+    worker.on('exit', function () {
+        console.log('Worker ' + worker.pid + ' existed.')
+        delete workers[worker.pid]
+    })
+    // 重新启动新的进程
+    worker.on('message', function (message) {
+        if (message.act === 'suicide') {
+            createWorker()
+        }
+    })
+    // 句柄转发
+    worker.send('server', server)
+    workers[worker.pid] = worker
+    console.log('Create worker. pid：' + worker.pid)
+}
+```
+
+giveup 事件是比 uncaughtException 更严重的异常事件。uncaughtException 只代表集群中某个工作进程退出，在整体保证下，不会出现用户得不到服务的情况，但是这个 giveup 事件则表示集群中没有任何进程服务了，十分危险。
