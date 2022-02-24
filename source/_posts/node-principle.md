@@ -65,7 +65,20 @@ Node.js启动的主流程图如下所示：
 
 <img src="/assets/node-principle/08.png" width="700" />
 
+涉及到的文件也包括 
+
+- src/node_main.cc
+- src/node.cc
+- src/env.cc
+- lib/internal/bootstrap/loader.js
+- lib/internal/bootstrap/node.js
+
 接下来我们详细分析每个过程：
+
+#### 1、启动
+
+node 的启动函数在 src/node_main.cc 文件当中，这个文件主要是根据操作系统的不同运行了对应的变量设置。然后会调用 node.cc 中的 `__Start()__` 函数。node.cc 中有三个 Start 函数现在我们依次来看看，
+
 
 #### 1、注册 C++ 模块
 
@@ -346,4 +359,6 @@ net.createServer(() => {}).listen(80)
 [Node.js的底层原理](https://zhuanlan.zhihu.com/p/375276722)
 
 [通过源码分析nodejs原理](https://github.com/theanarkh/understand-nodejs)
+
+[[NodeJS源码探秘]之启动全流程](http://localhost:4000/2021/12/28/node-principle/)
 
