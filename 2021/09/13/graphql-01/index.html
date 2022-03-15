@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/config/favicon.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kyleezhang.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"enable":false,"style":"tabs","active":false,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本文首先会从GraphQL规范讲起，先了解GraphQL语言本身，为什么会有这门语言，以及GraphQL规范中核心定义，然后再去了解GraphQL实现，graphql-js是如何解析，校验，执行GraphQL的。  GraphQL 规范  GraphQL规范是对GraphQL语法的抽象，规范中详细的定义了GraphQL语言的规则，以及GraphQL校验，执行等流程，不同语言的实现都应遵守Graph">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GraphQL原理浅析">
+<meta property="og:url" content="http://kyleezhang.com/2021/09/13/graphql-01/index.html">
+<meta property="og:site_name" content="kyleezhang&#96;s Blog">
+<meta property="og:description" content="本文首先会从GraphQL规范讲起，先了解GraphQL语言本身，为什么会有这门语言，以及GraphQL规范中核心定义，然后再去了解GraphQL实现，graphql-js是如何解析，校验，执行GraphQL的。  GraphQL 规范  GraphQL规范是对GraphQL语法的抽象，规范中详细的定义了GraphQL语言的规则，以及GraphQL校验，执行等流程，不同语言的实现都应遵守Graph">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://kyleezhang.com/assets/graphql-01/01.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/graphql-01/02.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/graphql-01/03.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/graphql-01/04.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/graphql-01/04.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/graphql-01/06.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/graphql-01/07.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/graphql-01/08.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/graphql-01/09.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/graphql-01/10.png">
+<meta property="article:published_time" content="2021-09-13T15:10:16.000Z">
+<meta property="article:modified_time" content="2022-02-19T15:17:55.235Z">
+<meta property="article:author" content="kyleezhang">
+<meta property="article:tag" content="Node">
+<meta property="article:tag" content="GraphQL">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://kyleezhang.com/assets/graphql-01/01.png">
+
+<link rel="canonical" href="http://kyleezhang.com/2021/09/13/graphql-01/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>GraphQL原理浅析 | kyleezhang`s Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2KR3NK700N"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-2KR3NK700N');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?f1621cb3fb0792bb294fce1b938d5eef";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="kyleezhang`s Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+    <a target="_blank" rel="noopener" href="https://github.com/kyleezhang " class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#fff; color:#151513; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    </div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">kyleezhang`s Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://kyleezhang.com/2021/09/13/graphql-01/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/assets/config/avatar.png">
+      <meta itemprop="name" content="kyleezhang">
+      <meta itemprop="description" content="学源于思">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="kyleezhang`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          GraphQL原理浅析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-09-13 23:10:16" itemprop="dateCreated datePublished" datetime="2021-09-13T23:10:16+08:00">2021-09-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-02-19 23:17:55" itemprop="dateModified" datetime="2022-02-19T23:17:55+08:00">2022-02-19</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%9C%8D%E5%8A%A1%E7%AB%AF/" itemprop="url" rel="index"><span itemprop="name">服务端</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>16k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>15 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文首先会从GraphQL规范讲起，先了解GraphQL语言本身，为什么会有这门语言，以及GraphQL规范中核心定义，然后再去了解GraphQL实现，graphql-js是如何解析，校验，执行GraphQL的。</p>
+<h2 id="graphql-规范"><a class="markdownIt-Anchor" href="#graphql-规范"></a> GraphQL 规范</h2>
+<blockquote>
+<p>GraphQL规范是对GraphQL语法的抽象，规范中详细的定义了GraphQL语言的规则，以及GraphQL校验，执行等流程，不同语言的实现都应遵守GraphQL的规范。<a target="_blank" rel="noopener" href="https://graphql.github.io/graphql-spec/">https://graphql.github.io/graphql-spec/</a></p>
+</blockquote>
+<a id="more"></a>
+<p>要想了解GraphQL的原理，阅读规范是必不可少的。我们需要了解的所有细节，都定义在GraphQL规范中。规范就像英语的语法，虽然不会影响我们使用这门语言，但当我们需要细致的研究英语文章时，语法总会是一道跨不过去的坎。</p>
+<p>GraphQL规范是会随着发布版本而变化的，就像EcmaScript规范一样，有ES2017，ES2018等，不同的实现可能实现了不同的版本。但GraphQL的实现相对统一，对于JS来说只有graphql-js这一种实现，大家在使用的时候注意一下graphql-js的版本就可以了，可能一些新的特性在旧版本中并没有实现。</p>
+<p>GraphQL规范中主要包含6个部分:</p>
+<ul>
+<li>Language: 语言层，定义了GraphQL查询语法，以及GraphQL的词法单元(Source Text)。</li>
+<li>Type System: 类型系统，定义了GraphQL的基本类型的定义，以及描述查询文档类型的Schema</li>
+<li>Introspection: 内省系统，定义了如何通过特定的类型，获取GraphQL内部的定义(Schema的定义)</li>
+<li>Validation: 校验，定义了GraphQL语法的校验规则</li>
+<li>Execution: 执行，定义了GraphQL是如何执行GraphQL请求文档的</li>
+<li>Response: 响应，定义了GraphQL执行结果返回的数据格式</li>
+</ul>
+<h3 id="一-起源与历史"><a class="markdownIt-Anchor" href="#一-起源与历史"></a> 一、起源与历史</h3>
+<img src="/assets/graphql-01/01.png">
+<p>在2012年进入了移动网络时代后，Facebook也开始从Web网站转移到Native App，然而旧有的部分接口并不适用于Native的数据展示(接口会直接返回HTML)，以及为了应对快速发展的移动端业务，Facebook的工程师开始重构API接口。在重新设计接口的过程中，他们提出了Client优先的设计思想，以通过思考客户端如何展示数据的角度来设计接口。IOS工程师希望能以对象模型的形式返回数据，并可以将接口返回的JSON映射Naitve的模型当中。为了满足客户端的需求，渐渐提出了具有类型和层次结构的接口语言，也就是GraphQL的雏形。</p>
+<p>GraphQL最开始只有Query和类型系统等功能，但在工程师上线News Feed的接口并获得成功后，引来了Facebook其他团队的围观，并对GraphQL提出了各种各样的讨论。在不同的讨论之间，GraphQL的Mutation, Subscription, Code Generation, Persistent Query等功能诞生了，在之后还产生了Relay等GraphQL的框架。直到2015年，Facebook的工程师第一次React的会议上公开了GraphQL，但这时GraphQL还只是Facebook内部使用的技术方案，并没有对外发布的计划。但在GraphQL公开以后，社区的呼声很高，都在呼吁能发布公开版本让大家使用。于是Facebook的工程师开始对GraphQL重构，并从内部的业务逻辑中抽离出来，直到发布第一个Preview版本。在发布Preview版本的过程中，还发布了GraphQL语言的实现graphql-js并开源，以及GraphQL的调试工具Graphical。在发布Preview版本后，又对反馈做了些优化和修改，最终于2016年正式发布。</p>
+<h3 id="二-设计理念"><a class="markdownIt-Anchor" href="#二-设计理念"></a> 二、设计理念</h3>
+<p>在了解完GraphQL的历史后，我们在来看GraphQL的设计理念。设计理念直接决定了GraphQL是为了哪些场景而诞生的，以及可以解决什么样的问题。</p>
+<p><strong>Hierarchical 分层</strong> 现在大部分产品开发都涉及到操作视图的分层。为了满足应用结构的层次性，GraphQL查询也是分层构建的，每个查询和其返回使用了相同的形状，这样的方式在描述数据需求上更为直观。<br />
+<strong>Product‐centric 产品为中心</strong> GraphQL是一种视图需求驱动的语言，因为主要是前端工程师书写它。GraphQL本身从前端工程师的思想和需求出发，再开发了语言和运行时库以满足这些需求。<br />
+<strong>Strong‐typing 强类型</strong> 每个GraphQL服务器都会构建一个针对应用的类型系统，查询语句就在这个类型系统上下文中执行。对于一个查询语句，GraphQL工具可以在执行以前通过类型系统检查这个查询语句的语法正确性和查询有效性，譬如在开发期，服务器就能保证返回值的形状和特性。<br />
+<strong>Client‐specified queries</strong> 客户端定制 通过类型系统，GraphQL向客户端通告了自己那些可以被消费的能力。而客户端则专注于如何消费这些能力，其查询语句的粒度是字段级的。在大多数没有GraphQL的CS模型应用中，不同的服务端用不同的脚本和入口决定了返回的数据。而GraphQL查询则会返回客户端要求的数据，不多不少。<br />
+<strong>Introspective 内省</strong> GraphQL是内省的，一个GraphQL服务器的类型系统必须能用GraphQL语言自身来查询。GraphQL的内省特性使之能成为建造通用工具和客户端库的强大平台。</p>
+<h3 id="三-graphql文档"><a class="markdownIt-Anchor" href="#三-graphql文档"></a> 三、GraphQL文档</h3>
+<p>GraphQL文档描述了客户端发送的查询语句或GraphQL服务可以操作的完整文件(Schema)。GraphQL文档包含了可执行定义和类型定义。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Document:</span><br><span class="line">    Definition[list]</span><br><span class="line">Defintion:</span><br><span class="line">    ExecutableDefinition</span><br><span class="line">    TypeSystemDefinition</span><br><span class="line">    TypeSystemExtension</span><br><span class="line">ExecutableDefinition:</span><br><span class="line">    OperationDefinition</span><br><span class="line">    FragmentDefinition</span><br></pre></td></tr></table></figure>
+<p>无论是GraphQL请求种的查询文档还是服务端定义的Schema都是GraphQL文档的一种，但对于GraphQL服务来说，只有包含OperationDefinition的文档才是可执行的。所以前端所定义的查询语句也是必须包含OperationDefinition的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">OperationDefinition:</span><br><span class="line">    OperationType Name[opt] VariableDefinitions[opt] Directives[opt] SelectionSet</span><br><span class="line">OperationType:</span><br><span class="line">    query | mutation | subscription</span><br></pre></td></tr></table></figure>
+<h3 id="四-graphql类型"><a class="markdownIt-Anchor" href="#四-graphql类型"></a> 四、GraphQL类型</h3>
+<p>GraphQL包含6种基本类型和2种包装类型 (NonNullType, ListType)。包装类型顾名思义是对其他类型的包装，无法单独使用。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">TypeDefinition:</span><br><span class="line">    ScalarTypeDefinition</span><br><span class="line">    ObjectTypeDefinition</span><br><span class="line">    InterfaceTypeDefinition</span><br><span class="line">    UnionTypeDefinition</span><br><span class="line">    EnumTypeDefinition</span><br><span class="line">    InputObjectTypeDefinition</span><br></pre></td></tr></table></figure>
+<ul>
+<li>ScalarType(标量类型)和EnumType(枚举类型)是类型定义中的叶子节点。</li>
+<li>ObjectType(对象类型)是所有类型定义的中间节点。</li>
+<li>UnionType(联合类型)和InterfaceType(接口类型)是抽象类型，会拥有其他类型的子类型</li>
+</ul>
+<h2 id="graphql-实现"><a class="markdownIt-Anchor" href="#graphql-实现"></a> GraphQL 实现</h2>
+<p>GraphQL实现在不同的语言有不同版本的实现，但所有的实现都要遵守GraphQL规范。不同实现中可能的差异在于GraphQL标量类型的转换与校验规则。下面与graphql-js为例，介绍下GraphQL的实现。</p>
+<img src="/assets/graphql-01/02.png">
+<p>graphql-js主要包含以上7个模块，其中最主要的模块是languange, validation, execution这三个模块，这三个模块是对GraphQL规范的核心实现。</p>
+<h3 id="一-language-语法"><a class="markdownIt-Anchor" href="#一-language-语法"></a> 一、Language 语法</h3>
+<p>语法层包含GraphQL规范中定义的语法实现，其主要工作是将GraphQL文档解析成AST语法树，便于之后的校验与执行。我们以下面的查询语句为例，来介绍解析的整个流程。首先我们会调用graphql-js的parse方法。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; parse &#125; <span class="keyword">from</span> <span class="string">&#x27;graphql&#x27;</span></span><br><span class="line"><span class="keyword">const</span> queryString = <span class="string">`</span></span><br><span class="line"><span class="string">    query ($needPhone: Boolean!) &#123;</span></span><br><span class="line"><span class="string">      me &#123;</span></span><br><span class="line"><span class="string">        name: nickname </span></span><br><span class="line"><span class="string">        phone @include(if: $needPhone)</span></span><br><span class="line"><span class="string">      &#125;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">`</span></span><br><span class="line"><span class="keyword">const</span> ast = parse(queryString);</span><br></pre></td></tr></table></figure>
+<p>parse会初始化Parser类，并将字符串转换为Source类型的数据结构，Source数据结构只是对源字符串简单的封装，提供了以字符串中莫个offset开始解析的能力，默认offset是1。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;body&quot;</span>: <span class="string">&quot;query ($needPhone: Boolean!) &#123;\n  me &#123;\n    name: nickname\n    phone @include(if: $needPhone)\n  &#125;\n&#125;\n&quot;</span>,</span><br><span class="line">  <span class="string">&quot;name&quot;</span>: <span class="string">&quot;GraphQL request&quot;</span>,</span><br><span class="line">  <span class="string">&quot;locationOffset&quot;</span>: &#123;</span><br><span class="line">    <span class="string">&quot;line&quot;</span>: <span class="number">1</span>,</span><br><span class="line">    <span class="string">&quot;column&quot;</span>: <span class="number">1</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在初始化Parser类的同时会调用createLexer创建一个词法分析器，lexer是词法分析的单元，通过匹配特征字符串TokenKind，将源字符串分解成不同的token。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> TokenKind = <span class="built_in">Object</span>.freeze(&#123;</span><br><span class="line">  SOF: <span class="string">&#x27;&lt;SOF&gt;&#x27;</span>,</span><br><span class="line">  EOF: <span class="string">&#x27;&lt;EOF&gt;&#x27;</span>,</span><br><span class="line">  BANG: <span class="string">&#x27;!&#x27;</span>,</span><br><span class="line">  DOLLAR: <span class="string">&#x27;$&#x27;</span>,</span><br><span class="line">  AMP: <span class="string">&#x27;&amp;&#x27;</span>,</span><br><span class="line">  PAREN_L: <span class="string">&#x27;(&#x27;</span>,</span><br><span class="line">  PAREN_R: <span class="string">&#x27;)&#x27;</span>,</span><br><span class="line">  SPREAD: <span class="string">&#x27;...&#x27;</span>,</span><br><span class="line">  COLON: <span class="string">&#x27;:&#x27;</span>,</span><br><span class="line">  EQUALS: <span class="string">&#x27;=&#x27;</span>,</span><br><span class="line">  AT: <span class="string">&#x27;@&#x27;</span>,</span><br><span class="line">  BRACKET_L: <span class="string">&#x27;[&#x27;</span>,</span><br><span class="line">  BRACKET_R: <span class="string">&#x27;]&#x27;</span>,</span><br><span class="line">  BRACE_L: <span class="string">&#x27;&#123;&#x27;</span>,</span><br><span class="line">  PIPE: <span class="string">&#x27;|&#x27;</span>,</span><br><span class="line">  BRACE_R: <span class="string">&#x27;&#125;&#x27;</span>,</span><br><span class="line">  NAME: <span class="string">&#x27;Name&#x27;</span>,</span><br><span class="line">  INT: <span class="string">&#x27;Int&#x27;</span>,</span><br><span class="line">  FLOAT: <span class="string">&#x27;Float&#x27;</span>,</span><br><span class="line">  STRING: <span class="string">&#x27;String&#x27;</span>,</span><br><span class="line">  BLOCK_STRING: <span class="string">&#x27;BlockString&#x27;</span>,</span><br><span class="line">  COMMENT: <span class="string">&#x27;Comment&#x27;</span>,</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>这些Token单元都是GraphQL规范中定义的，有兴趣的同学可以阅读规范中的对应章节。<a target="_blank" rel="noopener" href="https://graphql.github.io/graphql-spec/draft/#sec-Source-Text">https://graphql.github.io/graphql-spec/draft/#sec-Source-Text</a></p>
+</blockquote>
+<img src="/assets/graphql-01/03.png">
+<blockquote>
+<p>在词法分析的过程中，会跳过GraphQL规范中定义空白符。同时除了上图中的三种分词判断还有STRING，BLOCK_STRING，COMMENT等类型。</p>
+</blockquote>
+<p>Parser会从开始先从lexer去获取第一个token，然后token的类型递归的调用不同的parser方法去解析并在不同的parser方法中不断的调用lexer获取token，直到获取到最后一个token，返回解析后的AST对象。</p>
+<img src="/assets/graphql-01/04.png">
+<blockquote>
+<p>上面的流程图并没有画完，因为parser解析的分支非常多，要对每个可能出现的语法都要做处理。</p>
+</blockquote>
+<p>对于我们上面所举例的查询语句，会有如下的解析流程。</p>
+<ol>
+<li>获取到第一个NAME类型的token，</li>
+<li>调用parseDefinition，判断token的值为Query</li>
+<li>调用parseOperationDefinition，获取下一个token</li>
+<li>判断token为&quot;(&quot;，调用parseVaribaleDefinitions</li>
+<li>获取下一个token为&quot;$&quot;，调用parseVariable</li>
+<li>…</li>
+</ol>
+<p>最后会生成如下的AST对象:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Document&quot;</span>,</span><br><span class="line">  <span class="string">&quot;definitions&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;OperationDefinition&quot;</span>,</span><br><span class="line">      <span class="string">&quot;operation&quot;</span>: <span class="string">&quot;query&quot;</span>,</span><br><span class="line">      <span class="string">&quot;name&quot;</span>: &#123;</span><br><span class="line">        <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Name&quot;</span>,</span><br><span class="line">        <span class="string">&quot;value&quot;</span>: <span class="string">&quot;getUser&quot;</span>,</span><br><span class="line">        <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">11</span>, <span class="string">&quot;end&quot;</span>: <span class="number">18</span> &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      <span class="string">&quot;variableDefinitions&quot;</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">          <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;VariableDefinition&quot;</span>,</span><br><span class="line">          <span class="string">&quot;variable&quot;</span>: &#123;</span><br><span class="line">            <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Variable&quot;</span>,</span><br><span class="line">            <span class="string">&quot;name&quot;</span>: &#123;</span><br><span class="line">              <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Name&quot;</span>,</span><br><span class="line">              <span class="string">&quot;value&quot;</span>: <span class="string">&quot;needPhone&quot;</span>,</span><br><span class="line">              <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">21</span>, <span class="string">&quot;end&quot;</span>: <span class="number">30</span> &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">20</span>, <span class="string">&quot;end&quot;</span>: <span class="number">30</span> &#125;</span><br><span class="line">          &#125;,</span><br><span class="line">          <span class="string">&quot;type&quot;</span>: &#123;</span><br><span class="line">            <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;NonNullType&quot;</span>,</span><br><span class="line">            <span class="string">&quot;type&quot;</span>: &#123;</span><br><span class="line">              <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;NamedType&quot;</span>,</span><br><span class="line">              <span class="string">&quot;name&quot;</span>: &#123;</span><br><span class="line">                <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Name&quot;</span>,</span><br><span class="line">                <span class="string">&quot;value&quot;</span>: <span class="string">&quot;Boolean&quot;</span>,</span><br><span class="line">                <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">32</span>, <span class="string">&quot;end&quot;</span>: <span class="number">39</span> &#125;</span><br><span class="line">              &#125;,</span><br><span class="line">              <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">32</span>, <span class="string">&quot;end&quot;</span>: <span class="number">39</span> &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">32</span>, <span class="string">&quot;end&quot;</span>: <span class="number">40</span> &#125;</span><br><span class="line">          &#125;,</span><br><span class="line">          <span class="string">&quot;directives&quot;</span>: [],</span><br><span class="line">          <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">20</span>, <span class="string">&quot;end&quot;</span>: <span class="number">40</span> &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      ],</span><br><span class="line">      <span class="string">&quot;directives&quot;</span>: [],</span><br><span class="line">      <span class="string">&quot;selectionSet&quot;</span>: &#123;</span><br><span class="line">        <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;SelectionSet&quot;</span>,</span><br><span class="line">        <span class="string">&quot;selections&quot;</span>: [</span><br><span class="line">          &#123;</span><br><span class="line">            <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Field&quot;</span>,</span><br><span class="line">            <span class="string">&quot;name&quot;</span>: &#123;</span><br><span class="line">              <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Name&quot;</span>,</span><br><span class="line">              <span class="string">&quot;value&quot;</span>: <span class="string">&quot;me&quot;</span>,</span><br><span class="line">              <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">52</span>, <span class="string">&quot;end&quot;</span>: <span class="number">54</span> &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            <span class="string">&quot;arguments&quot;</span>: [],</span><br><span class="line">            <span class="string">&quot;directives&quot;</span>: [],</span><br><span class="line">            <span class="string">&quot;selectionSet&quot;</span>: &#123;</span><br><span class="line">              <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;SelectionSet&quot;</span>,</span><br><span class="line">              <span class="string">&quot;selections&quot;</span>: [</span><br><span class="line">                &#123;</span><br><span class="line">                  <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Field&quot;</span>,</span><br><span class="line">                  <span class="string">&quot;alias&quot;</span>: &#123;</span><br><span class="line">                    <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Name&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;value&quot;</span>: <span class="string">&quot;name&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">69</span>, <span class="string">&quot;end&quot;</span>: <span class="number">73</span> &#125;</span><br><span class="line">                  &#125;,</span><br><span class="line">                  <span class="string">&quot;name&quot;</span>: &#123;</span><br><span class="line">                    <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Name&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;value&quot;</span>: <span class="string">&quot;nickname&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">75</span>, <span class="string">&quot;end&quot;</span>: <span class="number">83</span> &#125;</span><br><span class="line">                  &#125;,</span><br><span class="line">                  <span class="string">&quot;arguments&quot;</span>: [],</span><br><span class="line">                  <span class="string">&quot;directives&quot;</span>: [],</span><br><span class="line">                  <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">69</span>, <span class="string">&quot;end&quot;</span>: <span class="number">83</span> &#125;</span><br><span class="line">                &#125;,</span><br><span class="line">                &#123;</span><br><span class="line">                  <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Field&quot;</span>,</span><br><span class="line">                  <span class="string">&quot;name&quot;</span>: &#123;</span><br><span class="line">                    <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Name&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;value&quot;</span>: <span class="string">&quot;phone&quot;</span>,</span><br><span class="line">                    <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">96</span>, <span class="string">&quot;end&quot;</span>: <span class="number">101</span> &#125;</span><br><span class="line">                  &#125;,</span><br><span class="line">                  <span class="string">&quot;arguments&quot;</span>: [],</span><br><span class="line">                  <span class="string">&quot;directives&quot;</span>: [</span><br><span class="line">                    &#123;</span><br><span class="line">                      <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Directive&quot;</span>,</span><br><span class="line">                      <span class="string">&quot;name&quot;</span>: &#123;</span><br><span class="line">                        <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Name&quot;</span>,</span><br><span class="line">                        <span class="string">&quot;value&quot;</span>: <span class="string">&quot;include&quot;</span>,</span><br><span class="line">                        <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">103</span>, <span class="string">&quot;end&quot;</span>: <span class="number">110</span> &#125;</span><br><span class="line">                      &#125;,</span><br><span class="line">                      <span class="string">&quot;arguments&quot;</span>: [</span><br><span class="line">                        &#123;</span><br><span class="line">                          <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Argument&quot;</span>,</span><br><span class="line">                          <span class="string">&quot;name&quot;</span>: &#123;</span><br><span class="line">                            <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Name&quot;</span>,</span><br><span class="line">                            <span class="string">&quot;value&quot;</span>: <span class="string">&quot;if&quot;</span>,</span><br><span class="line">                            <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">111</span>, <span class="string">&quot;end&quot;</span>: <span class="number">113</span> &#125;</span><br><span class="line">                          &#125;,</span><br><span class="line">                          <span class="string">&quot;value&quot;</span>: &#123;</span><br><span class="line">                            <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Variable&quot;</span>,</span><br><span class="line">                            <span class="string">&quot;name&quot;</span>: &#123;</span><br><span class="line">                              <span class="string">&quot;kind&quot;</span>: <span class="string">&quot;Name&quot;</span>,</span><br><span class="line">                              <span class="string">&quot;value&quot;</span>: <span class="string">&quot;needPhone&quot;</span>,</span><br><span class="line">                              <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">116</span>, <span class="string">&quot;end&quot;</span>: <span class="number">125</span> &#125;</span><br><span class="line">                            &#125;,</span><br><span class="line">                            <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">115</span>, <span class="string">&quot;end&quot;</span>: <span class="number">125</span> &#125;</span><br><span class="line">                          &#125;,</span><br><span class="line">                          <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">111</span>, <span class="string">&quot;end&quot;</span>: <span class="number">125</span> &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                      ],</span><br><span class="line">                      <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">102</span>, <span class="string">&quot;end&quot;</span>: <span class="number">126</span> &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                  ],</span><br><span class="line">                  <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">96</span>, <span class="string">&quot;end&quot;</span>: <span class="number">126</span> &#125;</span><br><span class="line">                &#125;</span><br><span class="line">              ],</span><br><span class="line">              <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">55</span>, <span class="string">&quot;end&quot;</span>: <span class="number">136</span> &#125;</span><br><span class="line">            &#125;,</span><br><span class="line">            <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">52</span>, <span class="string">&quot;end&quot;</span>: <span class="number">136</span> &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        ],</span><br><span class="line">        <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">42</span>, <span class="string">&quot;end&quot;</span>: <span class="number">142</span> &#125;</span><br><span class="line">      &#125;,</span><br><span class="line">      <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">5</span>, <span class="string">&quot;end&quot;</span>: <span class="number">142</span> &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  ],</span><br><span class="line">  <span class="string">&quot;loc&quot;</span>: &#123; <span class="string">&quot;start&quot;</span>: <span class="number">0</span>, <span class="string">&quot;end&quot;</span>: <span class="number">143</span> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="二-validate-验证"><a class="markdownIt-Anchor" href="#二-validate-验证"></a> 二、Validate 验证</h3>
+<p>GraphQL验证是对解析后的AST进行规则检查的过程，验证不仅会检测语法上的错误，也会检查查询文档，在GraphQL Schema的上下文中是否有歧义或错误。验证需要客户端请求的文档以及GraphQL Schema两个参数，通过深度优先遍历Document的AST对象，对规则中指定的每一个类型进行校验。</p>
+<blockquote>
+<p>graphql-js默认会执行GraphQL规范中定义的所有检测，相关规则可以阅读规范https://graphql.github.io/graphql-spec/draft/#sec-Validation，规范中对与每个检验规则都给出了详细示例。</p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> specifiedRules = <span class="built_in">Object</span>.freeze([</span><br><span class="line">  ExecutableDefinitions,</span><br><span class="line">  UniqueOperationNames,</span><br><span class="line">  LoneAnonymousOperation,</span><br><span class="line">  SingleFieldSubscriptions,</span><br><span class="line">  ......</span><br><span class="line">]);</span><br></pre></td></tr></table></figure>
+<p>其中每个规则都实现了ASTVisitor函数，在深度优先遍历的时候每个节点若实现了对应的方法，将会被执行，如果有错误会保存在透传给所有规则检验函数的context中，当遍历完所有节点后，会返回一个error数组。</p>
+<img src="/assets/graphql-01/04.png">
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> editedAST = visit(ast, &#123;</span><br><span class="line">  <span class="function"><span class="title">enter</span>(<span class="params">node, key, parent, path, ancestors</span>)</span> &#123;</span><br><span class="line">    <span class="comment">// @return</span></span><br><span class="line">    <span class="comment">//   undefined: no action</span></span><br><span class="line">    <span class="comment">//   false: skip visiting this node</span></span><br><span class="line">    <span class="comment">//   visitor.BREAK: stop visiting altogether</span></span><br><span class="line">    <span class="comment">//   null: delete this node</span></span><br><span class="line">    <span class="comment">//   any value: replace this node with the returned value</span></span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="function"><span class="title">leave</span>(<span class="params">node, key, parent, path, ancestors</span>)</span> &#123;</span><br><span class="line">    <span class="comment">// @return</span></span><br><span class="line">    <span class="comment">//   undefined: no action</span></span><br><span class="line">    <span class="comment">//   false: no action</span></span><br><span class="line">    <span class="comment">//   visitor.BREAK: stop visiting altogether</span></span><br><span class="line">    <span class="comment">//   null: delete this node</span></span><br><span class="line">    <span class="comment">//   any value: replace this node with the returned value</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>所有的规则都通过visit方法去校验AST的每个节点，visit方法还可以指定对某一个AST节点类型进行遍历，只有遍历到某个AST节点时才会触发enter方法和leave方法。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> &#123; visit &#125; = <span class="built_in">require</span>(<span class="string">&quot;graphql/language/visitor&quot;</span>);</span><br><span class="line"><span class="keyword">const</span> &#123; parse &#125; = <span class="built_in">require</span>(<span class="string">&quot;graphql/language&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> query = <span class="string">`&#123;</span></span><br><span class="line"><span class="string">    viewer &#123;</span></span><br><span class="line"><span class="string">      username @skip(if: true)</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string"> &#125;`</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> indent = <span class="string">&quot;&quot;</span>;</span><br><span class="line"><span class="keyword">var</span> visitor = &#123;</span><br><span class="line">    <span class="function"><span class="title">enter</span>(<span class="params">node</span>)</span> &#123;</span><br><span class="line">        <span class="built_in">console</span>.log(<span class="string">`visitor      - <span class="subst">$&#123;indent&#125;</span>Enter <span class="subst">$&#123;node.kind&#125;</span>`</span>);</span><br><span class="line">        indent = indent + <span class="string">&quot;  &quot;</span>;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="title">leave</span>(<span class="params">node</span>)</span> &#123;</span><br><span class="line">        indent = indent.substring(<span class="number">0</span>, indent.length - <span class="number">2</span>);</span><br><span class="line">        <span class="built_in">console</span>.log(<span class="string">`visitor      - <span class="subst">$&#123;indent&#125;</span>Leave <span class="subst">$&#123;node.kind&#125;</span>`</span>);</span><br><span class="line">    &#125;,</span><br><span class="line">    Field: &#123;</span><br><span class="line">        <span class="function"><span class="title">enter</span>(<span class="params">node</span>)</span> &#123;</span><br><span class="line">            <span class="built_in">console</span>.log(<span class="string">`visitorField - <span class="subst">$&#123;indent&#125;</span>Enter <span class="subst">$&#123;node.kind&#125;</span>`</span>);</span><br><span class="line">            indent = indent + <span class="string">&quot;  &quot;</span>;</span><br><span class="line">        &#125;,</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="title">leave</span>(<span class="params">node</span>)</span> &#123;</span><br><span class="line">            indent = indent.substring(<span class="number">0</span>, indent.length - <span class="number">2</span>);</span><br><span class="line">            <span class="built_in">console</span>.log(<span class="string">`visitorField - <span class="subst">$&#123;indent&#125;</span>Leave <span class="subst">$&#123;node.kind&#125;</span>`</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">visit(parse(query), visitor);</span><br><span class="line"></span><br><span class="line"><span class="comment">// visitor      - Enter Document</span></span><br><span class="line"><span class="comment">// visitor      -   Enter OperationDefinition</span></span><br><span class="line"><span class="comment">// visitor      -     Enter SelectionSet</span></span><br><span class="line"><span class="comment">// visitorField -       Enter Field</span></span><br><span class="line"><span class="comment">// visitor      -         Enter Name</span></span><br><span class="line"><span class="comment">// visitor      -         Leave Name</span></span><br><span class="line"><span class="comment">// visitor      -         Enter SelectionSet</span></span><br><span class="line"><span class="comment">// visitorField -           Enter Field</span></span><br><span class="line"><span class="comment">// visitor      -             Enter Name</span></span><br><span class="line"><span class="comment">// visitor      -             Leave Name</span></span><br><span class="line"><span class="comment">// visitor      -             Enter Directive</span></span><br><span class="line"><span class="comment">// visitor      -               Enter Name</span></span><br><span class="line"><span class="comment">// visitor      -               Leave Name</span></span><br><span class="line"><span class="comment">// visitor      -               Enter Argument</span></span><br><span class="line"><span class="comment">// visitor      -                 Enter Name</span></span><br><span class="line"><span class="comment">// visitor      -                 Leave Name</span></span><br><span class="line"><span class="comment">// visitor      -                 Enter BooleanValue</span></span><br><span class="line"><span class="comment">// visitor      -                 Leave BooleanValue</span></span><br><span class="line"><span class="comment">// visitor      -               Leave Argument</span></span><br><span class="line"><span class="comment">// visitor      -             Leave Directive</span></span><br><span class="line"><span class="comment">// visitorField -           Leave Field</span></span><br><span class="line"><span class="comment">// visitor      -         Leave SelectionSet</span></span><br><span class="line"><span class="comment">// visitorField -       Leave Field</span></span><br><span class="line"><span class="comment">// visitor      -     Leave SelectionSet</span></span><br><span class="line"><span class="comment">// visitor      -   Leave OperationDefinition</span></span><br><span class="line"><span class="comment">// visitor      - Leave Document</span></span><br></pre></td></tr></table></figure>
+<h3 id="三-execution-执行"><a class="markdownIt-Anchor" href="#三-execution-执行"></a> 三、Execution 执行</h3>
+<p>GraphQL通过执行来从请求生成响应。要执行请求，执行器必须接收两个参数，解析过的Document文档，以及GraphQL Schema。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> &#123;parse, buildASTSchema, execute&#125; = <span class="built_in">require</span>(<span class="string">&quot;graphql&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> resolve = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">&#x27;Hello World&#x27;</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> schema = <span class="string">`type Query &#123;</span></span><br><span class="line"><span class="string">    name: String</span></span><br><span class="line"><span class="string">&#125;`</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> query = <span class="string">`&#123;</span></span><br><span class="line"><span class="string">    name</span></span><br><span class="line"><span class="string">&#125;`</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> typeDocument = buildASTSchema(parse(schema));</span><br><span class="line"><span class="comment">// 增加resolver</span></span><br><span class="line">typeDocument.getType(<span class="string">&#x27;Query&#x27;</span>).getFields().name.resolve = resolve</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> res = execute(typeDocument, parse(query));</span><br><span class="line"><span class="built_in">console</span>.log(res); <span class="comment">// &#123; data: &#123; name: &#x27;Hello World&#x27; &#125; &#125;</span></span><br></pre></td></tr></table></figure>
+<p>GraphQL执行的过程其实就是执行resolver的过程，Document请求的所有field的resolver都会被执行。如果field没有设置resolver，那将会执行默认的resolver，整个执行流程如下。</p>
+<img src="/assets/graphql-01/06.png">
+<ol>
+<li>GraphQL执行首先会生成执行Context，执行Context包含传给execute的原始参数，以及默认的fieldResolver。在整个执行过程中，共用一份Context。</li>
+<li>判断Operation的类型，如果是Mutation则顺序执行resolveField，否则并行执行resolveField。对于Mutation的顺序执行，保证了请求的幂等性。</li>
+</ol>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&#123;  </span><br><span class="line">    first: <span class="function"><span class="title">changeTheNumber</span>(<span class="params">newNumber: <span class="number">1</span></span>)</span> &#123; </span><br><span class="line">       theNumber </span><br><span class="line">    &#125;  </span><br><span class="line">    second: <span class="function"><span class="title">changeTheNumber</span>(<span class="params">newNumber: <span class="number">3</span></span>)</span> &#123;  </span><br><span class="line">       theNumber </span><br><span class="line">    &#125;  </span><br><span class="line">    third: <span class="function"><span class="title">changeTheNumber</span>(<span class="params">newNumber: <span class="number">2</span></span>)</span> &#123;   </span><br><span class="line">       theNumber  </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>对当前节点的field执行resolveField，如果存在field.resolver执行resolver，否则执行默认resolver。</li>
+<li>调用completeValue，对当前field的返回类型进行判断，</li>
+<li>如果返回值是null或undefined，直接返回，不再执行resolver</li>
+<li>如果是叶子节点类型(Scalar | Enum)，调用Scalar的serialize方法进行序列化，并返回结果</li>
+<li>如果是List类型，遍历返回值中的每个元素，并递归执行completeValue</li>
+<li>如果是Object类型，对Object的所有子选择集执行resolveField</li>
+<li>如果是抽象类型(Union | Interface)，确定运行时类型，并执行该类型</li>
+<li>最后调用buildResponse，返回结果</li>
+</ol>
+<h2 id="graphql-schema"><a class="markdownIt-Anchor" href="#graphql-schema"></a> GraphQL Schema</h2>
+<p>定义一个GraphQL服务首先要生成GraphQL的Schema，Schema描述了GraphQL服务可以提供哪些接口，以及哪些查询参数。目前有两种方式去定义Schema。 第一种是通过SDL的形式来定义，通常被成为SDL-First或者Schema-First，这种定义方式是以字符串的形式来定义Schema的，可以是graphql的文件，或者直接是代码中定义的字符串。这种的好处就是清晰直观，有很强的可读性和可维护性，但缺少一定的灵活性。因为在Schema定义中没有像查询语句的Fragment，对于类型的复用有些困难，同时Resolver的定义和Schema的定义可能是分离的，我们需要手动连接连接Resolver(虽然有现成的工具帮我们做好了)。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// graphql/shema.graphql</span></span><br><span class="line">type User &#123;</span><br><span class="line">    name: <span class="built_in">String</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">type Query &#123;</span><br><span class="line">    users: [User!]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// graphql/resolver.js</span></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">    Query: <span class="function">(<span class="params">_, args, ctx</span>) =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> ctx.db.findUsers()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// graphql/index.js</span></span><br><span class="line"><span class="keyword">const</span> makeExecutableSchema = <span class="built_in">require</span>(<span class="string">&#x27;graphql-tools&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> schema = fs.readFileSync(<span class="string">&#x27;./schema.graphql&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> resolvers = <span class="built_in">require</span>(<span class="string">&#x27;./resolver&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> GraphQLSchema = makeExecutableSchema(&#123;<span class="attr">typeDef</span>: schema, resolvers&#125;)</span><br></pre></td></tr></table></figure>
+<p>第二种是通过代码的形式来定义，通常被称为Code-First或者Resolver-First，这种方式直接用graphql-js的对应函数去生成Schema，优势是灵活性很高，Resolver也直接定义在Schema中，但缺点也很明显，代码量多，逻辑不清晰直观。通常只有在需要高度定制，或者动态生成某些类型的时候才使用。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">schema.js</span><br><span class="line"><span class="keyword">const</span> UserType = <span class="keyword">new</span> GraphQLObjectType(&#123;</span><br><span class="line">    name: <span class="string">&#x27;User&#x27;</span>,</span><br><span class="line">    fileds: <span class="function">() =&gt;</span> (&#123;</span><br><span class="line">        name: &#123;<span class="attr">type</span>: GraphQLString&#125;</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> QueryType = <span class="keyword">new</span> GraphQLObjectType(&#123;</span><br><span class="line">    name: <span class="string">&#x27;Query&#x27;</span>,</span><br><span class="line">    fileds: <span class="function">() =&gt;</span> (&#123;</span><br><span class="line">        users: &#123;</span><br><span class="line">            type: <span class="keyword">new</span> GraphQLList(<span class="keyword">new</span> GraphQLNonNull(UserType))</span><br><span class="line">            resolve: <span class="function">(<span class="params">_, args, ctx</span>) =&gt;</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> ctx.db.findUsers()</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> GraphQLSchema = <span class="keyword">new</span> GraphQLSchema(&#123;<span class="attr">query</span>: QueryType&#125;);</span><br></pre></td></tr></table></figure>
+<p>使用代码生成的Schema其实就是GraphQL校验，执行中用到的Schema。使用SDL定义的Schema最终也要生成GraphQLSchema这个函数的实例。最近TS开始流行，其实除了这两种定义的方式，还有了第三种方式，就是使用TypeGraphQL，这种方式结合了SDL和代码定义的优势，不仅有较好可读性，也提供了一定的灵活性。而且提供了TS类型，这是目前通过SDL或者代码都很难做到的。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">@ObjectType()</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span> </span>&#123;</span><br><span class="line">    @Field()</span><br><span class="line">    name: string</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@Resolver(User)</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserResolver</span> </span>&#123;</span><br><span class="line">    @Query(<span class="function"><span class="params">returns</span> =&gt;</span> [User])</span><br><span class="line">    <span class="keyword">async</span> <span class="function"><span class="title">users</span>(<span class="params">@Ctx() ctx: Context</span>)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> ctx.db.findUsers()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> schema = <span class="keyword">await</span> buildSchema(&#123;  <span class="attr">resolvers</span>: [UserResolver]&#125;);</span><br></pre></td></tr></table></figure>
+<h2 id="graphql-请求"><a class="markdownIt-Anchor" href="#graphql-请求"></a> GraphQL 请求</h2>
+<p>我们都知道GraphQL请求要定义查询语句，只有包含查询语句的请求才是GraphQL请求，但实际上GraphQL规范中并没有明确定义Client端发出的请求是什么样的，可以POST请求，可以GET请求，请求的参数也可以是任意的，我们来看几个生产环境中使用GraphQL的例子。</p>
+<h3 id="一-instagram-的-graphql-接口"><a class="markdownIt-Anchor" href="#一-instagram-的-graphql-接口"></a> 一、Instagram 的 GraphQL 接口</h3>
+<img src="/assets/graphql-01/07.png">
+<h3 id="二-facebook-的-graphql-接口"><a class="markdownIt-Anchor" href="#二-facebook-的-graphql-接口"></a> 二、Facebook 的 GraphQL 接口</h3>
+<img src="/assets/graphql-01/08.png">
+<h3 id="三-特效开发平台的graphql接口"><a class="markdownIt-Anchor" href="#三-特效开发平台的graphql接口"></a> 三、特效开发平台的GraphQL接口</h3>
+<img src="/assets/graphql-01/09.png">
+<p>我们看到只有第3个请求是我们常见的GraphQL请求，这也是Apollo Client默认发出的请求格式。但实际上这种格式在生产环境是有一定风险的，对于网络请求我们应该尽量使用不透明的参数。将整个查询语句完全暴露给客户端就相当于公开出了我们的schema，那攻击者就可能猜测出查询语句的字段，如果服务端没有对相应字段做鉴权，那就可能返回不应该返回的数据。所以像Facebook等公司在生产环境都使用了一个不透明的hashKey来代替查询语句。服务端应当只接收可控的hashKey来返回请求。</p>
+<p>使用hashKey的另一个好处就是可以减少请求体的长度，众所周知GraphQL的查询语句非常长，如果是复杂的查询，那将极大的增加请求体的大小，而且查询语句一般是要打在前端的bundle中，也会增加bundle的大小，使用hashkey来代替查询语句可以增加请求的性能。在Apollo Server中提供了persisted queries的功能，来支持将查询语句转换为hashKey。Apollo Server中默认的GraphQL请求都是POST请求，但POST请求不利于CDN缓存，persisted queries的另一个功能是支持GET请求，在GET请求中只传递hashKey和variable，以便于做CDN缓存。</p>
+<img src="/assets/graphql-01/10.png">
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/weixin.png" alt="kyleezhang 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/alipay.png" alt="kyleezhang 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>kyleezhang
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://kyleezhang.com/2021/09/13/graphql-01/" title="GraphQL原理浅析">http://kyleezhang.com/2021/09/13/graphql-01/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/assets/config/wechat.png">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Node/" rel="tag"><i class="fa fa-tag"></i>Node</a>
+              <a href="/tags/GraphQL/" rel="tag"><i class="fa fa-tag"></i>GraphQL</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/09/10/%E6%B7%B1%E5%85%A5%E6%B5%85%E5%87%BANodeJS-02/" rel="prev" title="《深入浅出NodeJS》读书笔记（二）">
+      <i class="fa fa-chevron-left"></i> 《深入浅出NodeJS》读书笔记（二）
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/12/28/node-principle/" rel="next" title="NodeJS的底层原理">
+      NodeJS的底层原理 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#graphql-%E8%A7%84%E8%8C%83"><span class="nav-text"> GraphQL 规范</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80-%E8%B5%B7%E6%BA%90%E4%B8%8E%E5%8E%86%E5%8F%B2"><span class="nav-text"> 一、起源与历史</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C-%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5"><span class="nav-text"> 二、设计理念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89-graphql%E6%96%87%E6%A1%A3"><span class="nav-text"> 三、GraphQL文档</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B-graphql%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 四、GraphQL类型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#graphql-%E5%AE%9E%E7%8E%B0"><span class="nav-text"> GraphQL 实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80-language-%E8%AF%AD%E6%B3%95"><span class="nav-text"> 一、Language 语法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C-validate-%E9%AA%8C%E8%AF%81"><span class="nav-text"> 二、Validate 验证</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89-execution-%E6%89%A7%E8%A1%8C"><span class="nav-text"> 三、Execution 执行</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#graphql-schema"><span class="nav-text"> GraphQL Schema</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#graphql-%E8%AF%B7%E6%B1%82"><span class="nav-text"> GraphQL 请求</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80-instagram-%E7%9A%84-graphql-%E6%8E%A5%E5%8F%A3"><span class="nav-text"> 一、Instagram 的 GraphQL 接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C-facebook-%E7%9A%84-graphql-%E6%8E%A5%E5%8F%A3"><span class="nav-text"> 二、Facebook 的 GraphQL 接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89-%E7%89%B9%E6%95%88%E5%BC%80%E5%8F%91%E5%B9%B3%E5%8F%B0%E7%9A%84graphql%E6%8E%A5%E5%8F%A3"><span class="nav-text"> 三、特效开发平台的GraphQL接口</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="kyleezhang"
+      src="/assets/config/avatar.png">
+  <p class="site-author-name" itemprop="name">kyleezhang</p>
+  <div class="site-description" itemprop="description">学源于思</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">39</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/kyleezhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;kyleezhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/2942181559@qq.com" title="E-Mail → 2942181559@qq.com"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/u/6998903195" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;u&#x2F;6998903195" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">kyleezhang</span>
+</div>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">563k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">8:32</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  <!-- 背景动画 -->
+<script src="/js/particle.js"></script>
+
+</body>
+</html>

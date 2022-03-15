@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/config/favicon.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kyleezhang.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"enable":false,"style":"tabs","active":false,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="到底什么才是前端工程化呢？我们知道一个前端项目的开发往往要经历如下步骤：  创建项目，主要工程化内容是创建项目结构、特定类型文件 编码，主要工程化内容是编译&#x2F;构建&#x2F;打包 预览&#x2F;测试，主要工程化内容有Web Server &#x2F; Mock，Live Reloading &#x2F; HMR，Source Map等等 提交，主要工程化内容有Git Hooks &#x2F; Husky， Lint-staged等等 部署，主要">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从vue-cli到Vue CLI（一）">
+<meta property="og:url" content="http://kyleezhang.com/2021/01/28/vue-cli-01/index.html">
+<meta property="og:site_name" content="kyleezhang&#96;s Blog">
+<meta property="og:description" content="到底什么才是前端工程化呢？我们知道一个前端项目的开发往往要经历如下步骤：  创建项目，主要工程化内容是创建项目结构、特定类型文件 编码，主要工程化内容是编译&#x2F;构建&#x2F;打包 预览&#x2F;测试，主要工程化内容有Web Server &#x2F; Mock，Live Reloading &#x2F; HMR，Source Map等等 提交，主要工程化内容有Git Hooks &#x2F; Husky， Lint-staged等等 部署，主要">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://kyleezhang.com/assets/vue-cli/01.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/vue-cli/02.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/vue-cli/03.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/emoji/02.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/vue-cli/04.svg">
+<meta property="article:published_time" content="2021-01-28T13:03:53.000Z">
+<meta property="article:modified_time" content="2022-02-19T15:17:55.238Z">
+<meta property="article:author" content="kyleezhang">
+<meta property="article:tag" content="前端工程化">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://kyleezhang.com/assets/vue-cli/01.png">
+
+<link rel="canonical" href="http://kyleezhang.com/2021/01/28/vue-cli-01/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>从vue-cli到Vue CLI（一） | kyleezhang`s Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2KR3NK700N"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-2KR3NK700N');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?f1621cb3fb0792bb294fce1b938d5eef";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="kyleezhang`s Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+    <a target="_blank" rel="noopener" href="https://github.com/kyleezhang " class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#fff; color:#151513; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    </div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">kyleezhang`s Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://kyleezhang.com/2021/01/28/vue-cli-01/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/assets/config/avatar.png">
+      <meta itemprop="name" content="kyleezhang">
+      <meta itemprop="description" content="学源于思">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="kyleezhang`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          从vue-cli到Vue CLI（一）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-01-28 21:03:53" itemprop="dateCreated datePublished" datetime="2021-01-28T21:03:53+08:00">2021-01-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-02-19 23:17:55" itemprop="dateModified" datetime="2022-02-19T23:17:55+08:00">2022-02-19</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%89%8D%E7%AB%AF/" itemprop="url" rel="index"><span itemprop="name">前端</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>18k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>17 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>到底什么才是前端工程化呢？我们知道一个前端项目的开发往往要经历如下步骤：</p>
+<ul>
+<li>创建项目，主要工程化内容是创建项目结构、特定类型文件</li>
+<li>编码，主要工程化内容是编译/构建/打包</li>
+<li>预览/测试，主要工程化内容有Web Server / Mock，Live Reloading / HMR，Source Map等等</li>
+<li>提交，主要工程化内容有Git Hooks / Husky， Lint-staged等等</li>
+<li>部署，主要工程化内容有持续集成（CI）、持续部署（CD）</li>
+</ul>
+<p>实际上在这个过程中一切以提高效率、降低成本、质量保证为目的的手段都属于前端工程化，前端工程化从早期的脚手架到现在流行的主流工具链的演变主要是因为什么呢？本篇博客希望通过对 vue-cli 和 Vue CLI 架构思想和实现分析其演变的主要原因及设计动机，也是笔者对于前端工程化的一些阶段性理解。</p>
+<a id="more"></a>
+<h2 id="vue-cli"><a class="markdownIt-Anchor" href="#vue-cli"></a> vue-cli</h2>
+<p>vue-cli 是 Vue 早期官方推荐的脚手架工具，用于快速创建项目，其功能丰富，使用它能够帮助开发者快速的搭建一个完整的项目，开发者只需要在生成的项目结构的基础上进行开发即可，非常高效。并且由于基于模块机制，所以不仅仅可以用于创建 Vue 项目，甚至通过开发自定义模版可以实现定制化项目快速创建，我们接下来来分析其主要实现思路：</p>
+<h3 id="一-源码分析"><a class="markdownIt-Anchor" href="#一-源码分析"></a> 一、源码分析</h3>
+<h4 id="1-入口"><a class="markdownIt-Anchor" href="#1-入口"></a> 1、入口</h4>
+<p>vue-cli 的源码在<a target="_blank" rel="noopener" href="https://github.com/vuejs/vue-cli/tree/v2">这儿</a>，需要注意项目的 dev 分支是Vue CLI版本，vue-cli 源码需查看 v2 版本，我们首先查看 package.json 文件：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;bin&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;vue&quot;</span>: <span class="string">&quot;bin/vue&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;vue-init&quot;</span>: <span class="string">&quot;bin/vue-init&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;vue-list&quot;</span>: <span class="string">&quot;bin/vue-list&quot;</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>bin 字段用来指定各个内部命令对应的可执行文件的位置。当 package.json 提供了 bin 字段后，即相当于做了一个命令名和本地文件名的映射。当用户安装带有 bin 字段的包时，如果是全局安装，npm 将会使用符号链接把这些文件链接到 /usr/local/node_modules/.bin/，如果是本地安装，会链接到 ./node_modules/.bin/。</p>
+<p>因此当我们使用 <code>vue init &lt;template-name&gt; &lt;project-name&gt;</code> 时应该直接直接执行 bin/vue-init 这个文件，我们查看文件内容：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/usr/bin/env node</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> download = <span class="built_in">require</span>(<span class="string">&#x27;download-git-repo&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> program = <span class="built_in">require</span>(<span class="string">&#x27;commander&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> exists = <span class="built_in">require</span>(<span class="string">&#x27;fs&#x27;</span>).existsSync</span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">&#x27;path&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> ora = <span class="built_in">require</span>(<span class="string">&#x27;ora&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> home = <span class="built_in">require</span>(<span class="string">&#x27;user-home&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> tildify = <span class="built_in">require</span>(<span class="string">&#x27;tildify&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> chalk = <span class="built_in">require</span>(<span class="string">&#x27;chalk&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> inquirer = <span class="built_in">require</span>(<span class="string">&#x27;inquirer&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> rm = <span class="built_in">require</span>(<span class="string">&#x27;rimraf&#x27;</span>).sync</span><br><span class="line"><span class="keyword">const</span> logger = <span class="built_in">require</span>(<span class="string">&#x27;../lib/logger&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> generate = <span class="built_in">require</span>(<span class="string">&#x27;../lib/generate&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> checkVersion = <span class="built_in">require</span>(<span class="string">&#x27;../lib/check-version&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> warnings = <span class="built_in">require</span>(<span class="string">&#x27;../lib/warnings&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> localPath = <span class="built_in">require</span>(<span class="string">&#x27;../lib/local-path&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p>如果想要直接使用 vue init 这样简便的命令，我们还需要在命令映射的文件的第一行写入命令 <code>#!/usr/bin/env node</code>，这行命令的作用是告诉系统用 node 解析，当我们输入一个命令的时候，npm 是如何识别并执行对应的文件的呢？具体的原理阮一峰大佬已经在<a target="_blank" rel="noopener" href="http://www.ruanyifeng.com/blog/2016/10/npm_scripts.html">npm scripts 使用指南</a>中介绍过。简单的理解，就是输入命令后，会有在一个新建的 shell 中执行指定的脚本，在执行这个脚本的时候，我们需要来指定这个脚本的解释程序是 node，<code>#!</code> 其实是 Shebang，在文件中存在 Shebang 的情况下，类 Unix 操作系统的程序加载器会分析 Shebang 后的内容，将这些内容作为解释器指令，并调用该指令，并将载有 Shebang 的文件路径作为该解释器的参数， <code>/usr/bin/env</code> 就是告诉系统可以在 PATH 目录中查找。这种写法主要是为了让你的程序在不同的系统上都能适用。 不管你的 node 是在 <code>/usr/bin/node</code> 还是 <code>/usr/local/bin/node</code>，<code>#!/usr/bin/env node</code> 会自动的在你的用户 PATH 变量中所定义的目录中寻找 node 来执行的，所以配置 <code>#!/usr/bin/env node</code>, 就是解决了不同的用户 node 路径不同的问题，可以让系统动态的去查找 node 来执行你的脚本文件。如果没有这行命令我们就需要通过 <code>node node_modules/.bin/vue-init</code> 命令执行。</p>
+<p>上面引用到各模块主要作用如下：</p>
+<ul>
+<li>download-git-repo 一个用于下载git仓库的项目的模块</li>
+<li>commander 可以将文字输出到终端当中</li>
+<li>fs 是node的文件读写的模块</li>
+<li>path 模块提供了一些工具函数，用于处理文件与目录的路径</li>
+<li>ora 这个模块用于在终端里有显示载入动画</li>
+<li>user-home 获取用户主目录的路径</li>
+<li>tildify 将绝对路径转换为波形路径 比如/Users/sindresorhus/dev → ~/dev</li>
+<li>chalk 主要作用是修改控制台中字符串的样式，比如字体样式(加粗、隐藏等)、字体颜色、背景颜色等</li>
+<li>inquirer 是一个命令行的回答的模块，可以自己设定终端的问题，然后对这些回答给出相应的处理</li>
+<li>rimraf 是一个可以使用 UNIX 命令 rm -rf 的模块</li>
+</ul>
+<p>剩下的本地路径的模块其实都是一些工具类，等用到的时候我们再分析其实现。我们再接着往下看：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> isLocalPath = localPath.isLocalPath</span><br><span class="line"><span class="keyword">const</span> getTemplatePath = localPath.getTemplatePath</span><br><span class="line"></span><br><span class="line"><span class="comment">// ../lib/local-path</span></span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">&#x27;path&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  isLocalPath (templatePath) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="regexp">/^[./]|(^[a-zA-Z]:)/</span>.test(templatePath)</span><br><span class="line">  &#125;,</span><br><span class="line"></span><br><span class="line">  getTemplatePath (templatePath) &#123;</span><br><span class="line">    <span class="keyword">return</span> path.isAbsolute(templatePath)</span><br><span class="line">      ? templatePath</span><br><span class="line">      : path.normalize(path.join(process.cwd(), templatePath))</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>紧接着代码调用了 …/lib/local-path 暴露的 isLocalPath 和 getTemplatePath 方法，作用分别是根据模版路径当中是否存在 <code>./</code> 是否为本地路径和获取模版路径的方法，如果路径参数是绝对路径则直接返回，如果是相对的，则根据当前路径拼接。我们再接着往下看：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Usage.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line">program</span><br><span class="line">  .usage(<span class="string">&#x27;&lt;template-name&gt; [project-name]&#x27;</span>)</span><br><span class="line">  .option(<span class="string">&#x27;-c, --clone&#x27;</span>, <span class="string">&#x27;use git clone&#x27;</span>)</span><br><span class="line">  .option(<span class="string">&#x27;--offline&#x27;</span>, <span class="string">&#x27;use cached template&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Help.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line">program.on(<span class="string">&#x27;--help&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;  Examples:&#x27;</span>)</span><br><span class="line">  <span class="built_in">console</span>.log()</span><br><span class="line">  <span class="built_in">console</span>.log(chalk.gray(<span class="string">&#x27;    # create a new project with an official template&#x27;</span>))</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;    $ vue init webpack my-project&#x27;</span>)</span><br><span class="line">  <span class="built_in">console</span>.log()</span><br><span class="line">  <span class="built_in">console</span>.log(chalk.gray(<span class="string">&#x27;    # create a new project straight from a github template&#x27;</span>))</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;    $ vue init username/repo my-project&#x27;</span>)</span><br><span class="line">  <span class="built_in">console</span>.log()</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Help.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">help</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  program.parse(process.argv)</span><br><span class="line">  <span class="keyword">if</span> (program.args.length &lt; <span class="number">1</span>) <span class="keyword">return</span> program.help()</span><br><span class="line">&#125;</span><br><span class="line">help()</span><br></pre></td></tr></table></figure>
+<p>这部分代码声明了vue init用法，如果在终端当中 输入 vue init --help 或者跟在 vue init 后面的参数长度小于1，也会输出下面的描述：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Usage: vue-init &lt;template-name&gt; [project-name]</span><br><span class="line"></span><br><span class="line">Options:</span><br><span class="line"></span><br><span class="line">  -c, --<span class="built_in">clone</span>  use git <span class="built_in">clone</span></span><br><span class="line">  --offline    use cached template</span><br><span class="line">  -h, --<span class="built_in">help</span>   output usage information</span><br><span class="line">Examples:</span><br><span class="line"></span><br><span class="line">  <span class="comment"># create a new project with an official template</span></span><br><span class="line">  $ vue init webpack my-project</span><br><span class="line"></span><br><span class="line">  <span class="comment"># create a new project straight from a github template</span></span><br><span class="line">  $ vue init username/repo my-project</span><br></pre></td></tr></table></figure>
+<h4 id="2-配置数据"><a class="markdownIt-Anchor" href="#2-配置数据"></a> 2、配置数据</h4>
+<p>我们再接着往下看：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Settings.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 模块路径</span></span><br><span class="line"><span class="keyword">let</span> template = program.args[<span class="number">0</span>]</span><br><span class="line"><span class="keyword">const</span> hasSlash = template.indexOf(<span class="string">&#x27;/&#x27;</span>) &gt; -<span class="number">1</span></span><br><span class="line"><span class="comment">// 项目名称</span></span><br><span class="line"><span class="keyword">const</span> rawName = program.args[<span class="number">1</span>]</span><br><span class="line"><span class="keyword">const</span> inPlace = !rawName || rawName === <span class="string">&#x27;.&#x27;</span></span><br><span class="line"><span class="comment">// 如果不存在项目名称或项目名称输入的&#x27;.&#x27; 则name取的是 当前文件夹的名称</span></span><br><span class="line"><span class="keyword">const</span> name = inPlace ? path.relative(<span class="string">&#x27;../&#x27;</span>, process.cwd()) : rawName</span><br><span class="line"><span class="comment">// 输出路径</span></span><br><span class="line"><span class="keyword">const</span> to = path.resolve(rawName || <span class="string">&#x27;.&#x27;</span>)</span><br><span class="line"><span class="comment">// 是否需要用到 git clone</span></span><br><span class="line"><span class="keyword">const</span> clone = program.clone || <span class="literal">false</span></span><br><span class="line"><span class="comment">// tmp为本地模版路径 如果是离线状态 那么模版路径取本地的</span></span><br><span class="line"><span class="keyword">const</span> tmp = path.join(home, <span class="string">&#x27;.vue-templates&#x27;</span>, template.replace(<span class="regexp">/[\/:]/g</span>, <span class="string">&#x27;-&#x27;</span>))</span><br><span class="line"><span class="keyword">if</span> (program.offline) &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">`&gt; Use cached template at <span class="subst">$&#123;chalk.yellow(tildify(tmp))&#125;</span>`</span>)</span><br><span class="line">  template = tmp</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到此处代码主要是用于获取模块路径、项目名称和输出路径，那么vue-cli如何根据模版名称下载对应模版并生成对应项目呢？我们再接着往下看：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Padding.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log()</span><br><span class="line">process.on(<span class="string">&#x27;exit&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log()</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (inPlace || exists(to)) &#123;</span><br><span class="line">  inquirer.prompt([&#123;</span><br><span class="line">    type: <span class="string">&#x27;confirm&#x27;</span>,</span><br><span class="line">    message: inPlace</span><br><span class="line">      ? <span class="string">&#x27;Generate project in current directory?&#x27;</span></span><br><span class="line">      : <span class="string">&#x27;Target directory exists. Continue?&#x27;</span>,</span><br><span class="line">    name: <span class="string">&#x27;ok&#x27;</span></span><br><span class="line">  &#125;]).then(<span class="function"><span class="params">answers</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (answers.ok) &#123;</span><br><span class="line">      run()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;).catch(logger.fatal)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  run()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此处根据项目名称和输出路径是否存在进行判断，如果项目名称不存在或输出路径已经存在会在终端提问用户是否确定生成项目，如果用户确定则开始调用 run 方法，需要注意如果项目名称存在并且输出路径不存在则直接调用 run 方法，我们接着直接查看 run 方法：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Check, download and generate the project.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">run</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="comment">// check if template is local</span></span><br><span class="line">  <span class="keyword">if</span> (isLocalPath(template)) &#123;</span><br><span class="line">    <span class="keyword">const</span> templatePath = getTemplatePath(template)</span><br><span class="line">    <span class="keyword">if</span> (exists(templatePath)) &#123;</span><br><span class="line">      generate(name, templatePath, to, <span class="function"><span class="params">err</span> =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (err) logger.fatal(err)</span><br><span class="line">        <span class="built_in">console</span>.log()</span><br><span class="line">        logger.success(<span class="string">&#x27;Generated &quot;%s&quot;.&#x27;</span>, name)</span><br><span class="line">      &#125;)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      logger.fatal(<span class="string">&#x27;Local template &quot;%s&quot; not found.&#x27;</span>, template)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// 检查版本 </span></span><br><span class="line">    checkVersion(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">      <span class="comment">// 判断路径中是否含有 /</span></span><br><span class="line">      <span class="keyword">if</span> (!hasSlash) &#123;</span><br><span class="line">        <span class="comment">// use official templates</span></span><br><span class="line">        <span class="comment">// 拼接路径 &#x27;vuejs-tempaltes/&#x27;下的都是官方的模版包</span></span><br><span class="line">        <span class="keyword">const</span> officialTemplate = <span class="string">&#x27;vuejs-templates/&#x27;</span> + template</span><br><span class="line">        <span class="comment">// 如果模块路径中含有‘#’则直接下载</span></span><br><span class="line">        <span class="keyword">if</span> (template.indexOf(<span class="string">&#x27;#&#x27;</span>) !== -<span class="number">1</span>) &#123;</span><br><span class="line">          <span class="comment">// 下载并生成模版</span></span><br><span class="line">          downloadAndGenerate(officialTemplate)</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="comment">// 如果不存在 -2.0 的字符串 则会输出 模版废弃的相关提示</span></span><br><span class="line">          <span class="keyword">if</span> (template.indexOf(<span class="string">&#x27;-2.0&#x27;</span>) !== -<span class="number">1</span>) &#123;</span><br><span class="line">            warnings.v2SuffixTemplatesDeprecated(template, inPlace ? <span class="string">&#x27;&#x27;</span> : name)</span><br><span class="line">            <span class="keyword">return</span></span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          <span class="comment">// warnings.v2BranchIsNowDefault(template, inPlace ? &#x27;&#x27; : name)</span></span><br><span class="line">          downloadAndGenerate(officialTemplate)</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        downloadAndGenerate(template)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们可以看到代码会首先判断模块路径是否为本地路径，如果为本地路径则调用之前生成的 getTemplatePath 方法生成最终的模块路径，只要判断路径存在就调用 generate 方法生成最终项目，而如果不是本地路径则检查版本，然后调用 downloadAndGenerate 方法根据模版路径下载并生成项目。我们首先查看这儿的 checkVersion 方法：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ./lib/check-version.js</span></span><br><span class="line"><span class="keyword">const</span> request = <span class="built_in">require</span>(<span class="string">&#x27;request&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> semver = <span class="built_in">require</span>(<span class="string">&#x27;semver&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> chalk = <span class="built_in">require</span>(<span class="string">&#x27;chalk&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> packageConfig = <span class="built_in">require</span>(<span class="string">&#x27;../package.json&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="params">done</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// Ensure minimum supported node version is used</span></span><br><span class="line">  <span class="keyword">if</span> (!semver.satisfies(process.version, packageConfig.engines.node)) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">console</span>.log(chalk.red(</span><br><span class="line">      <span class="string">&#x27;  You must upgrade node to &gt;=&#x27;</span> + packageConfig.engines.node + <span class="string">&#x27;.x to use vue-cli&#x27;</span></span><br><span class="line">    ))</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  request(&#123;</span><br><span class="line">    url: <span class="string">&#x27;https://registry.npmjs.org/vue-cli&#x27;</span>,</span><br><span class="line">    timeout: <span class="number">1000</span></span><br><span class="line">  &#125;, <span class="function">(<span class="params">err, res, body</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!err &amp;&amp; res.statusCode === <span class="number">200</span>) &#123;</span><br><span class="line">      <span class="keyword">const</span> latestVersion = <span class="built_in">JSON</span>.parse(body)[<span class="string">&#x27;dist-tags&#x27;</span>].latest</span><br><span class="line">      <span class="keyword">const</span> localVersion = packageConfig.version</span><br><span class="line">      <span class="keyword">if</span> (semver.lt(localVersion, latestVersion)) &#123;</span><br><span class="line">        <span class="built_in">console</span>.log(chalk.yellow(<span class="string">&#x27;  A newer version of vue-cli is available.&#x27;</span>))</span><br><span class="line">        <span class="built_in">console</span>.log()</span><br><span class="line">        <span class="built_in">console</span>.log(<span class="string">&#x27;  latest:    &#x27;</span> + chalk.green(latestVersion))</span><br><span class="line">        <span class="built_in">console</span>.log(<span class="string">&#x27;  installed: &#x27;</span> + chalk.red(localVersion))</span><br><span class="line">        <span class="built_in">console</span>.log()</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    done()</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这儿的 semver 模块主要用于模块版本号的管理，这儿会首先判断 Node 的版本号是否满足 vue-cli 的 package.json 文件中的 engines 字段中对于 node 版本号的限制，然后再比较本地 vue-cli 的版本号与 vue-cli 的最新版本号，并在终端提示用户，然后接着调用传入的回调函数，即我们前面看到的 downloadAndGenerate 方法：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Download a generate from a template repo.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param <span class="type">&#123;String&#125;</span> <span class="variable">template</span></span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">downloadAndGenerate</span> (<span class="params">template</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 终端执行加载动画</span></span><br><span class="line">  <span class="keyword">const</span> spinner = ora(<span class="string">&#x27;downloading template&#x27;</span>)</span><br><span class="line">  spinner.start()</span><br><span class="line">  <span class="comment">// Remove if local template exists</span></span><br><span class="line">  <span class="keyword">if</span> (exists(tmp)) rm(tmp)</span><br><span class="line">  <span class="comment">// 调用download-git-repo模块下载模块，template参数为目标地址 tmp为下载地址 clone参数代表是否需要clone</span></span><br><span class="line">  download(template, tmp, &#123; clone &#125;, <span class="function"><span class="params">err</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// 结束加载动画</span></span><br><span class="line">    spinner.stop()</span><br><span class="line">    <span class="comment">// 如果下载出错打印日志</span></span><br><span class="line">    <span class="keyword">if</span> (err) logger.fatal(<span class="string">&#x27;Failed to download repo &#x27;</span> + template + <span class="string">&#x27;: &#x27;</span> + err.message.trim())</span><br><span class="line">    generate(name, tmp, to, <span class="function"><span class="params">err</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (err) logger.fatal(err)</span><br><span class="line">      <span class="built_in">console</span>.log()</span><br><span class="line">      logger.success(<span class="string">&#x27;Generated &quot;%s&quot;.&#x27;</span>, name)</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>代码中下载模版用的 download 方法是属于 download-git-repo 模块的。最基础的用法如上述示例所示，这里的参数很好理解，第一个参数为仓库地址，第二个为输出地址，第三个是否需要 git clone，带四个为回调参数，需要注意在上面的 run 方法中有提到一个 # 的字符串实际就是这个模块下载分支模块的用法，举个🌰:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">download(<span class="string">&#x27;bitbucket:flipxfx/download-git-repo-fixture#my-branch&#x27;</span>, <span class="string">&#x27;test/tmp&#x27;</span>, &#123; <span class="attr">clone</span>: <span class="literal">true</span> &#125;, <span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(err ? <span class="string">&#x27;Error&#x27;</span> : <span class="string">&#x27;Success&#x27;</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>我们接下来通过 generate 方法查看 vue-cli 是如何通过模版生成具体的项目的：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ./lib/generate.js</span></span><br><span class="line"><span class="keyword">const</span> chalk = <span class="built_in">require</span>(<span class="string">&#x27;chalk&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> Metalsmith = <span class="built_in">require</span>(<span class="string">&#x27;metalsmith&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> Handlebars = <span class="built_in">require</span>(<span class="string">&#x27;handlebars&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> <span class="keyword">async</span> = <span class="built_in">require</span>(<span class="string">&#x27;async&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> render = <span class="built_in">require</span>(<span class="string">&#x27;consolidate&#x27;</span>).handlebars.render</span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">&#x27;path&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> multimatch = <span class="built_in">require</span>(<span class="string">&#x27;multimatch&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> getOptions = <span class="built_in">require</span>(<span class="string">&#x27;./options&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> ask = <span class="built_in">require</span>(<span class="string">&#x27;./ask&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> filter = <span class="built_in">require</span>(<span class="string">&#x27;./filter&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> logger = <span class="built_in">require</span>(<span class="string">&#x27;./logger&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p>这儿又引入了一些其他模块：</p>
+<ul>
+<li>Metalsmith是一个静态网站（博客，项目）的生成库</li>
+<li>handlerbars 是一个模版编译器，通过template和json，输出一个html</li>
+<li>async 异步处理模块，有点类似让方法变成一个线程</li>
+<li>consolidate 模版引擎整合库</li>
+<li>multimatch 一个字符串数组匹配的库</li>
+</ul>
+<p>随后紧接着注册了2个渲染器，类似于vue中的 v-if v-else的条件渲染：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ./lib/generate.js</span></span><br><span class="line"><span class="comment">// register handlebars helper</span></span><br><span class="line">Handlebars.registerHelper(<span class="string">&#x27;if_eq&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">a, b, opts</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> a === b</span><br><span class="line">    ? opts.fn(<span class="built_in">this</span>)</span><br><span class="line">    : opts.inverse(<span class="built_in">this</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">Handlebars.registerHelper(<span class="string">&#x27;unless_eq&#x27;</span>, <span class="function"><span class="keyword">function</span> (<span class="params">a, b, opts</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> a === b</span><br><span class="line">    ? opts.inverse(<span class="built_in">this</span>)</span><br><span class="line">    : opts.fn(<span class="built_in">this</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>然后就是<strong>最最最重要的 generate 方法</strong></p>
+<h4 id="3-generate"><a class="markdownIt-Anchor" href="#3-generate"></a> 3、generate</h4>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ./lib/generate.js</span></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">generate</span> (<span class="params">name, src, dest, done</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> opts = getOptions(name, src)</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这儿的 getOptions 的具体实现如下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ./lib/options.js</span></span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">&#x27;path&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> metadata = <span class="built_in">require</span>(<span class="string">&#x27;read-metadata&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> exists = <span class="built_in">require</span>(<span class="string">&#x27;fs&#x27;</span>).existsSync</span><br><span class="line"><span class="keyword">const</span> getGitUser = <span class="built_in">require</span>(<span class="string">&#x27;./git-user&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> validateName = <span class="built_in">require</span>(<span class="string">&#x27;validate-npm-package-name&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Read prompts metadata.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param <span class="type">&#123;String&#125;</span> <span class="variable">dir</span></span></span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return <span class="type">&#123;Object&#125;</span></span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">options</span> (<span class="params">name, dir</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 获取 meta.json 或 meta.js 里面的信息，比如 prompts，helpers，filters 等等</span></span><br><span class="line">  <span class="keyword">const</span> opts = getMetadata(dir)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 为 prompts 属性中的项目名称添加默认值，映射后续生成项目 package.json 中的 name 字段</span></span><br><span class="line">  setDefault(opts, <span class="string">&#x27;name&#x27;</span>, name)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 利用 validate-npm-package-name 检查你输入的 app-name 是否符合 npm 包名命名规范，当然你也可以在 meta.js 中的 prompts 字段中的 name 下面增加 validate 字段来进行校验，但和 validate-npm-package-name 的规则是 &amp;&amp; 的关系。</span></span><br><span class="line">  setValidateName(opts)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 通过 git config --get user.name , git config --get user.email 获取 name 和 email，并拼接生成 author 字段</span></span><br><span class="line">  <span class="keyword">const</span> author = getGitUser()</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 为 prompts 属性中的作者名称添加默认值，映射后续生成项目 package.json 中的 author 字段</span></span><br><span class="line">  <span class="keyword">if</span> (author) &#123;</span><br><span class="line">    setDefault(opts, <span class="string">&#x27;author&#x27;</span>, author)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> opts</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过 getOptions 方法我们读取了模版项目目录下的配置文件 meta.json 或 meta.js 文件的内容， 同时将 name auther(当前git用户) 赋值到了 opts 当中，我们继续查看 generate 方法：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ./lib/generate.js</span></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">generate</span> (<span class="params">name, src, dest, done</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> opts = getOptions(name, src);</span><br><span class="line">  <span class="keyword">const</span> metalsmith = Metalsmith(path.join(src, <span class="string">&#x27;template&#x27;</span>))</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Metalsmith 在渲染项目文件流程中角色相当于 gulp.js，可以通过添加一些插件对构建文件进行处理，如重命名、合并等，此处是 定义 Metalsmith 工作目录 <code>~/.vue-templates</code>。我们接着往下看：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ./lib/generate.js</span></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">generate</span> (<span class="params">name, src, dest, done</span>) </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="comment">// 定义一些全局变量，这样可以在 layout-files 中使用</span></span><br><span class="line">  <span class="keyword">const</span> data = <span class="built_in">Object</span>.assign(metalsmith.metadata(), &#123;</span><br><span class="line">    destDirName: name,</span><br><span class="line">    inPlace: dest === process.cwd(),</span><br><span class="line">    noEscape: <span class="literal">true</span></span><br><span class="line">  &#125;)</span><br><span class="line">  opts.helpers &amp;&amp; <span class="built_in">Object</span>.keys(opts.helpers).map(<span class="function"><span class="params">key</span> =&gt;</span> &#123;</span><br><span class="line">    Handlebars.registerHelper(key, opts.helpers[key])</span><br><span class="line">  &#125;)</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Handlebars.registerHelper 用于注册配置文件meta.json 或 meta.js 中的一些 helper（或者说成是一些逻辑方法），在模版中来处理一些数据，比如在之前注册的 <code>if_eq helper</code>，他的作用就是判断两个字符串是否相等。然后在 webpack 的模板中就有以下的用法：</p>
+<img src="/assets/vue-cli/01.png" width="900" />
+<p>就是根据你在构建项目时选择的 test runner （Jest，Karma and Mocha，none configure it yourself） 来生成对应的 npm script。接着往下看：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ./lib/generate.js</span></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">generate</span> (<span class="params">name, src, dest, done</span>) </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">const</span> helpers = &#123; chalk, logger &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (opts.metalsmith &amp;&amp; <span class="keyword">typeof</span> opts.metalsmith.before === <span class="string">&#x27;function&#x27;</span>) &#123;</span><br><span class="line">    opts.metalsmith.before(metalsmith, opts, helpers)</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此处 <code>opts.metalsmith.before</code> 方法的作用主要是合并一些全局变量，怎么理解呢，我们从 webpack 模板入手。在 webpack 模板的 meta.js 中含有 metalsmith.before:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  metalsmith: &#123;</span><br><span class="line">    <span class="comment">// When running tests for the template, this adds answers for the selected scenario</span></span><br><span class="line">    before: addTestAnswers</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>addTestAnswers 的具体内容如下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> scenarios = [</span><br><span class="line">  <span class="string">&#x27;full&#x27;</span>, </span><br><span class="line">  <span class="string">&#x27;full-karma-airbnb&#x27;</span>, </span><br><span class="line">  <span class="string">&#x27;minimal&#x27;</span></span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> index = scenarios.indexOf(process.env.VUE_TEMPL_TEST)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> isTest = <span class="built_in">exports</span>.isTest = index !== -<span class="number">1</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> scenario = isTest &amp;&amp; <span class="built_in">require</span>(<span class="string">`./<span class="subst">$&#123;scenarios[index]&#125;</span>.json`</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">exports</span>.addTestAnswers = <span class="function">(<span class="params">metalsmith, options, helpers</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">Object</span>.assign(</span><br><span class="line">    metalsmith.metadata(),</span><br><span class="line">    &#123; <span class="attr">isNotTest</span>: !isTest &#125;,</span><br><span class="line">    isTest ? scenario : &#123;&#125;</span><br><span class="line">  )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>metalsmith.before 结果就是将 metalsmith metadata 数据和 isNotTest 合并，如果 isTest 为 ture，还会自动设置 name，description等字段。那么它的作用是什么呢，作用就是为模版添加自动测试脚本，它会将 isNotTest 设置为 false，而通过 inquirer 来提问又会是在 isNotTest 为 true 的情况下才会发生，因此设置了 VUE_TEMPL_TEST 的值会省略 inquirer 提问过程，并且会根据你设置的值来生成对应的模板，有以下三种值可以设置：</p>
+<ul>
+<li>minimal：这种不会设置 router，eslint 和 tests</li>
+<li>full： 会带有 router，eslint (standard) 和 tests (jest &amp; e2e)</li>
+<li>full-airbnb-karma：带有 router eslint（airbnb） 和 tests（karma）</li>
+</ul>
+<p>例如我们可以通过如下指令直接生成项目：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">VUE_TEMPL_TEST=full vue init webpack demo</span><br></pre></td></tr></table></figure>
+<p>在这种情况下，会自动跳过 inquirer 的问题，直接生成项目：</p>
+<img src="/assets/vue-cli/02.png" width="500" />
+<p>项目目录结构如下图所示：</p>
+<img src="/assets/vue-cli/03.png" width="900" />
+<p>我们接着查看 generate 方法：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ./lib/generate.js</span></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">generate</span> (<span class="params">name, src, dest, done</span>) </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  metalsmith.use(askQuestions(opts.prompts))</span><br><span class="line">    .use(filterFiles(opts.filters))</span><br><span class="line">    .use(renderTemplateFiles(opts.skipInterpolation))</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>metalsmith.use 是 metalsmith 使用插件的写法，前面说过 metalsmith 最大的特点就是所有的逻辑都是由插件处理，此处一共有使用了三个 metalsmith 插件，分别为：askQuestions filterFiles renderTemplateFiles:</p>
+<p>1、askQuestions 方法主要是通过 inquirer.prompt 来实现命令行交互，并将交互的值通过 metalsmith.metadata() 存到全局，然后在渲染模板的时候直接获取这些值。</p>
+<p>2、 filterFiles 方法的主要作用是根据用户在命令行界面的选择来对模版中文件结构进行处理，举个🌰：</p>
+<p>webpack 模版中 meta.js 中 filter 字段如下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">filters: &#123;</span><br><span class="line">  <span class="string">&#x27;.eslintrc.js&#x27;</span>: <span class="string">&#x27;lint&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;.eslintignore&#x27;</span>: <span class="string">&#x27;lint&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;config/test.env.js&#x27;</span>: <span class="string">&#x27;unit || e2e&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;build/webpack.test.conf.js&#x27;</span>: <span class="string">&quot;unit &amp;&amp; runner === &#x27;karma&#x27;&quot;</span>,</span><br><span class="line">  <span class="string">&#x27;test/unit/**/*&#x27;</span>: <span class="string">&#x27;unit&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;test/unit/index.js&#x27;</span>: <span class="string">&quot;unit &amp;&amp; runner === &#x27;karma&#x27;&quot;</span>,</span><br><span class="line">  <span class="string">&#x27;test/unit/jest.conf.js&#x27;</span>: <span class="string">&quot;unit &amp;&amp; runner === &#x27;jest&#x27;&quot;</span>,</span><br><span class="line">  <span class="string">&#x27;test/unit/karma.conf.js&#x27;</span>: <span class="string">&quot;unit &amp;&amp; runner === &#x27;karma&#x27;&quot;</span>,</span><br><span class="line">  <span class="string">&#x27;test/unit/specs/index.js&#x27;</span>: <span class="string">&quot;unit &amp;&amp; runner === &#x27;karma&#x27;&quot;</span>,</span><br><span class="line">  <span class="string">&#x27;test/unit/setup.js&#x27;</span>: <span class="string">&quot;unit &amp;&amp; runner === &#x27;jest&#x27;&quot;</span>,</span><br><span class="line">  <span class="string">&#x27;test/e2e/**/*&#x27;</span>: <span class="string">&#x27;e2e&#x27;</span>,</span><br><span class="line">  <span class="string">&#x27;src/router/**/*&#x27;</span>: <span class="string">&#x27;router&#x27;</span>,</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+<p>以 .eslintrc.js 为例，在模板中默认是有 .eslintrc.js 文件的。利用 vue-cli 初始化一个项目的时候，会询问你 Use ESLint to lint your code? ，然后 inquirer.prompt 通过回调将你回答的值存在 metalsmith.metadata() 的 lint 字段中，在调用 filterFiles 方法的时候就会判断在 metalsmith.metadata() 下 lint 的值是否为 true，如果为 false 的就会删除 .eslintrc.js。</p>
+<p>3、renderTemplateFiles</p>
+<p>renderTemplateFiles 方法的源码如下图所示：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">renderTemplateFiles</span> (<span class="params">skipInterpolation</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 在 meta.js 的 skipInterpolation 下面添加跳过插值的文件，这样在渲染的时候就不会使用 consolidate.handlebars.render 去渲染页面</span></span><br><span class="line">  skipInterpolation = <span class="keyword">typeof</span> skipInterpolation === <span class="string">&#x27;string&#x27;</span></span><br><span class="line">    ? [skipInterpolation]</span><br><span class="line">    : skipInterpolation</span><br><span class="line">  <span class="keyword">return</span> <span class="function">(<span class="params">files, metalsmith, done</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> keys = <span class="built_in">Object</span>.keys(files)</span><br><span class="line">    <span class="keyword">const</span> metalsmithMetadata = metalsmith.metadata()</span><br><span class="line">    <span class="keyword">async</span>.each(keys, <span class="function">(<span class="params">file, next</span>) =&gt;</span> &#123;</span><br><span class="line">      <span class="comment">// skipping files with skipInterpolation option</span></span><br><span class="line">      <span class="keyword">if</span> (skipInterpolation &amp;&amp; multimatch([file], skipInterpolation, &#123; <span class="attr">dot</span>: <span class="literal">true</span> &#125;).length) &#123;</span><br><span class="line">        <span class="keyword">return</span> next()</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">const</span> str = files[file].contents.toString()</span><br><span class="line">      <span class="comment">// do not attempt to render files that do not have mustaches</span></span><br><span class="line">      <span class="comment">// 如果在该文件中没有遇到 &#123;&#123;&#125;&#125; 就跳过该文件</span></span><br><span class="line">      <span class="keyword">if</span> (!<span class="regexp">/&#123;&#123;([^&#123;&#125;]+)&#125;&#125;/g</span>.test(str)) &#123;</span><br><span class="line">        <span class="keyword">return</span> next()</span><br><span class="line">      &#125;</span><br><span class="line">      render(str, metalsmithMetadata, <span class="function">(<span class="params">err, res</span>) =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (err) &#123;</span><br><span class="line">          err.message = <span class="string">`[<span class="subst">$&#123;file&#125;</span>] <span class="subst">$&#123;err.message&#125;</span>`</span></span><br><span class="line">          <span class="keyword">return</span> next(err)</span><br><span class="line">        &#125;</span><br><span class="line">        files[file].contents = <span class="keyword">new</span> Buffer(res)</span><br><span class="line">        next()</span><br><span class="line">      &#125;)</span><br><span class="line">    &#125;, done)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>renderTemplateFiles 的主要功能就是利用 consolidate.handlebars.render 将 ~/.vue-templates 下面的 handlebars 模板文件渲染成正式的文件。</p>
+<p>我们再接着查看 generate 方法：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ./lib/generate.js</span></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">generate</span> (<span class="params">name, src, dest, done</span>) </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="comment">// 进一步给提供了模版提供了配置数据处理及包装的能力</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> opts.metalsmith === <span class="string">&#x27;function&#x27;</span>) &#123;</span><br><span class="line">    opts.metalsmith(metalsmith, opts, helpers)</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (opts.metalsmith &amp;&amp; <span class="keyword">typeof</span> opts.metalsmith.after === <span class="string">&#x27;function&#x27;</span>) &#123;</span><br><span class="line">    opts.metalsmith.after(metalsmith, opts, helpers)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// clean方法是设置在写入之前是否删除原先目标目录 默认为true</span></span><br><span class="line">  <span class="comment">// source方法是设置原路径</span></span><br><span class="line">  <span class="comment">// destination方法就是设置输出的目录</span></span><br><span class="line">  <span class="comment">// build方法执行构建</span></span><br><span class="line">  metalsmith.clean(<span class="literal">false</span>)</span><br><span class="line">    .source(<span class="string">&#x27;.&#x27;</span>) <span class="comment">// start from template root instead of `./src` which is Metalsmith&#x27;s default for `source`</span></span><br><span class="line">    .destination(dest)</span><br><span class="line">    .build(<span class="function">(<span class="params">err, files</span>) =&gt;</span> &#123;</span><br><span class="line">      done(err)</span><br><span class="line">      <span class="keyword">if</span> (<span class="keyword">typeof</span> opts.complete === <span class="string">&#x27;function&#x27;</span>) &#123;</span><br><span class="line">        <span class="keyword">const</span> helpers = &#123; chalk, logger, files &#125;</span><br><span class="line">        opts.complete(data, helpers)</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        logMessage(opts.completeMessage, data)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> data</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此处的核心是 metalsmith.build 使用刚才分析的 askQuestions 、filterFiles 和 renderTemplateFiles 三个插件将项目的初始化文件生成出来并输出到目标目录，完成后输出相关的信息。</p>
+<p>至此 vue-cli 创建项目的实现流程我们就全部分析完成了，generate 方法通过模版项目下的 meta.json 或 meta.js 配置文件的解析生成对应的项目配置文件及目录，我们可以<a target="_blank" rel="noopener" href="https://github.com/vuejs-templates/webpack">点这儿</a>查看模版 vuejs-templates/webpack 模块的配置文件。</p>
+<img src="/assets/emoji/02.png">
+<h3 id="二-总结"><a class="markdownIt-Anchor" href="#二-总结"></a> 二、总结</h3>
+<p>通过上面的分析我们得到 vue-cli 的整体打包流程如下所示：</p>
+<img src="/assets/vue-cli/04.svg" width="1000" />
+<h3 id="三-vue-cli的不足"><a class="markdownIt-Anchor" href="#三-vue-cli的不足"></a> 三、vue-cli的不足</h3>
+<p>从上面对于 vue-cli 的分析我们也可以看出其只是一个单纯的脚手架工具，用于快速创建项目的工具，由于基于模块机制，所以不仅仅可以用于创建 Vue 项目，甚至通过开发自定义模版可以实现定制化项目快速创建，那么为什么其后续慢慢被遗弃呢？</p>
+<p>这主要是由于脚手架本身的局限性：用完即丢。创建完项目就不管了，后续流程不参与。后续开发过程中，各项工程化需求由其它工具分别完成，因此用户大量的时间耗费在各种工具的学习、配置、调试和踩坑上 应对工具升级、迁移，维护成本极高，因此更为理想的方案应该是项目整个流程各个工程化需求都参与的工具链。这也导致了 vue-cli 的后续版本 Vue CLI 的诞生。</p>
+<h2 id="参考资料"><a class="markdownIt-Anchor" href="#参考资料"></a> 参考资料</h2>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6844903646556078093#heading-3">Vue-cli原理分析</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/weixin.png" alt="kyleezhang 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/alipay.png" alt="kyleezhang 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>kyleezhang
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://kyleezhang.com/2021/01/28/vue-cli-01/" title="从vue-cli到Vue CLI（一）">http://kyleezhang.com/2021/01/28/vue-cli-01/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/assets/config/wechat.png">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E5%89%8D%E7%AB%AF%E5%B7%A5%E7%A8%8B%E5%8C%96/" rel="tag"><i class="fa fa-tag"></i>前端工程化</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/01/26/css-grid/" rel="prev" title="CSS Grid网格布局详解">
+      <i class="fa fa-chevron-left"></i> CSS Grid网格布局详解
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/03/16/client-cache/" rel="next" title="浏览器缓存">
+      浏览器缓存 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#vue-cli"><span class="nav-text"> vue-cli</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-text"> 一、源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%85%A5%E5%8F%A3"><span class="nav-text"> 1、入口</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E9%85%8D%E7%BD%AE%E6%95%B0%E6%8D%AE"><span class="nav-text"> 2、配置数据</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-generate"><span class="nav-text"> 3、generate</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C-%E6%80%BB%E7%BB%93"><span class="nav-text"> 二、总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89-vue-cli%E7%9A%84%E4%B8%8D%E8%B6%B3"><span class="nav-text"> 三、vue-cli的不足</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-text"> 参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="kyleezhang"
+      src="/assets/config/avatar.png">
+  <p class="site-author-name" itemprop="name">kyleezhang</p>
+  <div class="site-description" itemprop="description">学源于思</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">39</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/kyleezhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;kyleezhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/2942181559@qq.com" title="E-Mail → 2942181559@qq.com"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/u/6998903195" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;u&#x2F;6998903195" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">kyleezhang</span>
+</div>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">563k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">8:32</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  <!-- 背景动画 -->
+<script src="/js/particle.js"></script>
+
+</body>
+</html>

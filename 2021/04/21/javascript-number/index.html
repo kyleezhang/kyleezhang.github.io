@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/config/favicon.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kyleezhang.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"enable":false,"style":"tabs","active":false,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="在 JavaScript 中数值只有一种，即 Number 类型，内部表示为双精度浮点型，即其他语言中的 double 类型，所以在 JavaScript 中实际上是没有整数类型的，数值都是按浮点数来处理的，存储方法相同，遵循 IEEE 754 国际标准，因此在 JavaScript 中 3 和 3.0 被视为同一个值，示例： 13.0 &#x3D;&#x3D;&#x3D; 3 &#x2F;&#x2F; true">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaScript 中的 Number 类型">
+<meta property="og:url" content="http://kyleezhang.com/2021/04/21/javascript-number/index.html">
+<meta property="og:site_name" content="kyleezhang&#96;s Blog">
+<meta property="og:description" content="在 JavaScript 中数值只有一种，即 Number 类型，内部表示为双精度浮点型，即其他语言中的 double 类型，所以在 JavaScript 中实际上是没有整数类型的，数值都是按浮点数来处理的，存储方法相同，遵循 IEEE 754 国际标准，因此在 JavaScript 中 3 和 3.0 被视为同一个值，示例： 13.0 &#x3D;&#x3D;&#x3D; 3 &#x2F;&#x2F; true">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://kyleezhang.com/assets/emoji/01.gif">
+<meta property="og:image" content="http://kyleezhang.com/assets/javascript-number/01.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190918235407940.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190918235556672.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190921230804742.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190921230854349.png">
+<meta property="article:published_time" content="2021-04-21T15:17:59.000Z">
+<meta property="article:modified_time" content="2022-02-19T15:17:55.235Z">
+<meta property="article:author" content="kyleezhang">
+<meta property="article:tag" content="JavaScript">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://kyleezhang.com/assets/emoji/01.gif">
+
+<link rel="canonical" href="http://kyleezhang.com/2021/04/21/javascript-number/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>JavaScript 中的 Number 类型 | kyleezhang`s Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2KR3NK700N"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-2KR3NK700N');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?f1621cb3fb0792bb294fce1b938d5eef";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="kyleezhang`s Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+    <a target="_blank" rel="noopener" href="https://github.com/kyleezhang " class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#fff; color:#151513; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    </div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">kyleezhang`s Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://kyleezhang.com/2021/04/21/javascript-number/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/assets/config/avatar.png">
+      <meta itemprop="name" content="kyleezhang">
+      <meta itemprop="description" content="学源于思">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="kyleezhang`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JavaScript 中的 Number 类型
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-04-21 23:17:59" itemprop="dateCreated datePublished" datetime="2021-04-21T23:17:59+08:00">2021-04-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-02-19 23:17:55" itemprop="dateModified" datetime="2022-02-19T23:17:55+08:00">2022-02-19</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%89%8D%E7%AB%AF/" itemprop="url" rel="index"><span itemprop="name">前端</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在 JavaScript 中数值只有一种，即 Number 类型，内部表示为双精度浮点型，即其他语言中的 double 类型，所以在 JavaScript 中实际上是没有整数类型的，数值都是按浮点数来处理的，存储方法相同，遵循 IEEE 754 国际标准，因此在 JavaScript 中 3 和 3.0 被视为同一个值，示例：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">3.0</span> === <span class="number">3</span> <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<p>对于整数情况，能够准确计算的整数范围为在 -2<sup>53</sup>~2<sup>53</sup> 之间，不包含两个端点，因此只要在这个范围内整数可以放心使用。除了十进制以外整数还可以通过八进制或十六进制的字面值来表示，其中八进制字面值的第一位必须是零，然后是八进制数字序列（0 ~ 7），如果字面值中的数值超出范围，那么前导零将被忽略，后面的数值被当作十进制解析，这儿需要注意在严格模式中八进制的这种表示会报错，ES6中进一步明确，八进制的表示要使用前缀0o，示例：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="number">0o11</span> === <span class="number">0</span>11)</span><br><span class="line">&#125;)()</span><br><span class="line"><span class="comment">// true</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 严格模式</span></span><br><span class="line">(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line"><span class="meta">  &#x27;use strict&#x27;</span>;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="number">0o11</span> === <span class="number">0</span>11)</span><br><span class="line">&#125;)()</span><br><span class="line"><span class="comment">// Uncaught GyntaxError</span></span><br></pre></td></tr></table></figure>
+<p>十六进制字面值前两位必须是 0x，后跟任何十六进制数字（0 ~ 9以及A ~ F）,其中 A ~ F 可以大写，也可以小写。ES6中又扩展了二进制的写法，使用前缀0b（或0B）。</p>
+<p>虽然在 JavaScript 中无论是小数还是整数都是按照64位的浮点数形式存储，但是进行整数运算会自动转换为32位的有符号整数，例如位运算，有符号整数使用31位表示整数的数值，用第32位表示整数的符号，数值范围是-2<sup>31</sup> ~ 2<sup>31</sup>。</p>
+<p>接下来我们来分析这些范围到底是怎么产生的？</p>
+<img src="/assets/emoji/01.gif" />
+<h2 id="一-浮点型数值的保存"><a class="markdownIt-Anchor" href="#一-浮点型数值的保存"></a> 一、浮点型数值的保存</h2>
+<p>JavaScript 中的 Number 类型使用的是双精度浮点型，即其他语言中的 double 类型，双精度浮点数使用 8 个字节即 64bit 来进行存储，现代计算机中浮点数大多是以国际标准 IEEE 754 来存储，存储过程分两步，</p>
+<ol>
+<li>把浮点数转换为对应的二进制数，并用科学计数法表示</li>
+<li>将转换之后的数通过 IEEE 754 标准表示成真正会在计算机存储的值。</li>
+</ol>
+<p>根据 IEEE 754 标准任何一个二进制浮点数 V 都可以表示成：</p>
+<img src="/assets/javascript-number/01.png" />
+<ul>
+<li>(-1)<sup>S</sup>表示符号位，当S=0，V为正数，当S=1，V为负数</li>
+<li>M表示有效数字，大于等于1，小于2</li>
+<li>2<sup>E</sup>表示指数位</li>
+</ul>
+<p>举个🌰，十进制的 5.0，写成二进制是 101.0，相当于 1.01x2<sup>2</sup>，其中 S=0，M=1.01，E=2。</p>
+<p>IEEE 754规定对于32位浮点数最高1位是符号位S，接下来8位是指数E，剩下的23位为有效数字M，具体如下图所示：</p>
+<p><img src="https://img-blog.csdnimg.cn/20190918235407940.png" alt="" /></p>
+<p>对于64位的浮点数最高1位是符号位S，接下来11位是指数E，剩下的52位是有效数字M，具体如下图所示：</p>
+<p><img src="https://img-blog.csdnimg.cn/20190918235556672.png" alt="" /></p>
+<p>注意：IEEE754 对于有效数字M和指数E还有一些特别的规定。</p>
+<p>前面说过，1 &lt;= M &lt; 2，也就是说 M 总是可以写成 1.xxxxxxx 的形式，其中 xxxxxxx 表示效数部分。IEEE 754 规定，在计算机内部保存 M 时默认这个数的第一位总是1，因此可以被舍去，只保存后面的 xxxxxxx 部分。比如保存1.01的时候只保存01，等到读取的时候再把第一位的1加上去，这样做的目的就是为了节省一位有效数字，以32位浮点数为例，留给有效数字M的只有23位，将第一位的1舍去以后等于保存24位有效数字。</p>
+<p>至于指数E，情况较为复杂。首先，E为一个无符号指数，这意味着，如果E为8位，它的取值范围为 0 ~ 255，如果E为11位，它的取值范围为0 ~ 2047。但是我们知道科学计数中的E是是可以出现负值的，所以IEEE 754规定，E的真实值必须再减去一个中间数，对于8位的E，这个中间数是127，对于11位的E，这个中间数是1023。<br />
+比如2<sup>10</sup>的E是10，所以保存成32位浮点数时，必须保存成 10+127=137，即 10001001。</p>
+<p>然后指数E还可以分成三种情况：</p>
+<ul>
+<li>E不全为0或不全为1：这时，浮点数就采用上面的规则表示，即指数E的计算值减去127（或1023），得到真实值，再将有效数字M前加上第一位的1。</li>
+<li>E全为0：这时，浮点数的指数E等于1 ~ 127（或1 ~ 1023），有效数字M不再加上第一位的1，而是还原成0.xxxxxxx的小数，这样做是为了表示±0，以及接近0的很小的数字。</li>
+<li>E全为1：这时，如果有效数字M全为0，表示±无穷大（正负取决于符号位S）；如果有效数字M不全为0，表示这个数不是一个数（NaN）。</li>
+</ul>
+<p>示例：浮点数 9.0 如何用二进制表示？还原成十进制又是多少？</p>
+<p>首先，浮点数 9.0 等于二进制的 1001.0，即 1.001x2<sup>3</sup><br />
+那么，第一位的符号位 S=0，有效数字 M 等于 001 后面再加 20 个 0，凑满 23 位，指数 E 等于 3+127=130，即 10000010。<br />
+所以，写成二进制形式，应该是 S+E+M，即0 10000010 001 0000 0000 0000 0000 0000。这个 32 位的二进制数，还原成十进制，正是 1091567616。</p>
+<h2 id="二-数值范围"><a class="markdownIt-Anchor" href="#二-数值范围"></a> 二、数值范围</h2>
+<p>ECMAScript能够表示的数字的绝对值范围是 5e-324 ~ 1.7976931348623157e+308，这两个取值可以通过 Number.MIN_VALUE 和 Number.MAX_VALUE 这两个字段来表示，如果某次计算的结果得到了一个超出 JavaScript 数值范围的，那么这个数值会自动被转换为特殊的 Infinity 值，具体来说，如果这个数是负数，则会被转换成 -Infinity（负无穷），如果这个数值是正数，则会被转换成 Infinity（正无穷）。</p>
+<p>示例：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(<span class="built_in">Number</span>.MAX_VALUE) <span class="comment">// 1.7976931348623157e+308</span></span><br><span class="line"><span class="built_in">console</span>.log(<span class="built_in">Number</span>.MIN_VALUE) <span class="comment">// 5e-324</span></span><br><span class="line"><span class="built_in">console</span>.log(<span class="built_in">Number</span>.MAX_VALUE + <span class="built_in">Number</span>.MAX_VALUE) <span class="comment">// Infinity</span></span><br></pre></td></tr></table></figure>
+<p>那么这个取值范围是如何得到的呢？</p>
+<p>前面说到 JavaScript 中数值的保存采用的是双精度浮点型，遵循 IEEE 754 标准，在 ECMAScript 规范中规定指数 E 的范围在 -1074 ~ 971，双精度浮点型中有效数字 M 的存储位为52，但是有效数字 M 由于可以省略第一位1，节省一个存储位，因此有效数字M可以存储的范围为 1 ~ 2<sup>53</sup>，因此 JavaScript 中 Number 能表示的最大数字绝对值范围是 2<sup>-1074</sup> ~ 2<sup>(53+971)</sup>。</p>
+<p>注：通过 Number.isFinite()（ES6引入）和 isFinite() 方法可以判断一个数值是不是有穷的，即如果参数位于最小与最大数值之间时会返回 true。</p>
+<h2 id="三-精度丢失"><a class="markdownIt-Anchor" href="#三-精度丢失"></a> 三、精度丢失</h2>
+<p>众所周知在 JavaScript 中 0.1+0.2 不等于 0.3，实际上所有浮点数值存储遵循 IEEE 754 标准的编程语言中都会存在这个问题，这是因为计算机中小数的存储先是转换成二进制进行存储的，而 0.1、0.2 转换成二进制分别为：</p>
+<blockquote>
+<p>(0.1)10 =&gt; (00011001100110011001(1001)…)2<br />
+(0.2)10 =&gt; (00110011001100110011(0011)…)2</p>
+</blockquote>
+<p>可以发现，0.1 和 0.2 转成二进制之后都是一个无限循环的数，前面提到尾数位只能存储最多 53 位有效数字，这时候就必须来进行四舍五入了，而这个取舍的规则就是在 IEEE 754 中定义的，0.1 最终能被存储的有效数字是</p>
+<blockquote>
+<p>0001(1001)(1001)(1001)(1001)(1001)(1001)(1001)(1001)(1001)(1001)(1001)(1001)101<br />
++<br />
+(0011)(0011)(0011)(0011)(0011)(0011)(0011)(0011)(0011)(0011)(0011)(0011)(0011)01<br />
+=<br />
+0100(1100)(1100)(1100)(1100)(1100)(1100)(1100)(1100)(1100)(1100)(1100)(1100)111</p>
+</blockquote>
+<p>最终的这个二进制数转换成十进制的就是 0.30000000000000004 ，这儿需要注意，53 位的存储位指的是能存 53 位有效数字，因此前置的 0 不算，要往后再取到  53 位有效数字为止。</p>
+<p>因此精度丢失的问题实际上用一句话概括就是计算机中用二进制存储小数，而大部分小数转成二进制后都是无限循环的值，因此存在取舍问题，也就是精度丢失。</p>
+<p>ES6 在 Number 对象上新增了一个极小常量：Number.EPSILON，值为 2.220446049250313e-16，引入这么一个常量就是为了为浮点数计算设置一个误差范围，如果这个误差小于 Number.EPSILON 我们就认为得到了准确结果。</p>
+<h2 id="四-最大安全整数"><a class="markdownIt-Anchor" href="#四-最大安全整数"></a> 四、 最大安全整数</h2>
+<p>JavaScript 中最大安全整数的范围是 2<sup>53</sup> ~ 2<sup>53</sup>，不包括两个端点，即 -9007199254740991 ~ 9007199254740991，可以通过 Number.MIN_SAFE_INTEGER 和 Number.MAX_SAFE_INTEGER 字段查询，超出这个范围的整数计算都是不准确的，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(<span class="built_in">Number</span>.MAX_SAFE_INTEGER) <span class="comment">// 9007199254740991</span></span><br><span class="line"><span class="built_in">console</span>.log(<span class="built_in">Number</span>.MIN_SAFE_INTEGER) <span class="comment">// -9007199254740991</span></span><br><span class="line"><span class="built_in">console</span>.log(<span class="number">9007199254740991</span> + <span class="number">2</span>) <span class="comment">// 9007199254740992</span></span><br></pre></td></tr></table></figure>
+<p>最大安全整数9007199254740991对应的二进制数如图：</p>
+<p><img src="https://img-blog.csdnimg.cn/20190921230804742.png" alt="" /></p>
+<p>53位有效数字都存储满了之后，想要表示更大的数字，就只能往指数数加一位，这时候尾数因为没有多余的存储空间，因此只能补0。</p>
+<p><img src="https://img-blog.csdnimg.cn/20190921230854349.png" alt="" /></p>
+<p>如图所示，在指数位为53的情况下，最后一位尾数位为0的数字可以被精确表示，而最后一位尾数为为1的数字都不能被精确表示。也就是可以被精确表示和不能被精确表示的比例是1:1。<br />
+同理，当指数为54的时候，只有最后两位尾数为00的可以被精确表示，也就是可以被精确表示和不能被精确表示的比例是1:3，当有效位数达到 x(x&gt;53) 的时候，可以被精确表示和不能被精确表示的比例将是1 : 2<sup>(x-53)</sup> - 1。</p>
+<p>可以预见的是，在指数越来越高的时候，这个指数会成指数增长，因此在 Number.MAX_SAFE_INTEGER ~ Number.MAX_VALUE 之间可以被精确表示的整数可以说是凤毛麟角。</p>
+<p>之所以会有最大安全整数这个概念，本质上还是因为数字类型在计算机中的存储结构。在尾数位不够补零之后，只要是多余的尾数为1所对应的整数都不能被精确表示。</p>
+<p>可以发现，不管是浮点数计算的计算结果错误和大整数的计算结果错误，最终都可以归结到JS的精度只有53位（尾数只能存储53位的有效数字）。那么我们在日常工作中碰到这两个问题该如何解决呢？<br />
+大而全的解决方案就是使用 mathjs，看一下 mathjs 的输出：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">math.config(&#123;</span><br><span class="line">    number: <span class="string">&#x27;BigNumber&#x27;</span>,      </span><br><span class="line">    precision: <span class="number">64</span> </span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(math.format(math.eval(<span class="string">&#x27;0.1 + 0.2&#x27;</span>))); <span class="comment">// &#x27;0.3&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(math.format(math.eval(<span class="string">&#x27;0.23 * 0.34 * 0.92&#x27;</span>))); <span class="comment">// &#x27;0.071944&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(math.format(math.eval(<span class="string">&#x27;9007199254740991 + 2&#x27;</span>))); </span><br><span class="line"><span class="comment">// &#x27;9.007199254740993e+15&#x27;</span></span><br></pre></td></tr></table></figure>
+<h2 id="参考资料"><a class="markdownIt-Anchor" href="#参考资料"></a> 参考资料</h2>
+<p><a target="_blank" rel="noopener" href="https://juejin.im/post/5a6fce10f265da3e261c3c71#heading-2">从0.1+0.2=0.30000000000000004再看JS中的Number类型</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.ruanyifeng.com/blog/2010/06/ieee_floating-point_representation.html">浮点数的二进制表示</a></p>
+<p>《ES6标准入门》 阮一峰</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/weixin.png" alt="kyleezhang 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/alipay.png" alt="kyleezhang 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>kyleezhang
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://kyleezhang.com/2021/04/21/javascript-number/" title="JavaScript 中的 Number 类型">http://kyleezhang.com/2021/04/21/javascript-number/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/assets/config/wechat.png">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/JavaScript/" rel="tag"><i class="fa fa-tag"></i>JavaScript</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/04/20/javascript-proto/" rel="prev" title="JavaScript 中基于原型的继承">
+      <i class="fa fa-chevron-left"></i> JavaScript 中基于原型的继承
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/05/15/vue-cli-02/" rel="next" title="从vue-cli到Vue CLI（二）">
+      从vue-cli到Vue CLI（二） <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80-%E6%B5%AE%E7%82%B9%E5%9E%8B%E6%95%B0%E5%80%BC%E7%9A%84%E4%BF%9D%E5%AD%98"><span class="nav-text"> 一、浮点型数值的保存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C-%E6%95%B0%E5%80%BC%E8%8C%83%E5%9B%B4"><span class="nav-text"> 二、数值范围</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89-%E7%B2%BE%E5%BA%A6%E4%B8%A2%E5%A4%B1"><span class="nav-text"> 三、精度丢失</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B-%E6%9C%80%E5%A4%A7%E5%AE%89%E5%85%A8%E6%95%B4%E6%95%B0"><span class="nav-text"> 四、 最大安全整数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-text"> 参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="kyleezhang"
+      src="/assets/config/avatar.png">
+  <p class="site-author-name" itemprop="name">kyleezhang</p>
+  <div class="site-description" itemprop="description">学源于思</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">39</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/kyleezhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;kyleezhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/2942181559@qq.com" title="E-Mail → 2942181559@qq.com"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/u/6998903195" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;u&#x2F;6998903195" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">kyleezhang</span>
+</div>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">563k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">8:32</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/katex@0/dist/katex.min.css">
+
+
+  
+
+  <!-- 背景动画 -->
+<script src="/js/particle.js"></script>
+
+</body>
+</html>

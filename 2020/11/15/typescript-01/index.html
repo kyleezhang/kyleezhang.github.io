@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/config/favicon.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kyleezhang.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"enable":false,"style":"tabs","active":false,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="TypeScript 是一种由微软开发的自由和开源的编程语言，是 JavaScript 的一个超集，其为 JavaScript 引入了可选的静态类型，相比于 JavaScript 它的特点主要有以下三点：  类型检查：使我们可以在编译阶段发现问题而不是运行时 语言扩展：TypeScript 不仅仅包括了 ES6 及未来提案中的一些特性，还从其他语言借鉴了一些特性，比如接口和抽象类 工具属性：Typ">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TypeScript学习笔记（一）——基本类型">
+<meta property="og:url" content="http://kyleezhang.com/2020/11/15/typescript-01/index.html">
+<meta property="og:site_name" content="kyleezhang&#96;s Blog">
+<meta property="og:description" content="TypeScript 是一种由微软开发的自由和开源的编程语言，是 JavaScript 的一个超集，其为 JavaScript 引入了可选的静态类型，相比于 JavaScript 它的特点主要有以下三点：  类型检查：使我们可以在编译阶段发现问题而不是运行时 语言扩展：TypeScript 不仅仅包括了 ES6 及未来提案中的一些特性，还从其他语言借鉴了一些特性，比如接口和抽象类 工具属性：Typ">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://kyleezhang.com/assets/typescript-01/01.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/typescript-01/02.png">
+<meta property="article:published_time" content="2020-11-15T08:30:03.000Z">
+<meta property="article:modified_time" content="2022-02-19T15:17:55.237Z">
+<meta property="article:author" content="kyleezhang">
+<meta property="article:tag" content="TypeScript">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://kyleezhang.com/assets/typescript-01/01.png">
+
+<link rel="canonical" href="http://kyleezhang.com/2020/11/15/typescript-01/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>TypeScript学习笔记（一）——基本类型 | kyleezhang`s Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2KR3NK700N"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-2KR3NK700N');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?f1621cb3fb0792bb294fce1b938d5eef";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="kyleezhang`s Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+    <a target="_blank" rel="noopener" href="https://github.com/kyleezhang " class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#fff; color:#151513; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    </div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">kyleezhang`s Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://kyleezhang.com/2020/11/15/typescript-01/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/assets/config/avatar.png">
+      <meta itemprop="name" content="kyleezhang">
+      <meta itemprop="description" content="学源于思">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="kyleezhang`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          TypeScript学习笔记（一）——基本类型
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-15 16:30:03" itemprop="dateCreated datePublished" datetime="2020-11-15T16:30:03+08:00">2020-11-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-02-19 23:17:55" itemprop="dateModified" datetime="2022-02-19T23:17:55+08:00">2022-02-19</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%89%8D%E7%AB%AF/" itemprop="url" rel="index"><span itemprop="name">前端</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>13k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>12 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>TypeScript 是一种由微软开发的自由和开源的编程语言，是 JavaScript 的一个超集，其为 JavaScript 引入了可选的静态类型，相比于 JavaScript 它的特点主要有以下三点：</p>
+<ul>
+<li>类型检查：使我们可以在编译阶段发现问题而不是运行时</li>
+<li>语言扩展：TypeScript 不仅仅包括了 ES6 及未来提案中的一些特性，还从其他语言借鉴了一些特性，比如接口和抽象类</li>
+<li>工具属性：TypeScript 会编译生成 JavaScript 运行在浏览器及不同操作系统上，无其他运行时开销</li>
+</ul>
+<p>那么为什么我们需要 TypeScript 帮我们引入静态类型呢？</p>
+<a id="more"></a>
+<p>静态类型语言可以在编译阶段确定所有变量的类型，而动态类型语言只能在执行阶段确定所有变量的类型，我们以相同功能的 Javascript 和 C++ 代码为例：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// javascript</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="title">constructor</span>(<span class="params">x, y</span>)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.x = x;</span><br><span class="line">    <span class="built_in">this</span>.y = y;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">add</span>(<span class="params">a, b</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> a.x + a.y + b.x + b.y </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// C++</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span> &#123;</span></span><br><span class="line">  <span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">int</span> x;</span><br><span class="line">    <span class="keyword">int</span> y;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">add</span><span class="params">(C a, C b)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> a.x + a.y + b.x + b.y</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在上述示例中 a、b 都是类 C 的实例对象，add 函数返回 a、b 对象所有属性的和，对于 JavaScript 而言，属性结构图如下图所示：</p>
+<img src="/assets/typescript-01/01.png" width="520" />
+<ul>
+<li>在程序运行时动态计算属性偏移量</li>
+<li>需要额外的空间存储属性名</li>
+<li>所有对象的属性偏移量量信息各存一份</li>
+</ul>
+<p>而对于C++而言：</p>
+<img src="/assets/typescript-01/02.png" width="520" />
+<ul>
+<li>编译阶段确定属性偏移量</li>
+<li>偏移量访问代替属性名访问</li>
+<li>属性偏移量信息共享</li>
+</ul>
+<p>由此可以看到动态类型语言无论在时间还是空间上都有比较多的性能损耗，虽然实际上 V8 为了提升 JavaScript 运行时的性能做了很多优化，但是 TypeScript 更重要的价值在于将静态类型的编程思维引入了 JavaScript，让我们可以在编译阶段以一种完全不同的视角去看待我们的代码。</p>
+<h2 id="基本类型语法"><a class="markdownIt-Anchor" href="#基本类型语法"></a> 基本类型&amp;语法</h2>
+<h3 id="一-boolean类型"><a class="markdownIt-Anchor" href="#一-boolean类型"></a> 一、Boolean类型</h3>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> bool: <span class="built_in">boolean</span> = <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<h3 id="二-number类型"><a class="markdownIt-Anchor" href="#二-number类型"></a> 二、Number类型</h3>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> num: <span class="built_in">number</span> = <span class="number">123</span></span><br></pre></td></tr></table></figure>
+<h3 id="三-string类型"><a class="markdownIt-Anchor" href="#三-string类型"></a> 三、String类型</h3>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> str: <span class="built_in">string</span> = <span class="string">&#x27;abc&#x27;</span></span><br></pre></td></tr></table></figure>
+<h3 id="四-symbol类型"><a class="markdownIt-Anchor" href="#四-symbol类型"></a> 四、Symbol类型</h3>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> s1 = <span class="built_in">Symbol</span>();</span><br><span class="line"><span class="keyword">let</span> s2: symbol = <span class="built_in">Symbol</span>()</span><br></pre></td></tr></table></figure>
+<h3 id="五-array类型"><a class="markdownIt-Anchor" href="#五-array类型"></a> 五、Array类型</h3>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> list: <span class="built_in">number</span>[] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br><span class="line"><span class="keyword">let</span> list: <span class="built_in">Array</span>&lt;<span class="built_in">number</span>&gt; = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]; <span class="comment">// Array&lt;number&gt;泛型语法</span></span><br></pre></td></tr></table></figure>
+<h3 id="六-enum类型"><a class="markdownIt-Anchor" href="#六-enum类型"></a> 六、Enum类型</h3>
+<p>枚举类型：一组有名字的常量集合，使用枚举可以清晰地表达意图或创建一组有区别的用例。 TypeScript 支持数字的和基于字符串的枚举。</p>
+<h4 id="1-数字枚举"><a class="markdownIt-Anchor" href="#1-数字枚举"></a> 1、数字枚举</h4>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">enum</span> Direction &#123;</span><br><span class="line">  NORTH, <span class="comment">// 0</span></span><br><span class="line">  SOUTH, <span class="comment">// 1</span></span><br><span class="line">  EAST, <span class="comment">// 2</span></span><br><span class="line">  WEST, <span class="comment">// 3</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">let</span> dir: Direction = Direction.NORTH;</span><br></pre></td></tr></table></figure>
+<p>默认情况下，NORTH 的初始值为0，其余的成员会从1开始自动增长。换句话说，Direction.SOUTH 的值为1，Direction.EAST 的值为2，Direction.WEST 的值为3。<br />
+以上的枚举示例经编译后，对应的 ES5 代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&quot;use strict&quot;</span>;</span><br><span class="line"><span class="keyword">var</span> Direction;</span><br><span class="line">(<span class="function"><span class="keyword">function</span> (<span class="params">Direction</span>) </span>&#123;</span><br><span class="line">  Direction[(Direction[<span class="string">&quot;NORTH&quot;</span>] = <span class="number">0</span>)] = <span class="string">&quot;NORTH&quot;</span>;</span><br><span class="line">  Direction[(Direction[<span class="string">&quot;SOUTH&quot;</span>] = <span class="number">1</span>)] = <span class="string">&quot;SOUTH&quot;</span>;</span><br><span class="line">  Direction[(Direction[<span class="string">&quot;EAST&quot;</span>] = <span class="number">2</span>)] = <span class="string">&quot;EAST&quot;</span>;</span><br><span class="line">  Direction[(Direction[<span class="string">&quot;WEST&quot;</span>] = <span class="number">3</span>)] = <span class="string">&quot;WEST&quot;</span>;</span><br><span class="line">&#125;)(Direction || (Direction = &#123;&#125;));</span><br><span class="line"><span class="keyword">var</span> dir = Direction.NORTH;</span><br></pre></td></tr></table></figure>
+<p>从上面代码我们可以看到 TypeScript 通过反向映射实现了数字枚举，但是其他枚举却又有所不同。</p>
+<h4 id="2-字符串枚举"><a class="markdownIt-Anchor" href="#2-字符串枚举"></a> 2、字符串枚举</h4>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">enum</span> Direction &#123;</span><br><span class="line">  NORTH = <span class="string">&quot;NORTH&quot;</span>,</span><br><span class="line">  SOUTH = <span class="string">&quot;SOUTH&quot;</span>,</span><br><span class="line">  EAST = <span class="string">&quot;EAST&quot;</span>,</span><br><span class="line">  WEST = <span class="string">&quot;WEST&quot;</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对应的 ES5 代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&quot;use strict&quot;</span>;</span><br><span class="line"><span class="keyword">var</span> Direction;</span><br><span class="line">(<span class="function"><span class="keyword">function</span> (<span class="params">Direction</span>) </span>&#123;</span><br><span class="line">  Direction[<span class="string">&quot;NORTH&quot;</span>] = <span class="string">&quot;NORTH&quot;</span>;</span><br><span class="line">  Direction[<span class="string">&quot;SOUTH&quot;</span>] = <span class="string">&quot;SOUTH&quot;</span>;</span><br><span class="line">  Direction[<span class="string">&quot;EAST&quot;</span>] = <span class="string">&quot;EAST&quot;</span>;</span><br><span class="line">  Direction[<span class="string">&quot;WEST&quot;</span>] = <span class="string">&quot;WEST&quot;</span>;</span><br><span class="line">&#125;)(Direction || (Direction = &#123;&#125;));</span><br></pre></td></tr></table></figure>
+<p>从上面示例中我们可以发现字符串枚举没有实现反向映射。</p>
+<h4 id="3-异构映射"><a class="markdownIt-Anchor" href="#3-异构映射"></a> 3、异构映射</h4>
+<p>异构枚举的成员值是数字和字符串的混合：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">enum</span> Enum &#123;</span><br><span class="line">  A,</span><br><span class="line">  B,</span><br><span class="line">  C = <span class="string">&quot;C&quot;</span>,</span><br><span class="line">  D = <span class="string">&quot;D&quot;</span>,</span><br><span class="line">  E = <span class="number">8</span>,</span><br><span class="line">  F,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对应的ES5代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&quot;use strict&quot;</span>;</span><br><span class="line"><span class="keyword">var</span> Enum;</span><br><span class="line">(<span class="function"><span class="keyword">function</span> (<span class="params">Enum</span>) </span>&#123;</span><br><span class="line">  Enum[Enum[<span class="string">&quot;A&quot;</span>] = <span class="number">0</span>] = <span class="string">&quot;A&quot;</span>;</span><br><span class="line">  Enum[Enum[<span class="string">&quot;B&quot;</span>] = <span class="number">1</span>] = <span class="string">&quot;B&quot;</span>;</span><br><span class="line">  Enum[<span class="string">&quot;C&quot;</span>] = <span class="string">&quot;C&quot;</span>;</span><br><span class="line">  Enum[<span class="string">&quot;D&quot;</span>] = <span class="string">&quot;D&quot;</span>;</span><br><span class="line">  Enum[Enum[<span class="string">&quot;E&quot;</span>] = <span class="number">8</span>] = <span class="string">&quot;E&quot;</span>;</span><br><span class="line">  Enum[Enum[<span class="string">&quot;F&quot;</span>] = <span class="number">9</span>] = <span class="string">&quot;F&quot;</span>;</span><br><span class="line">&#125;)(Enum || (Enum = &#123;&#125;));</span><br></pre></td></tr></table></figure>
+<p>从示例我们可以发现异构枚举中的数字成员实现了反向映射，而字符串成员没有，但是异构枚举容易造成混淆，不推荐使用。</p>
+<h4 id="4-常量枚举"><a class="markdownIt-Anchor" href="#4-常量枚举"></a> 4、常量枚举</h4>
+<p>除了数字枚举和字符串枚举之外，还有一种特殊的枚举——常量枚举。它是使用 const 关键字修饰的枚举，常量枚举会使用内联语法，不会为枚举类型编译生成任何 JavaScript，举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="built_in">enum</span> Direction &#123;</span><br><span class="line">  NORTH,</span><br><span class="line">  SOUTH,</span><br><span class="line">  EAST,</span><br><span class="line">  WEST,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> dir: Direction = Direction.NORTH;</span><br></pre></td></tr></table></figure>
+<p>对应的ES5代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&quot;use strict&quot;</span>;</span><br><span class="line"><span class="keyword">var</span> dir = <span class="number">0</span> <span class="comment">/* NORTH */</span>;</span><br></pre></td></tr></table></figure>
+<h4 id="5-枚举成员"><a class="markdownIt-Anchor" href="#5-枚举成员"></a> 5、枚举成员</h4>
+<p>枚举成员的值具有如下特性：</p>
+<ul>
+<li>只读：枚举类型初始化以后不支持属性的修改，即枚举类型成员的属性都是只读属性</li>
+<li>类型：枚举类型成员的值包括两种类型：<strong>常量类型(const number)</strong> 和 <strong>计算类型(computer number)</strong> ，常量类型包括没有初始值、引用已有枚举属性值和常量表达式三类，常量类型会在编译阶段编译出结果，以常量的形式出现在运行时环境，计算类型主要是一些非常量的表达式，这些表达式的值不会在编译阶段被计算而是保留到执行时阶段。</li>
+</ul>
+<p>我们举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">enum</span> Char &#123;</span><br><span class="line">  <span class="comment">// const number</span></span><br><span class="line">  a,</span><br><span class="line">  b = Char.a,</span><br><span class="line">  c = <span class="number">1</span> + <span class="number">3</span>,</span><br><span class="line">  <span class="comment">// computer number</span></span><br><span class="line">  d = <span class="built_in">Math</span>.random(),</span><br><span class="line">  e = <span class="string">&#x27;1234&#x27;</span>.length</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对应的ES5的代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Char;</span><br><span class="line">(<span class="function"><span class="keyword">function</span> (<span class="params">Char</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// const number</span></span><br><span class="line">  Char[Char[<span class="string">&quot;a&quot;</span>] = <span class="number">0</span>] = <span class="string">&quot;a&quot;</span>;</span><br><span class="line">  Char[Char[<span class="string">&quot;b&quot;</span>] = <span class="number">0</span>] = <span class="string">&quot;b&quot;</span>;</span><br><span class="line">  Char[Char[<span class="string">&quot;c&quot;</span>] = <span class="number">4</span>] = <span class="string">&quot;c&quot;</span>;</span><br><span class="line">  <span class="comment">// computer number</span></span><br><span class="line">  Char[Char[<span class="string">&quot;d&quot;</span>] = <span class="built_in">Math</span>.random()] = <span class="string">&quot;d&quot;</span>;</span><br><span class="line">  Char[Char[<span class="string">&quot;e&quot;</span>] = <span class="string">&#x27;1234&#x27;</span>.length] = <span class="string">&quot;e&quot;</span>;</span><br><span class="line">&#125;)(Char || (Char = &#123;&#125;));</span><br></pre></td></tr></table></figure>
+<h3 id="七-any类型"><a class="markdownIt-Anchor" href="#七-any类型"></a> 七、Any类型</h3>
+<p>在 TypeScript 中，任何类型都可以被归为 any 类型。这让 any 类型成为了类型系统的顶级类型（也被称作全局超级类型）。</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> notSure: <span class="built_in">any</span> = <span class="number">666</span>;</span><br><span class="line">notSure = <span class="string">&quot;semlinker&quot;</span>;</span><br><span class="line">notSure = <span class="literal">false</span>;</span><br></pre></td></tr></table></figure>
+<p>any 类型本质上是类型系统的一个逃逸舱。作为开发者，这给了我们很大的自由：TypeScript 允许我们对 any 类型的值执行任何操作，而无需事先执行任何形式的检查。比如:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> value: <span class="built_in">any</span>;</span><br><span class="line"></span><br><span class="line">value.foo.bar; <span class="comment">// OK</span></span><br><span class="line">value.trim(); <span class="comment">// OK</span></span><br><span class="line">value(); <span class="comment">// OK</span></span><br><span class="line"><span class="keyword">new</span> value(); <span class="comment">// OK</span></span><br><span class="line">value[<span class="number">0</span>][<span class="number">1</span>]; <span class="comment">// OK</span></span><br></pre></td></tr></table></figure>
+<p>在许多场景下，这太宽松了。使用 any 类型，可以很容易地编写类型正确但在运行时有问题的代码。如果我们使用 any 类型，就无法使用 TypeScript 提供的大量的保护机制。为了解决 any 带来的问题，TypeScript 3.0 引入了 unknown 类型。</p>
+<h3 id="八-unknown类型"><a class="markdownIt-Anchor" href="#八-unknown类型"></a> 八、unknown类型</h3>
+<p>就像所有类型都可以赋值给 any，所有类型也都可以赋值给 unknown。这使得 unknown 成为 TypeScript 类型系统的另一种顶级类型。下面我们来看一下 unknown 类型的使用示例：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> value: unknown;</span><br><span class="line"></span><br><span class="line">value = <span class="literal">true</span>; <span class="comment">// OK</span></span><br><span class="line">value = <span class="number">42</span>; <span class="comment">// OK</span></span><br><span class="line">value = <span class="string">&quot;Hello World&quot;</span>; <span class="comment">// OK</span></span><br><span class="line">value = []; <span class="comment">// OK</span></span><br><span class="line">value = &#123;&#125;; <span class="comment">// OK</span></span><br><span class="line">value = <span class="built_in">Math</span>.random; <span class="comment">// OK</span></span><br><span class="line">value = <span class="literal">null</span>; <span class="comment">// OK</span></span><br><span class="line">value = <span class="literal">undefined</span>; <span class="comment">// OK</span></span><br><span class="line">value = <span class="keyword">new</span> <span class="built_in">TypeError</span>(); <span class="comment">// OK</span></span><br><span class="line">value = <span class="built_in">Symbol</span>(<span class="string">&quot;type&quot;</span>); <span class="comment">// OK</span></span><br></pre></td></tr></table></figure>
+<p>对 value 变量的所有赋值都被认为是类型正确的。但是，当我们尝试将类型为 unknown 的值赋值给其他类型的变量时会发生什么？</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> value: unknown;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> value1: unknown = value; <span class="comment">// OK</span></span><br><span class="line"><span class="keyword">let</span> value2: <span class="built_in">any</span> = value; <span class="comment">// OK</span></span><br><span class="line"><span class="keyword">let</span> value3: <span class="built_in">boolean</span> = value; <span class="comment">// Error</span></span><br><span class="line"><span class="keyword">let</span> value4: <span class="built_in">number</span> = value; <span class="comment">// Error</span></span><br><span class="line"><span class="keyword">let</span> value5: <span class="built_in">string</span> = value; <span class="comment">// Error</span></span><br><span class="line"><span class="keyword">let</span> value6: <span class="built_in">object</span> = value; <span class="comment">// Error</span></span><br><span class="line"><span class="keyword">let</span> value7: <span class="built_in">any</span>[] = value; <span class="comment">// Error</span></span><br><span class="line"><span class="keyword">let</span> value8: <span class="built_in">Function</span> = value; <span class="comment">// Error</span></span><br></pre></td></tr></table></figure>
+<p>unknown 类型只能被赋值给 any 类型和 unknown 类型本身。直观地说，这是有道理的：只有能够保存任意类型值的容器才能保存 unknown 类型的值。毕竟我们不知道变量 value 中存储了什么类型的值。<br />
+现在让我们看看当我们尝试对类型为 unknown 的值执行操作时会发生什么。以下是我们在之前 any 章节看过的相同操作：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> value: unknown;</span><br><span class="line"></span><br><span class="line">value.foo.bar; <span class="comment">// Error</span></span><br><span class="line">value.trim(); <span class="comment">// Error</span></span><br><span class="line">value(); <span class="comment">// Error</span></span><br><span class="line"><span class="keyword">new</span> value(); <span class="comment">// Error</span></span><br><span class="line">value[<span class="number">0</span>][<span class="number">1</span>]; <span class="comment">// Error</span></span><br></pre></td></tr></table></figure>
+<p>将 value 变量类型设置为 unknown 后，这些操作都不再被认为是类型正确的。通过将 any 类型改变为 unknown 类型，我们已将允许所有更改的默认设置，更改为禁止任何更改。</p>
+<h3 id="九-tuple类型"><a class="markdownIt-Anchor" href="#九-tuple类型"></a> 九、Tuple类型</h3>
+<p>众所周知，数组一般由同种类型的值组成，但有时我们需要在单个变量中存储不同类型的值，这时候我们就可以使用元组。在 JavaScript 中是没有元组的，元组是 TypeScript 中特有的类型，其工作方式类似于数组。<br />
+元组可用于定义具有有限数量的未命名属性的类型。每个属性都有一个关联的类型。使用元组时，必须提供每个属性的值，举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> tupleType: [<span class="built_in">string</span>, <span class="built_in">boolean</span>];</span><br><span class="line">tupleType = [<span class="string">&quot;semlinker&quot;</span>, <span class="literal">true</span>];</span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(tupleType[<span class="number">0</span>]) <span class="comment">// &#x27;semlinker&#x27;</span></span><br></pre></td></tr></table></figure>
+<p>在上述示例中我们定义了一个名为 tupleType 的变量，它的类型是一个类型数组 <code>[string, boolean]</code>，然后我们按照正确的类型依次初始化 tupleType 变量，并通过下标来访问其中元素，需要注意的是初始化元组时不仅仅需要保证每个属性类型的一致，同时必须提供每个属性的值，否则都会报错。</p>
+<h3 id="十-void类型"><a class="markdownIt-Anchor" href="#十-void类型"></a> 十、Void类型</h3>
+<p>在 JavaScript 中 void 是关键字，最关键的用途是获取 undefined：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="number">0</span>; <span class="comment">// undefined</span></span><br></pre></td></tr></table></figure>
+<p>我们通过它可以有效避免 undefined 常量被重新赋值的情形，但在 TypeScript 中 void 类型表示没有任何返回：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">func</span>(<span class="params"></span>): <span class="title">void</span> </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&quot;This is a function&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>需要注意的是，声明一个 void 类型的变量没有什么作用，因为在严格模式下，它的值只能为 undefined：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> unusable: <span class="built_in">void</span> = <span class="literal">undefined</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="十一-null和undefined类型"><a class="markdownIt-Anchor" href="#十一-null和undefined类型"></a> 十一、Null和Undefined类型</h3>
+<p>TypeScript 里，undefined 和 null 两者有各自的类型分别为 undefined 和 null。</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> u: <span class="literal">undefined</span> = <span class="literal">undefined</span>;</span><br><span class="line"><span class="keyword">let</span> n: <span class="literal">null</span> = <span class="literal">null</span>;</span><br></pre></td></tr></table></figure>
+<p>需要注意的是在 TypeScript 规范中 undefined 和 null 是所有类型的子类型，所以当我们将 tsconfig.json 中的 strictNullChecks 选项设为 false 时我们可以将 null 和 undefined 赋值给其他类型的值，举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> num: <span class="built_in">number</span> = <span class="number">123</span>;</span><br><span class="line">num = <span class="literal">null</span>;</span><br><span class="line">num = <span class="literal">undefined</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="十二-bigint类型"><a class="markdownIt-Anchor" href="#十二-bigint类型"></a> 十二、BigInt类型</h3>
+<p>BigInt 是 ECMAScript 的一项提案，它在理论上允许我们建模任意大小的整数。但是 TypeScript 3.2 引入了一个新的原始类型 bigint，允许我们为 BigInit 数据类型进行类型检查，并支持在目标为 esnext 时输出 BigInit 字面量，我们可以通过调用 BigInt() 函数或书写 BigInt 字面量（或在整型数字字面量末尾添加 n）来获取 bigint:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> foo: bigint = BigInt(<span class="number">100</span>); <span class="comment">// the BigInt function</span></span><br><span class="line"><span class="keyword">let</span> bar: bigint = <span class="number">100n</span>;        <span class="comment">// a BigInt literal</span></span><br><span class="line"><span class="comment">// *Slaps roof of fibonacci function*</span></span><br><span class="line"><span class="comment">// This bad boy returns ints that can get *so* big!</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">fibonacci</span>(<span class="params">n: bigint</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">let</span> result = <span class="number">1n</span>;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">let</span> last = <span class="number">0n</span>, i = <span class="number">0n</span>; i &lt; n; i++) &#123;</span><br><span class="line">    <span class="keyword">const</span> current = result;</span><br><span class="line">    result += last;</span><br><span class="line">    last = current;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br><span class="line">fibonacci(<span class="number">10000n</span>)</span><br></pre></td></tr></table></figure>
+<p>需要注意的是 bigint 和 number 之间无法混用，是完全不同的东西：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> foo: <span class="built_in">number</span>;</span><br><span class="line"><span class="keyword">let</span> bar: bigint;</span><br><span class="line">foo = bar; <span class="comment">// error: Type &#x27;bigint&#x27; is not assignable to type &#x27;number&#x27;.</span></span><br><span class="line">bar = foo; <span class="comment">// error: Type &#x27;number&#x27; is not assignable to type &#x27;bigint&#x27;.</span></span><br></pre></td></tr></table></figure>
+<p>还有一点要注意的是，对 bigint 使用 typeof 操作符返回一个新的字符串：“bigint”。因此，TypeScript 能够正确地使用 typeof 细化类型，举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">whatKindOfNumberIsIt</span>(<span class="params">x: <span class="built_in">number</span> | bigint</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> x === <span class="string">&quot;bigint&quot;</span>) &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&quot;&#x27;x&#x27; is a bigint!&quot;</span>);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">&quot;&#x27;x&#x27; is a floating-point number&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="十三-never类型"><a class="markdownIt-Anchor" href="#十三-never类型"></a> 十三、Never类型</h3>
+<p>never 类型表示的是那些永不存在的值的类型。 例如，never 类型是那些总是会抛出异常或根本就不会有返回值的函数表达式或箭头函数表达式的返回值类型。</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 返回never的函数必须存在无法达到的终点</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">error</span>(<span class="params">message: <span class="built_in">string</span></span>): <span class="title">never</span> </span>&#123;</span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(message);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">infiniteLoop</span>(<span class="params"></span>): <span class="title">never</span> </span>&#123;</span><br><span class="line">  <span class="keyword">while</span> (<span class="literal">true</span>) &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在 TypeScript 中，可以利用 never 类型的特性来实现全面性检查，具体示例如下：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo = <span class="built_in">string</span> | <span class="built_in">number</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">controlFlowAnalysisWithNever</span>(<span class="params">foo: Foo</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> foo === <span class="string">&quot;string&quot;</span>) &#123;</span><br><span class="line">    <span class="comment">// 这里 foo 被收窄为 string 类型</span></span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="keyword">typeof</span> foo === <span class="string">&quot;number&quot;</span>) &#123;</span><br><span class="line">    <span class="comment">// 这里 foo 被收窄为 number 类型</span></span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// foo 在这里是 never</span></span><br><span class="line">    <span class="keyword">const</span> check: <span class="built_in">never</span> = foo;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意在 else 分支里面，我们把收窄为 never 的 foo 赋值给一个显式声明的 never 变量。如果一切逻辑正确，那么这里应该能够编译通过。但是假如后来有一天你的同事修改了 Foo 的类型：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Foo = <span class="built_in">string</span> | <span class="built_in">number</span> | <span class="built_in">boolean</span>;</span><br></pre></td></tr></table></figure>
+<p>然而他忘记同时修改 controlFlowAnalysisWithNever 方法中的控制流程，这时候 else 分支的 foo 类型会被收窄为 boolean 类型，导致无法赋值给 never 类型，这时就会产生一个编译错误。通过这个方式，我们可以确保 controlFlowAnalysisWithNever 方法总是穷尽了 Foo 的所有可能类型。 通过这个示例，我们可以得出一个结论：使用 never 避免出现新增了联合类型没有对应的实现，目的就是写出类型绝对安全的代码。</p>
+<h3 id="十四-object-object和类型"><a class="markdownIt-Anchor" href="#十四-object-object和类型"></a> 十四、object、Object和{}类型</h3>
+<h4 id="1-object类型"><a class="markdownIt-Anchor" href="#1-object类型"></a> 1、object类型</h4>
+<p>TypeScript 2.2 引入了被称为 object 类型的新类型，它用于表示非原始类型，在 JavaScript 中以下类型被视为原始类型：string、boolean、number、bigint、symbol、null 和 undefined。它的引入主要是因为随着 TypeScript 2.2 的发布，标准库的类型声明已经更新，例如 Object.create() 和 Object.setPrototypeOf() 方法都需要为它们的原型参数指定 object | null 类型：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// node_modules/typescript/lib/lib.es5.d.ts</span></span><br><span class="line"><span class="keyword">interface</span> ObjectConstructor &#123;</span><br><span class="line">  create(o: <span class="built_in">object</span> | <span class="literal">null</span>): <span class="built_in">any</span>;</span><br><span class="line">  setPrototypeOf(o: <span class="built_in">any</span>, <span class="attr">proto</span>: <span class="built_in">object</span> | <span class="literal">null</span>): <span class="built_in">any</span>;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>将原始类型作为原型传递给 Object.setPrototypeOf() 或 Object.create() 将导致在运行时抛出类型错误。TypeScript 现在能够捕获这些错误，并在编译时提示相应的错误：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> proto = &#123;&#125;;</span><br><span class="line"></span><br><span class="line"><span class="built_in">Object</span>.create(proto);     <span class="comment">// OK</span></span><br><span class="line"><span class="built_in">Object</span>.create(<span class="literal">null</span>);      <span class="comment">// OK</span></span><br><span class="line"><span class="built_in">Object</span>.create(<span class="literal">undefined</span>); <span class="comment">// Error</span></span><br><span class="line"><span class="built_in">Object</span>.create(<span class="number">1337</span>);      <span class="comment">// Error</span></span><br><span class="line"><span class="built_in">Object</span>.create(<span class="literal">true</span>);      <span class="comment">// Error</span></span><br><span class="line"><span class="built_in">Object</span>.create(<span class="string">&quot;oops&quot;</span>);    <span class="comment">// Error</span></span><br></pre></td></tr></table></figure>
+<p>object 类型的另一个用例是作为 ES2015 的一部分引入的 WeakMap 数据结构。它的键必须是对象，不能是原始值。这个要求现在反映在类型定义中：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> WeakMap&lt;K <span class="keyword">extends</span> object, V&gt; &#123;</span><br><span class="line">  <span class="keyword">delete</span>(key: K): <span class="built_in">boolean</span>;</span><br><span class="line">  get(key: K): V | <span class="literal">undefined</span>;</span><br><span class="line">  has(key: K): <span class="built_in">boolean</span>;</span><br><span class="line">  set(key: K, <span class="attr">value</span>: V): <span class="built_in">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="2-object类型"><a class="markdownIt-Anchor" href="#2-object类型"></a> 2、Object类型</h4>
+<p>TypeScript 定义了另一个与新的 object 类型几乎同名的类型，那就是 Object 类型。该类型是所有 Object 类的实例的类型。它由以下两个接口来定义：</p>
+<ul>
+<li>Object 接口定义了 Object.prototype 原型对象上的属性</li>
+<li>ObjectConstructor 接口定义了 Object 类的属性</li>
+</ul>
+<p>(1) <strong>Object接口定义</strong></p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// node_modules/typescript/lib/lib.es5.d.ts</span></span><br><span class="line"><span class="keyword">interface</span> Object &#123;</span><br><span class="line">  <span class="title">constructor</span>: <span class="title">Function</span>;</span><br><span class="line">  toString(): <span class="built_in">string</span>;</span><br><span class="line">  toLocaleString(): <span class="built_in">string</span>;</span><br><span class="line">  valueOf(): <span class="built_in">Object</span>;</span><br><span class="line">  hasOwnProperty(v: PropertyKey): <span class="built_in">boolean</span>;</span><br><span class="line">  isPrototypeOf(v: <span class="built_in">Object</span>): <span class="built_in">boolean</span>;</span><br><span class="line">  propertyIsEnumerable(v: PropertyKey): <span class="built_in">boolean</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>(2) <strong>ObjectConstructor接口定义</strong></p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// node_modules/typescript/lib/lib.es5.d.ts</span></span><br><span class="line"><span class="keyword">interface</span> ObjectConstructor &#123;</span><br><span class="line">  <span class="comment">/** Invocation via `new` */</span></span><br><span class="line">  <span class="keyword">new</span>(value?: <span class="built_in">any</span>): <span class="built_in">Object</span>;</span><br><span class="line">  <span class="comment">/** Invocation via function calls */</span></span><br><span class="line">  (value?: <span class="built_in">any</span>): <span class="built_in">any</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">readonly</span> prototype: <span class="built_in">Object</span>;</span><br><span class="line"></span><br><span class="line">  getPrototypeOf(o: <span class="built_in">any</span>): <span class="built_in">any</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// ···</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">declare</span> <span class="keyword">var</span> <span class="built_in">Object</span>: ObjectConstructor;</span><br></pre></td></tr></table></figure>
+<p>Object 类的所有实例都继承了 Object 接口中的所有属性。我们可以看到，如果我们创建一个返回其参数的函数：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">f</span>(<span class="params">x: <span class="built_in">Object</span></span>): </span>&#123; toString(): <span class="built_in">string</span> &#125; &#123;</span><br><span class="line">  <span class="keyword">return</span> x; <span class="comment">// OK</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当我们传入一个 Object 对象的实例时，它总是会满足该函数的返回类型 —— 即要求返回对象包含一个 toString() 方法。</p>
+<p>有趣的是，类型Object包括原始值：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">func1</span>(<span class="params">x: <span class="built_in">Object</span></span>) </span>&#123; &#125;</span><br><span class="line">func1(<span class="string">&#x27;semlinker&#x27;</span>); <span class="comment">// OK</span></span><br></pre></td></tr></table></figure>
+<p>实际上这是因为 Object.prototype 的属性也可以通过原始值访问：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&#x27;semlinker&#x27;</span>.hasOwnProperty === <span class="built_in">Object</span>.prototype.hasOwnProperty <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+<p>相反，object 类型不包括原始值：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">func2</span>(<span class="params">x: <span class="built_in">object</span></span>) </span>&#123; &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Argument of type &#x27;&quot;semlinker&quot;&#x27; </span></span><br><span class="line"><span class="comment">// is not assignable to parameter of type &#x27;object&#x27;.(2345)</span></span><br><span class="line">func2(<span class="string">&#x27;semlinker&#x27;</span>); <span class="comment">// Error</span></span><br></pre></td></tr></table></figure>
+<p>需要注意的是，当对 Object 类型的变量进行赋值时，如果值对象属性名与 Object 接口中的属性冲突，则 TypeScript 编译器会提示相应的错误：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Type &#x27;() =&gt; number&#x27; is not assignable to type </span></span><br><span class="line"><span class="comment">// &#x27;() =&gt; string&#x27;.</span></span><br><span class="line"><span class="comment">// Type &#x27;number&#x27; is not assignable to type &#x27;string&#x27;.</span></span><br><span class="line"><span class="keyword">const</span> obj1: <span class="built_in">Object</span> = &#123; </span><br><span class="line">  <span class="function"><span class="title">toString</span>(<span class="params"></span>)</span> &#123; <span class="keyword">return</span> <span class="number">123</span> &#125; <span class="comment">// Error</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>而对于 object 类型来说，TypeScript 编译器不会提示任何错误：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> obj2: <span class="built_in">object</span> = &#123; </span><br><span class="line">  <span class="function"><span class="title">toString</span>(<span class="params"></span>)</span> &#123; <span class="keyword">return</span> <span class="number">123</span> &#125; </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>另外在处理 object 类型和字符串索引对象类型的赋值操作时，也要特别注意。比如：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> strictTypeHeaders: &#123; [key: <span class="built_in">string</span>]: <span class="built_in">string</span> &#125; = &#123;&#125;;</span><br><span class="line"><span class="keyword">let</span> header: <span class="built_in">object</span> = &#123;&#125;;</span><br><span class="line">header = strictTypeHeaders; <span class="comment">// OK</span></span><br><span class="line"><span class="comment">// Type &#x27;object&#x27; is not assignable to type &#x27;&#123; [key: string]: string; &#125;&#x27;.</span></span><br><span class="line">strictTypeHeaders = header; <span class="comment">// Error</span></span><br></pre></td></tr></table></figure>
+<p>在上述例子中，最后一行会出现编译错误，这是因为 <code>&#123; [key: string]: string &#125;</code> 类型相比 object 类型更加精确。而 <code>header = strictTypeHeaders;</code> 这一行却没有提示任何错误，是因为这两种类型都是非基本类型，object 类型比 <code>&#123; [key: string]: string &#125;</code> 类型更加通用。</p>
+<h4 id="3-类型"><a class="markdownIt-Anchor" href="#3-类型"></a> 3、{}类型</h4>
+<p>还有另一种类型与之非常相似，即空类型：{}。它描述了一个没有成员的对象。当你试图访问这样一个对象的任意属性时，TypeScript 会产生一个编译时错误：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Type &#123;&#125;</span></span><br><span class="line"><span class="keyword">const</span> obj = &#123;&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Error: Property &#x27;prop&#x27; does not exist on type &#x27;&#123;&#125;&#x27;.</span></span><br><span class="line">obj.prop = <span class="string">&quot;semlinker&quot;</span>;</span><br></pre></td></tr></table></figure>
+<p>但是，你仍然可以使用在 Object 类型上定义的所有属性和方法，这些属性和方法可通过 JavaScript 的原型链隐式地使用：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Type &#123;&#125;</span></span><br><span class="line"><span class="keyword">const</span> obj = &#123;&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// &quot;[object Object]&quot;</span></span><br><span class="line">obj.toString();</span><br></pre></td></tr></table></figure>
+<p>在 JavaScript 中创建一个表示二维坐标点的对象很简单：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> pt = &#123;&#125;; </span><br><span class="line">pt.x = <span class="number">3</span>; </span><br><span class="line">pt.y = <span class="number">4</span>;</span><br></pre></td></tr></table></figure>
+<p>然而以上代码在 TypeScript 中，每个赋值语句都会产生错误：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> pt = &#123;&#125;;</span><br><span class="line"><span class="comment">// Property &#x27;x&#x27; does not exist on type &#x27;&#123;&#125;&#x27;</span></span><br><span class="line">pt.x = <span class="number">3</span>; <span class="comment">// Error</span></span><br><span class="line"><span class="comment">// Property &#x27;y&#x27; does not exist on type &#x27;&#123;&#125;&#x27;</span></span><br><span class="line">pt.y = <span class="number">4</span>; <span class="comment">// Error</span></span><br></pre></td></tr></table></figure>
+<p>这是因为第1行中的 pt 类型是根据它的值 {} 推断出来的，你只可以对已知的属性赋值。这个问题怎么解决呢？我们可能会先想到接口，比如这样子：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> Point &#123;</span><br><span class="line">  x: <span class="built_in">number</span>;</span><br><span class="line">  y: <span class="built_in">number</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Type &#x27;&#123;&#125;&#x27; is missing the following </span></span><br><span class="line"><span class="comment">// properties from type &#x27;Point&#x27;: x, y(2739)</span></span><br><span class="line"><span class="keyword">const</span> pt: Point = &#123;&#125;; <span class="comment">// Error</span></span><br><span class="line">pt.x = <span class="number">3</span>;</span><br><span class="line">pt.y = <span class="number">4</span>;</span><br></pre></td></tr></table></figure>
+<p>很可惜对于以上的方案，TypeScript 编译器仍会提示错误。那么这个问题该如何解决呢？其实我们可以直接通过对象字面量进行赋值：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> pt = &#123; </span><br><span class="line">  x: <span class="number">3</span>,</span><br><span class="line">  y: <span class="number">4</span>, </span><br><span class="line">&#125;; <span class="comment">// OK</span></span><br></pre></td></tr></table></figure>
+<p>而如果你需要一步一步地创建对象，你可以使用类型断言（as）来消除 TypeScript 的类型检查：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> pt = &#123;&#125; <span class="keyword">as</span> Point; </span><br><span class="line">pt.x = <span class="number">3</span>;</span><br><span class="line">pt.y = <span class="number">4</span>; <span class="comment">// OK</span></span><br></pre></td></tr></table></figure>
+<p>但是更好的方法是声明变量的类型并一次性构建对象：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> pt: Point = &#123; </span><br><span class="line">  x: <span class="number">3</span>,</span><br><span class="line">  y: <span class="number">4</span>, </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>另外在使用 Object.assign 方法合并多个对象的时候，你可能也会遇到以下问题：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> pt = &#123; <span class="attr">x</span>: <span class="number">666</span>, <span class="attr">y</span>: <span class="number">888</span> &#125;;</span><br><span class="line"><span class="keyword">const</span> id = &#123; <span class="attr">name</span>: <span class="string">&quot;semlinker&quot;</span> &#125;;</span><br><span class="line"><span class="keyword">const</span> namedPoint = &#123;&#125;;</span><br><span class="line"><span class="built_in">Object</span>.assign(namedPoint, pt, id);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Property &#x27;name&#x27; does not exist on type &#x27;&#123;&#125;&#x27;.(2339)</span></span><br><span class="line">namedPoint.name; <span class="comment">// Error</span></span><br></pre></td></tr></table></figure>
+<p>这时候你可以使用对象展开运算符 … 来解决上述问题：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> pt = &#123; <span class="attr">x</span>: <span class="number">666</span>, <span class="attr">y</span>: <span class="number">888</span> &#125;;</span><br><span class="line"><span class="keyword">const</span> id = &#123; <span class="attr">name</span>: <span class="string">&quot;semlinker&quot;</span> &#125;;</span><br><span class="line"><span class="keyword">const</span> namedPoint = &#123;...pt, ...id&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//(property) name: string</span></span><br><span class="line">namedPoint.name <span class="comment">// &quot;semlinker&quot;</span></span><br></pre></td></tr></table></figure>
+<h2 id="参考资料"><a class="markdownIt-Anchor" href="#参考资料"></a> 参考资料</h2>
+<p>极客时间《TypeScript开发实战》专栏</p>
+<p>《深入理解TypeScript》</p>
+<p><a target="_blank" rel="noopener" href="http://www.semlinker.com/ts-object-type/">一文读懂 TS 中 Object, object, {} 类型之间的区别</a></p>
+<p><a target="_blank" rel="noopener" href="https://juejin.im/post/6872111128135073806#heading-21">一份不可多得的 TS 学习指南（1.8W字）</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.bookstack.cn/read/TypeScript-3.6/doc-handbook-README">Typescript使用手册</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/weixin.png" alt="kyleezhang 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/alipay.png" alt="kyleezhang 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>kyleezhang
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://kyleezhang.com/2020/11/15/typescript-01/" title="TypeScript学习笔记（一）——基本类型">http://kyleezhang.com/2020/11/15/typescript-01/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/assets/config/wechat.png">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/TypeScript/" rel="tag"><i class="fa fa-tag"></i>TypeScript</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/10/30/javascript-scope/" rel="prev" title="关于作用域和作用域链的一些想法">
+      <i class="fa fa-chevron-left"></i> 关于作用域和作用域链的一些想法
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/11/17/typescript-04/" rel="next" title="TypeScript学习笔记（二）——接口与类">
+      TypeScript学习笔记（二）——接口与类 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%E8%AF%AD%E6%B3%95"><span class="nav-text"> 基本类型&amp;语法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80-boolean%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 一、Boolean类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C-number%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 二、Number类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89-string%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 三、String类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B-symbol%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 四、Symbol类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%94-array%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 五、Array类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%AD-enum%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 六、Enum类型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%95%B0%E5%AD%97%E6%9E%9A%E4%B8%BE"><span class="nav-text"> 1、数字枚举</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%9E%9A%E4%B8%BE"><span class="nav-text"> 2、字符串枚举</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%BC%82%E6%9E%84%E6%98%A0%E5%B0%84"><span class="nav-text"> 3、异构映射</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E5%B8%B8%E9%87%8F%E6%9E%9A%E4%B8%BE"><span class="nav-text"> 4、常量枚举</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E6%9E%9A%E4%B8%BE%E6%88%90%E5%91%98"><span class="nav-text"> 5、枚举成员</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%83-any%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 七、Any类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%AB-unknown%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 八、unknown类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B9%9D-tuple%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 九、Tuple类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%81-void%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 十、Void类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%81%E4%B8%80-null%E5%92%8Cundefined%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 十一、Null和Undefined类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%81%E4%BA%8C-bigint%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 十二、BigInt类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%81%E4%B8%89-never%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 十三、Never类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%81%E5%9B%9B-object-object%E5%92%8C%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 十四、object、Object和{}类型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-object%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 1、object类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-object%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 2、Object类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E7%B1%BB%E5%9E%8B"><span class="nav-text"> 3、{}类型</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-text"> 参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="kyleezhang"
+      src="/assets/config/avatar.png">
+  <p class="site-author-name" itemprop="name">kyleezhang</p>
+  <div class="site-description" itemprop="description">学源于思</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">39</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/kyleezhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;kyleezhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/2942181559@qq.com" title="E-Mail → 2942181559@qq.com"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/u/6998903195" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;u&#x2F;6998903195" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">kyleezhang</span>
+</div>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">563k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">8:32</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  <!-- 背景动画 -->
+<script src="/js/particle.js"></script>
+
+</body>
+</html>

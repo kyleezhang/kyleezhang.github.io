@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/config/favicon.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kyleezhang.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"enable":false,"style":"tabs","active":false,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="其实 Webpack 官网首屏的英雄区就已经很清楚地描述了它的工作原理，如下图所示：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Webpack运行机制">
+<meta property="og:url" content="http://kyleezhang.com/2020/12/16/webpack-runtime/index.html">
+<meta property="og:site_name" content="kyleezhang&#96;s Blog">
+<meta property="og:description" content="其实 Webpack 官网首屏的英雄区就已经很清楚地描述了它的工作原理，如下图所示：">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/01.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/02.gif">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/03.gif">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/04.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/05.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/06.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/08.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/09.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/10.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/11.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/12.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/13.jpg">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/15.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/14.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/16.jpg">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/17.jpg">
+<meta property="og:image" content="http://kyleezhang.com/assets/webpack-runtime/18.jpeg">
+<meta property="article:published_time" content="2020-12-16T07:20:42.000Z">
+<meta property="article:modified_time" content="2022-02-19T15:17:55.240Z">
+<meta property="article:author" content="kyleezhang">
+<meta property="article:tag" content="前端工程化">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://kyleezhang.com/assets/webpack-runtime/01.png">
+
+<link rel="canonical" href="http://kyleezhang.com/2020/12/16/webpack-runtime/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Webpack运行机制 | kyleezhang`s Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2KR3NK700N"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-2KR3NK700N');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?f1621cb3fb0792bb294fce1b938d5eef";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="kyleezhang`s Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+    <a target="_blank" rel="noopener" href="https://github.com/kyleezhang " class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#fff; color:#151513; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    </div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">kyleezhang`s Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://kyleezhang.com/2020/12/16/webpack-runtime/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/assets/config/avatar.png">
+      <meta itemprop="name" content="kyleezhang">
+      <meta itemprop="description" content="学源于思">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="kyleezhang`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Webpack运行机制
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-16 15:20:42" itemprop="dateCreated datePublished" datetime="2020-12-16T15:20:42+08:00">2020-12-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-02-19 23:17:55" itemprop="dateModified" datetime="2022-02-19T23:17:55+08:00">2022-02-19</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%89%8D%E7%AB%AF/" itemprop="url" rel="index"><span itemprop="name">前端</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>27k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>25 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>其实 Webpack 官网首屏的英雄区就已经很清楚地描述了它的工作原理，如下图所示：<br />
+<img src="/assets/webpack-runtime/01.png" width="760" /></p>
+<a id="more"></a>
+<p>以一个普通的前端项目为例，项目中一般都会散落着各种各样的代码及资源文件，比如 JS、CSS、图片、字体等，这些文件在 Webpack 的思想中都属于当前项目中的一个模块。Webpack 可以通过打包，将它们最终聚集到一起。Webpack 在整个打包的过程中：</p>
+<ul>
+<li>通过 Loader 处理特殊类型资源的加载，例如加载样式、图片；</li>
+<li>通过 Plugin 实现各种自动化的构建任务，例如自动压缩、自动发布。</li>
+</ul>
+<p>具体来看打包的过程，Webpack 启动后，会根据我们的配置，找到项目中的某个指定文件（一般这个文件都会是一个 JS 文件）作为入口。然后顺着入口文件中的代码，根据代码中出现的 import（ES Modules）或者是 require（CommonJS）之类的语句，解析推断出来这个文件所依赖的资源模块，然后再分别去解析每个资源模块的依赖，周而复始，最后形成整个项目中所有用到的文件之间的依赖关系树，具体过程如下所示：<br />
+<img src="/assets/webpack-runtime/02.gif" width="680" /></p>
+<p>有了这个依赖关系树过后， Webpack 会遍历（递归）这个依赖树，找到每个节点对应的资源文件，然后根据配置选项中的 Loader 配置，交给对应的 Loader 去加载这个模块，最后将加载的结果放入 bundle.js（打包结果）中，从而实现整个项目的打包，具体过程如下所示：<br />
+<img src="/assets/webpack-runtime/03.gif" /></p>
+<p>下面我们详细了解一下 Webpack 的核心工作流程：</p>
+<h2 id="loader机制"><a class="markdownIt-Anchor" href="#loader机制"></a> Loader机制</h2>
+<p>loader 用于对模块的源代码进行转换。loader 可以使你在 import 或&quot;加载&quot;模块时预处理文件。因此，loader 类似于其他构建工具中“任务(task)”，并提供了处理前端构建步骤的强大方法。loader 可以将文件从不同的语言（如 TypeScript转换为 JavaScript)，或将内联图像转换为 data URL。loader 甚至允许你直接在 JavaScript 模块中 import CSS文件！通俗点讲就是loader在webpack中担任翻译官的角色。<br />
+Webpack 配置文件中对 Loader 的配置主要分为：匹配规则和匹配规则后的应用。</p>
+<h3 id="一-loader的匹配规则"><a class="markdownIt-Anchor" href="#一-loader的匹配规则"></a> 一、loader的匹配规则</h3>
+<p>loader 的匹配规则包括下面几种：</p>
+<ul>
+<li>{ test: … } 指定特定后缀名文件</li>
+<li>{ include: … } 指定特定的文件路径</li>
+<li>{ exclude: … } 排除特定的路径</li>
+<li>{ and: […] } 必须匹配数组中所有条件</li>
+<li>{ or: […] } 匹配数组中任意一个条件</li>
+<li>{ not: […] } 排除匹配数组中所有条件</li>
+</ul>
+<p>上述的所谓条件的值可以是：</p>
+<ul>
+<li>字符串：必须以提供的字符串开始，所以是字符串的话，这里我们需要提供绝对路径</li>
+<li>正则表达式：调用正则的 test 方法来判断匹配</li>
+<li>函数：(path) =&gt; boolean，返回 true 表示匹配</li>
+<li>数组：至少包含一个条件的数组</li>
+<li>对象：匹配所有属性值的条件</li>
+</ul>
+<p>举个🌰:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">rules: [</span><br><span class="line">  &#123;</span><br><span class="line">    test: <span class="regexp">/\.jsx?/</span>, <span class="comment">// 正则</span></span><br><span class="line">    include: [</span><br><span class="line">      path.resolve(__dirname, <span class="string">&#x27;src&#x27;</span>), <span class="comment">// 字符串，注意是绝对路径</span></span><br><span class="line">    ], <span class="comment">// 数组</span></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125;,</span><br><span class="line">  &#123;</span><br><span class="line">    test: &#123;</span><br><span class="line">      js: <span class="regexp">/\.js/</span>,</span><br><span class="line">      jsx: <span class="regexp">/\.jsx/</span>,</span><br><span class="line">    &#125;, <span class="comment">// 对象，不建议使用</span></span><br><span class="line">    not: [</span><br><span class="line">      (value) =&gt; &#123; <span class="comment">/* ... */</span> <span class="keyword">return</span> <span class="literal">true</span>; &#125;, <span class="comment">// 函数，通常需要高度自定义时才会使用</span></span><br><span class="line">    ],</span><br><span class="line">  &#125;,</span><br><span class="line">],</span><br></pre></td></tr></table></figure>
+<h3 id="二-loader配置"><a class="markdownIt-Anchor" href="#二-loader配置"></a> 二、loader配置</h3>
+<p>通过匹配规则匹配到对应的资源后最重要的还是通过use字段指定具体loader的应用，use字段我们可以简单指定 loader 名称，也可以指定具体配置，举个🌰:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">rules: [</span><br><span class="line">  &#123;</span><br><span class="line">    test: <span class="regexp">/\.less/</span>,</span><br><span class="line">    use: [</span><br><span class="line">      <span class="string">&#x27;style-loader&#x27;</span>, <span class="comment">// 直接使用字符串表示 loader</span></span><br><span class="line">      &#123;</span><br><span class="line">        loader: <span class="string">&#x27;css-loader&#x27;</span>,</span><br><span class="line">        options: &#123;</span><br><span class="line">          importLoaders: <span class="number">1</span></span><br><span class="line">        &#125;,</span><br><span class="line">      &#125;, <span class="comment">// 用对象表示 loader，可以传递 loader 配置等</span></span><br><span class="line">      &#123;</span><br><span class="line">        loader: <span class="string">&#x27;less-loader&#x27;</span>,</span><br><span class="line">        options: &#123;</span><br><span class="line">          noIeCompat: <span class="literal">true</span></span><br><span class="line">        &#125;, <span class="comment">// 传递 loader 配置</span></span><br><span class="line">      &#125;,</span><br><span class="line">    ],</span><br><span class="line">  &#125;,</span><br><span class="line">],</span><br></pre></td></tr></table></figure>
+<p>这儿需要注意的就是数组的解析顺序是从右往左。</p>
+<h3 id="三-实现一个loader"><a class="markdownIt-Anchor" href="#三-实现一个loader"></a> 三、实现一个loader</h3>
+<p>实现一个 loader 必须遵循如下准则：</p>
+<ul>
+<li>简单【Simple】loader只做单一任务，多个单功能loader &gt; 一个多功能loader</li>
+<li>链式【Chaining】遵循链式调用原则</li>
+<li>无状态【Stateless】即函数式里的Pure Function，无副作用</li>
+<li>使用工具库【Loader Utilities】充分利用 loader-utils 包</li>
+</ul>
+<p>每个 Webpack 的 Loader 都需要导出一个函数，这个函数就是我们这个 Loader 对资源的处理过程，它的输入就是加载到的资源文件内容，输出就是我们加工后的结果。我们通过 source 参数接收输入，通过返回值输出。loader 分为同步 loader 和 异步 loader，因为其本质是一个函数。所以这两种 loader 的区别，可以理解为只是返回值不同（只是为了方便理解的类比）。</p>
+<h4 id="1-同步loader"><a class="markdownIt-Anchor" href="#1-同步loader"></a> 1、同步loader</h4>
+<p>同步 loader 比较简单，无论是 return 还是调用 this.callback 都可以同步地返回转换后的 content 内容，不过 this.callback 的函数参数类型更为丰富：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">this</span>.callback(</span><br><span class="line">  err: <span class="built_in">Error</span> | <span class="literal">null</span>,</span><br><span class="line">  content: <span class="built_in">string</span> | Buffer,</span><br><span class="line">  sourceMap?: SourceMap,</span><br><span class="line">  meta?: <span class="built_in">any</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>举个🌰:</p>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** webpack.config.js */</span>  </span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">&quot;path&quot;</span>);  </span><br><span class="line">  </span><br><span class="line"><span class="built_in">module</span>.exports = &#123;  </span><br><span class="line">  entry: &#123;  </span><br><span class="line">    index: path.resolve(__dirname, <span class="string">&quot;src/index.js&quot;</span>),  </span><br><span class="line">  &#125;,  </span><br><span class="line">  output: &#123;  </span><br><span class="line">    path: path.resolve(__dirname, <span class="string">&quot;dist&quot;</span>),  </span><br><span class="line">  &#125;,  </span><br><span class="line">  <span class="built_in">module</span>: &#123;  </span><br><span class="line">    rules: [  </span><br><span class="line">      &#123;  </span><br><span class="line">        test: <span class="regexp">/\.js$/</span>,  </span><br><span class="line">        use: [  </span><br><span class="line">          &#123;  </span><br><span class="line">            loader: path.resolve(<span class="string">&quot;lib/loader/loader1.js&quot;</span>),  </span><br><span class="line">            options: &#123;  </span><br><span class="line">              message: <span class="string">&quot;this is a message&quot;</span>,  </span><br><span class="line">            &#125;  </span><br><span class="line">          &#125;  </span><br><span class="line">        ],  </span><br><span class="line">      &#125;,  </span><br><span class="line">    ],  </span><br><span class="line">  &#125;,  </span><br><span class="line">&#125;; </span><br><span class="line"></span><br><span class="line"><span class="comment">/** lib/loader/loader1.js */</span>  </span><br><span class="line"><span class="keyword">const</span> loaderUtils = <span class="built_in">require</span>(<span class="string">&#x27;loader-utils&#x27;</span>);  </span><br><span class="line">  </span><br><span class="line"><span class="comment">/** 过滤console.log和换行符 */</span>  </span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> (<span class="params">source</span>) </span>&#123;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 获取loader配置项  </span></span><br><span class="line">  <span class="keyword">const</span> options = loaderUtils.getOptions(<span class="built_in">this</span>);  <span class="comment">// 此处也可通过this.query获取options信息</span></span><br><span class="line">  </span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">&#x27;loader配置项:&#x27;</span>, options);  </span><br><span class="line">  </span><br><span class="line">  <span class="keyword">const</span> result = source  </span><br><span class="line">    .replace(<span class="regexp">/console.log\(.*\);?/g</span>, <span class="string">&quot;&quot;</span>)  </span><br><span class="line">    .replace(<span class="regexp">/\n/g</span>, <span class="string">&quot;&quot;</span>)  </span><br><span class="line">    .concat(<span class="string">`console.log(&quot;<span class="subst">$&#123;options.message || <span class="string">&#x27;没有配置项&#x27;</span>&#125;</span>&quot;);`</span>);  </span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">  <span class="comment">// 或this.callback(null, source);</span></span><br><span class="line">&#125;;  </span><br></pre></td></tr></table></figure>
+<p>在上述示例中我们实现了一个简单的 loader ，功能是替换<code>console.log</code>、去除换行符、在文件结尾处增加一行自定义内容，在示例中我们通过 loader-utils 包来获取配置参数，实际上我们也可以使用 Webpack 提供的 <code>this.query</code> 参数来获取 loader 配置中的 options 参数。</p>
+<h4 id="2-异步loader"><a class="markdownIt-Anchor" href="#2-异步loader"></a> 2、异步loader</h4>
+<p>异步loader只有一种处理方式。对于异步 loader，使用 this.async 来获取 callback 函数。这里的 callback 函数，和同步 loader 里面 this.callback 的参数是一样的，举个🌰:</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> (<span class="params">source</span>) </span>&#123;  </span><br><span class="line">  </span><br><span class="line">  <span class="keyword">let</span> count = <span class="number">1</span>;  </span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 1.调用this.async() 告诉webpack这是一个异步loader，需要等待 callback 回调之后再进行下一个loader处理  </span></span><br><span class="line">  <span class="comment">// 2.this.async 返回异步回调，调用表示异步loader处理结束  </span></span><br><span class="line">  <span class="keyword">const</span> callback = <span class="built_in">this</span>.async();  </span><br><span class="line">  </span><br><span class="line">  <span class="keyword">const</span> timer = <span class="built_in">setInterval</span>(<span class="function">() =&gt;</span> &#123;  </span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">`时间已经过去<span class="subst">$&#123;count++&#125;</span>秒`</span>);  </span><br><span class="line">  &#125;, <span class="number">1000</span>);  </span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 异步操作  </span></span><br><span class="line">  <span class="built_in">setTimeout</span>(<span class="function">() =&gt;</span> &#123;  </span><br><span class="line">    <span class="built_in">clearInterval</span>(timer);  </span><br><span class="line">    callback(<span class="literal">null</span>, source);  </span><br><span class="line">  &#125;, <span class="number">3200</span>);  </span><br><span class="line">  </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>此处需要注意的是虽然 Webpack 加载资源文件的过程类似于一个工作管道，你可以在这个过程中依次使用多个 Loader，但是最终这个管道结束过后的结果必须是一段标准的 JS 代码字符串，如果当前 loader 返回的结果不是 JS 代码字符串，我们可以再选择合适的加载器，在后面接着处理我们这里得到的结果，举个🌰:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ./markdown-loader.js</span></span><br><span class="line"><span class="keyword">const</span> marked = <span class="built_in">require</span>(<span class="string">&#x27;marked&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="params">source</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// 1. 将 markdown 转换为 html 字符串</span></span><br><span class="line">  <span class="keyword">const</span> html = marked(source)</span><br><span class="line">  <span class="keyword">return</span> html</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ./webpack.config.js</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  entry: <span class="string">&#x27;./src/main.js&#x27;</span>,</span><br><span class="line">  output: &#123;</span><br><span class="line">    filename: <span class="string">&#x27;bundle.js&#x27;</span>,</span><br><span class="line">  &#125;,</span><br><span class="line">  <span class="built_in">module</span>: &#123;</span><br><span class="line">    rules: [</span><br><span class="line">      &#123;</span><br><span class="line">        test: <span class="regexp">/\.md$/</span>,</span><br><span class="line">        use: [</span><br><span class="line">          <span class="string">&#x27;html-loader&#x27;</span>,</span><br><span class="line">          <span class="string">&#x27;./markdown-loader&#x27;</span></span><br><span class="line">        ]</span><br><span class="line">      &#125;</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="plugin机制"><a class="markdownIt-Anchor" href="#plugin机制"></a> Plugin机制</h2>
+<p>Webpack 插件机制的目的是为了增强 Webpack 在项目自动化构建方面的能力，Loader 主要负责完成项目中各种各样资源模块的加载，从而实现整体项目的模块化，而 Plugin 则是用来解决项目中除了资源模块打包以外的其他自动化工作，所以说 Plugin 的能力范围更广，用途自然也就更多。<br />
+Webpack 的插件引入极为简单，一般来说，当我们有了某个自动化的需求过后，可以先去找到一个合适的插件，然后安装这个插件，最后将它配置到 Webpack 配置对象的 plugins 数组中，这个过程唯一有可能不一样的地方就是，有的插件可能需要有一些配置参数。</p>
+<h3 id="一-实现一个plugin"><a class="markdownIt-Anchor" href="#一-实现一个plugin"></a> 一、实现一个plugin</h3>
+<p>通过前面的介绍，我们知道相比于 Loader，插件的能力范围更宽，因为 Loader 只是在模块的加载环节工作，而插件的作用范围几乎可以触及 Webpack 工作的每一个环节。<br />
+那么，这种插件机制是如何实现的呢？其实 Webpack 的插件机制就是我们在软件开发中最常见的钩子机制，Webpack 钩子机制的实现主要通过第三方库：Tapable，Tapable 是一个类似于 Node.js 的 EventEmitter 的库，主要是控制钩子函数的发布与订阅，Tapable 库为插件提供了很多 Hook 以便挂载：</p>
+<ul>
+<li>SyncHook：同步钩子</li>
+<li>SyncBailHook：同步熔断钩子</li>
+<li>WaterfallHook：同步流水钩子</li>
+<li>LoopHook：同步循环钩子</li>
+<li>cParalleHook：异步并发钩子</li>
+<li>cRarallelBailHook：异步并发熔断钩子</li>
+<li>cSeriesHook：异步串行钩子</li>
+<li>cSeriesBailHook：异步串行熔断钩子</li>
+<li>cSeriesWaterfallHook：异步串行流水钩子</li>
+</ul>
+<p>关于 Tapable 详细信息请查看<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/79221553">这篇文章</a>。</p>
+<p>Webpack 中 Compiler 和 Compilation 对象(Compiler 对象是 Webpack 工作过程中最核心的对象，里面包含了构建过程的所有配置信息，Compilation 对象可以理解为此次打包的上下文)都继承于 Tapable，为了便于插件的扩展，Webpack 几乎在每一个环节都埋下了一个钩子。这样我们在开发插件的时候，通过往这些不同节点上挂载不同的任务，就可以轻松扩展 Webpack 的能力。<br />
+具体有哪些预先定义好的钩子，我们可以参考官方文档的 API：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://webpack.js.org/api/compiler-hooks/">Compiler Hooks</a></li>
+<li><a target="_blank" rel="noopener" href="https://webpack.js.org/api/compilation-hooks/">Compilation Hooks</a></li>
+<li><a target="_blank" rel="noopener" href="https://webpack.js.org/api/parser/">JavascriptParser Hooks</a></li>
+</ul>
+<p>plugin 的实现要点如下：</p>
+<ul>
+<li>一个命名JS函数或者JS类</li>
+<li>在 prototype 上定义一个 apply 方法（供webpack调用，并且在调用时注入 compiler 对象）</li>
+<li>在 apply 函数中需要有通过 compiler 对象挂载的 webpack 事件钩子（钩子函数中能拿到当前编译的 compilation 对象）</li>
+<li>处理 webpack 内部实例的特定数据</li>
+<li>功能完成后调用 webpack 提供的回调</li>
+</ul>
+<p>举个🌰:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 插件功能：移除打包文件中的注释信息</span></span><br><span class="line"><span class="comment">// ./remove-comments-plugin.js</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RemoveCommentsPlugin</span> </span>&#123;</span><br><span class="line">  apply (compiler) &#123;</span><br><span class="line">    compiler.hooks.emit.tap(<span class="string">&#x27;RemoveCommentsPlugin&#x27;</span>, <span class="function"><span class="params">compilation</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">const</span> name <span class="keyword">in</span> compilation.assets) &#123;</span><br><span class="line">        <span class="keyword">if</span> (name.endsWith(<span class="string">&#x27;.js&#x27;</span>)) &#123;</span><br><span class="line">          <span class="keyword">const</span> contents = compilation.assets[name].source()</span><br><span class="line">          <span class="keyword">const</span> noComments = contents.replace(<span class="regexp">/\/\*&#123;2,&#125;\/\s?/g</span>, <span class="string">&#x27;&#x27;</span>)</span><br><span class="line">          compilation.assets[name] = &#123;</span><br><span class="line">            source: <span class="function">() =&gt;</span> noComments,</span><br><span class="line">            size: <span class="function">() =&gt;</span> noComments.length</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在上述示例中我们选择了一个叫作 emit 的钩子，这个钩子会在 Webpack 即将向输出目录输出文件时执行，然后通过 compiler 对象的 hooks 属性访问到 emit 钩子，再通过 tap 方法注册一个钩子函数，这个方法接收两个参数：</p>
+<ul>
+<li>第一个是插件的名称，我们这里的插件名称是 RemoveCommentsPlugin；</li>
+<li>第二个是要挂载到这个钩子上的函数；</li>
+</ul>
+<p>然后我们在这个函数中接收一个 compilation 对象参数并使用对象中的 assets 属性获取即将写入输出目录的资源文件信息，它是一个对象，我们这里通过 for in 去遍历这个对象，其中键就是每个文件的名称，然后我们判断文件名是不是以<code>.js</code>结尾，如果是 JS 文件，我们将文件内容得到，再通过正则替换的方式移除掉代码中的注释，最后覆盖掉 compilation.assets 中对应的对象，在覆盖的对象中，我们同样暴露一个 source 方法用来返回新的内容。另外还需要再暴露一个 size 方法，用来返回内容大小，这是 Webpack 内部要求的格式，<br />
+tap 是 Tapable 提供的同步钩子的注册方法，如果是异步钩子则必须执行异步回调，举个🌰:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1、Plugin名称  </span></span><br><span class="line"><span class="keyword">const</span> MY_PLUGIN_NAME = <span class="string">&quot;MyBasicPlugin&quot;</span>;  </span><br><span class="line">  </span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyBasicPlugin</span> </span>&#123;  </span><br><span class="line">  <span class="comment">// 2、在构造函数中获取插件配置项  </span></span><br><span class="line">  <span class="function"><span class="title">constructor</span>(<span class="params">option</span>)</span> &#123;  </span><br><span class="line">    <span class="built_in">this</span>.option = option;  </span><br><span class="line">  &#125;  </span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 3、在原型对象上定义一个apply函数供webpack调用  </span></span><br><span class="line">  <span class="function"><span class="title">apply</span>(<span class="params">compiler</span>)</span> &#123;  </span><br><span class="line">    <span class="comment">// 4、注册webpack事件监听函数  </span></span><br><span class="line">    compiler.hooks.emit.tapAsync(  </span><br><span class="line">      MY_PLUGIN_NAME,  </span><br><span class="line">      (compilation, asyncCallback) =&gt; &#123; </span><br><span class="line"></span><br><span class="line">        <span class="comment">// 5、操作Or改变compilation内部数据  </span></span><br><span class="line">        <span class="built_in">console</span>.log(compilation);        </span><br><span class="line">  </span><br><span class="line">        <span class="built_in">console</span>.log(<span class="string">&quot;当前阶段 ======&gt; 编译完成，即将输出到output目录&quot;</span>);  </span><br><span class="line">  </span><br><span class="line">        <span class="comment">// 6、如果是异步钩子，结束后需要执行异步回调  </span></span><br><span class="line">        asyncCallback();  </span><br><span class="line">      &#125;  </span><br><span class="line">    );  </span><br><span class="line">  &#125;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="comment">// 7、模块导出  </span></span><br><span class="line"><span class="built_in">module</span>.exports = MyBasicPlugin; </span><br></pre></td></tr></table></figure>
+<h2 id="webpack打包流程"><a class="markdownIt-Anchor" href="#webpack打包流程"></a> Webpack打包流程</h2>
+<p>（注：文章中源码部分分别来自于 v3.3.11 版本的 webpack-cli 和 v4.43.0 版本的 Webpack）</p>
+<h3 id="一-初始化启动"><a class="markdownIt-Anchor" href="#一-初始化启动"></a> 一、初始化启动</h3>
+<p>当通过命令行启动 Webpack 后，npm会让命令行工具进入node_modules.bin目录，然后执行目录下的 webpack.js文件，文件内的核心内容如下：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// node_modules/webpack/bin/webpack.js</span></span><br><span class="line"><span class="comment">// 正常执行返回</span></span><br><span class="line">process.exitCode = <span class="number">0</span>;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 通过 child_process 快速的运行某个命令</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param <span class="type">&#123;string&#125;</span> </span>command process to run</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param <span class="type">&#123;string[]&#125;</span> </span>args commandline arguments</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@returns <span class="type">&#123;Promise&lt;void&gt;&#125;</span> <span class="variable">promise</span></span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">const</span> runCommand = <span class="function">(<span class="params">command, args</span>) =&gt;</span> &#123;...&#125;;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 通过require.resolve判断某一个包是否存在</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param <span class="type">&#123;string&#125;</span> </span>packageName name of the package</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@returns <span class="type">&#123;boolean&#125;</span> </span>is the package installed?</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">const</span> isInstalled = <span class="function"><span class="params">packageName</span> =&gt;</span> &#123;...&#125;;</span><br><span class="line"><span class="comment">// wecpack可用的CLI：webpaclk-cli和webpack-command</span></span><br><span class="line"><span class="keyword">const</span> CLIs = [</span><br><span class="line">  &#123;</span><br><span class="line">    name: <span class="string">&quot;webpack-cli&quot;</span>,</span><br><span class="line">    package: <span class="string">&quot;webpack-cli&quot;</span>,</span><br><span class="line">    binName: <span class="string">&quot;webpack-cli&quot;</span>,</span><br><span class="line">    alias: <span class="string">&quot;cli&quot;</span>,</span><br><span class="line">    installed: isInstalled(<span class="string">&quot;webpack-cli&quot;</span>),</span><br><span class="line">    recommended: <span class="literal">true</span>,</span><br><span class="line">    url: <span class="string">&quot;https://github.com/webpack/webpack-cli&quot;</span>,</span><br><span class="line">    description: <span class="string">&quot;The original webpack full-featured CLI.&quot;</span>,</span><br><span class="line">  &#125;,</span><br><span class="line">  &#123;</span><br><span class="line">    name: <span class="string">&quot;webpack-command&quot;</span>,</span><br><span class="line">    package: <span class="string">&quot;webpack-command&quot;</span>,</span><br><span class="line">    binName: <span class="string">&quot;webpack-command&quot;</span>,</span><br><span class="line">    alias: <span class="string">&quot;command&quot;</span>,</span><br><span class="line">    installed: isInstalled(<span class="string">&quot;webpack-command&quot;</span>),</span><br><span class="line">    recommended: <span class="literal">false</span>,</span><br><span class="line">    url: <span class="string">&quot;https://github.com/webpack-contrib/webpack-command&quot;</span>,</span><br><span class="line">    description: <span class="string">&quot;A lightweight, opinionated webpack CLI.&quot;</span>,</span><br><span class="line">  &#125;</span><br><span class="line">]</span><br><span class="line"><span class="comment">// 判断是否两个CLI是否安装了</span></span><br><span class="line"><span class="keyword">const</span> installedClis = CLIs.filter(<span class="function"><span class="params">cli</span>=&gt;</span>cli.installed);</span><br><span class="line"><span class="comment">// 根据安装数量进行处理</span></span><br><span class="line"><span class="keyword">if</span> (installedClis.length === <span class="number">0</span>) &#123;</span><br><span class="line">  <span class="comment">// 终端询问用户是否安装 webpack-cli</span></span><br><span class="line">  ...</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (installedClis.length === <span class="number">1</span>) &#123;</span><br><span class="line">  <span class="comment">// 直接通过require方法调用已安装 CLI</span></span><br><span class="line">  ...</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  <span class="comment">// 终端提示安装了两个CLI，只能使用一个，请移除另一个</span></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这儿的 node_modules/.bin/webpack.js 实际上就是 Webpack 打包流程的入口文件，启动后 Webpack 会判断是否安装了可用的CLI: webpack-cli 或 webpack-command（webpack-cli功能更加丰富），并根据安装数量进行相应的处理，最终 webpack 会找到 webpack-cli(webpack-command) 这个 npm 包并且执行 CLI。</p>
+<h3 id="二-webpack-cli"><a class="markdownIt-Anchor" href="#二-webpack-cli"></a> 二、webpack-cli</h3>
+<p>从 Webpack 4 开始 Webpack 的 CLI 部分就被单独抽到了 webpack-cli 模块中，目的是为了增强 Webpack 本身的灵活性，Webpack CLI 的作用就是将 CLI 参数和 Webpack 配置文件中的配置整合，得到一个完整的配置对象。那么 webpack-cli 中又做了哪些操作呢？</p>
+<p>首先，webpack-cli 会处理不需要经过编译的命令：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// node_modules/webpack-cli/bin/cli.js</span></span><br><span class="line"><span class="keyword">const</span> NON_COMPILATION_ARGS = [</span><br><span class="line">  <span class="string">&quot;init&quot;</span>,</span><br><span class="line">  <span class="string">&quot;migrate&quot;</span>,</span><br><span class="line">  <span class="string">&quot;add&quot;</span>,</span><br><span class="line">  <span class="string">&quot;remove&quot;</span>,</span><br><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">  &quot;update&quot;,</span></span><br><span class="line"><span class="comment">  &quot;make&quot;,</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">  <span class="string">&quot;serve&quot;</span>,</span><br><span class="line">  <span class="string">&quot;generate-loader&quot;</span>,</span><br><span class="line">  <span class="string">&quot;generate-plugin&quot;</span>,</span><br><span class="line">  <span class="string">&quot;info&quot;</span></span><br><span class="line">];</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> NON_COMPILATION_CMD = process.argv.find(<span class="function"><span class="params">arg</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">if</span> (arg === <span class="string">&quot;serve&quot;</span>) &#123;</span><br><span class="line">    <span class="built_in">global</span>.process.argv = <span class="built_in">global</span>.process.argv.filter(<span class="function"><span class="params">a</span> =&gt;</span> a !== <span class="string">&quot;serve&quot;</span>);</span><br><span class="line">    process.argv = <span class="built_in">global</span>.process.argv;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> NON_COMPILATION_ARGS.find(<span class="function"><span class="params">a</span> =&gt;</span> a === arg);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (NON_COMPILATION_CMD) &#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">require</span>(<span class="string">&quot;./prompt-command&quot;</span>)(NON_COMPILATION_CMD, ...process.argv);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后 Webpack CLI 会通过 yargs 模块解析 CLI 参数，所谓 CLI 参数指的就是我们在运行 webpack 命令时通过命令行传入的参数，例如 --mode=production，具体实现代码如下：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// yargs will terminate the process early when the user uses help or version.</span></span><br><span class="line"><span class="comment">// This causes large help outputs to be cut short (https://github.com/nodejs/node/wiki/API-changes-between-v0.10-and-v4#process).</span></span><br><span class="line"><span class="comment">// To prevent this we use the yargs.parse API and exit the process normally</span></span><br><span class="line">yargs.parse(process.argv.slice(<span class="number">2</span>), <span class="function">(<span class="params">err, argv, output</span>) =&gt;</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">let</span> options;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">// 转换命令行参数</span></span><br><span class="line">      options = <span class="built_in">require</span>(<span class="string">&quot;./convert-argv&quot;</span>)(argv);</span><br><span class="line">  &#125; <span class="keyword">catch</span> (err) &#123;</span><br><span class="line">      ...</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>我们发现在 yargs.parse 的回调函数中还调用了 bin/utils/convert-argv.js 模块，将得到的命令行参数转换为 Webpack 的配置选项对象，在 convert-argv.js 工作过程中，首先为传递过来的命令行参数设置了默认值:</p>
+<img src="/assets/webpack-runtime/04.png" />
+<p>然后判断了命令行参数中是否指定了一个具体的配置文件路径，如果指定了就加载指定配置文件，反之则需要根据默认配置文件加载规则找到配置文件，具体代码如下：</p>
+<img src="/assets/webpack-runtime/05.png" />
+<p>找到配置文件过后，webpack-cli 将配置文件中的配置和 CLI 参数中的配置合并，如果出现重复的情况，会优先使用 CLI 参数，最终得到一个完整的配置选项。<br />
+有了配置选项过后，开始载入 Webpack 核心模块，传入配置选项，创建 Compiler 对象，这个 Compiler 对象就是整个 Webpack 工作过程中最核心的对象了，负责完成整个项目的构建工作。</p>
+<img src="/assets/webpack-runtime/06.png" />
+<h3 id="三-创建-compiler-对象"><a class="markdownIt-Anchor" href="#三-创建-compiler-对象"></a> 三、创建 Compiler 对象</h3>
+<p>随着 Webpack CLI 载入 Webpack 核心模块，整个执行过程就到了 Webpack 模块中，所以这一部分的代码需要回到 Webpack 模块中，同样，这里我们需要找到这个模块的入口文件，也就是 lib/webpack.js 文件。这个文件导出的是一个用于创建 Compiler 的函数，具体如下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> webpack = <span class="function">(<span class="params">options, callback</span>) =&gt;</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">let</span> compiler;</span><br><span class="line">  <span class="comment">// 校验外部传入options</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">Array</span>.isArray(options)) &#123;</span><br><span class="line">    <span class="comment">// 如果options为数组开启多路打包</span></span><br><span class="line">    compiler = <span class="keyword">new</span> MultiCompiler(options.map(<span class="function"><span class="params">options</span> =&gt;</span> webpack(options)));</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="keyword">typeof</span> options === <span class="string">&quot;object&quot;</span>) &#123;</span><br><span class="line">    <span class="comment">// 如果options为对象开启单路打包</span></span><br><span class="line">    options = <span class="keyword">new</span> WebpackOptionsDefaulter().process(options); <span class="comment">// 1.处理options</span></span><br><span class="line">    compiler = <span class="keyword">new</span> Compiler(options.context); <span class="comment">// 2.创建compiler</span></span><br><span class="line">    compiler.options = options;</span><br><span class="line">    <span class="keyword">new</span> NodeEnvironmentPlugin().apply(compiler);</span><br><span class="line">    <span class="keyword">if</span> (options.plugins &amp;&amp; <span class="built_in">Array</span>.isArray(options.plugins)) &#123;</span><br><span class="line">      <span class="comment">// 3.注册已配置的插件</span></span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">const</span> plugin <span class="keyword">of</span> options.plugins) &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">typeof</span> plugin === <span class="string">&quot;function&quot;</span>) &#123;</span><br><span class="line">          plugin.call(compiler, compiler);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          plugin.apply(compiler);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 4.触发特定的Hook</span></span><br><span class="line">    compiler.hooks.environment.call();</span><br><span class="line">    compiler.hooks.afterEnvironment.call();</span><br><span class="line">    <span class="comment">// 5.处理options</span></span><br><span class="line">    compiler.options = <span class="keyword">new</span> WebpackOptionsApply().process(options, compiler);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&quot;Invalid argument: options&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (callback) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span> callback !== <span class="string">&#x27;function&#x27;</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&quot;Invalid argument: callback&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (options.watch === <span class="literal">true</span> || (<span class="built_in">Array</span>.isArray(options)) &amp;&amp; options.some(<span class="function"><span class="params">o</span> =&gt;</span> o.watch)) &#123;</span><br><span class="line">      <span class="keyword">const</span> watchOptions = <span class="built_in">Array</span>.isArray(options) ? options.map(<span class="function"><span class="params">o</span> =&gt;</span> o.watchOptions || &#123;&#125;): options.watchOptions || &#123;&#125;;</span><br><span class="line">			<span class="keyword">return</span> compiler.watch(watchOptions, callback);</span><br><span class="line">    &#125;</span><br><span class="line">    compiler.run(callback);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> compiler;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>在这个函数中，首先校验了外部传递过来的 options 参数是否符合要求，紧接着判断了 options 的类型。如果传入的是一个数组，那么 Webpack 内部创建的就是一个 MultiCompiler，也就是同时开启多路打包，配置数组中的每一个成员就是一个独立的配置选项。而如果我们传入的是普通的对象，流程主要分为五步：</p>
+<ol>
+<li>处理options</li>
+<li>创建compiler</li>
+<li>绑定自定义插件</li>
+<li>触发特定的Hook</li>
+<li>处理options.</li>
+</ol>
+<p>我们可以看到第1和第5步都是处理options。那到底有啥不同呢？</p>
+<ul>
+<li><code>new WebpackOptionsDefaulter().process(options)</code>：WebpackOptionsDefaulter 顾名思义，是设置 webpack 的默认参数的地方，比如说默认入口路径，默认 rule, 默认 optimize 策略。这行的作用就是设置默认参数，并将用户自定义参数覆盖上去。</li>
+<li><code>new WebpackOptionsApply().process(options, compiler)</code>：WebpackOptionsApply 的主要功能是根据 options 中的配置，注册各种内部插件如 SingleEntryPlugin，以及负责解析的各类钩子，以及负责优化的 SplitChunksPlugin 等等。</li>
+</ul>
+<p>可以注意到在创建了 Compiler 对象过后，Webpack 就开始注册我们配置中的每一个插件了，这是因为再往后 Webpack 工作过程的生命周期就要开始了，所以必须先注册，这样才能确保插件中的每一个钩子都能被命中。</p>
+<p>完成 Compiler 对象的创建过后，紧接着这里的代码开始判断配置选项中是否启用了监视模式，如果是监视模式就调用 Compiler 对象的 watch 方法，以监视模式启动构建，如果不是监视模式就调用 Compiler 对象的 run 方法，开始构建整个应用。</p>
+<h3 id="四-开始创建"><a class="markdownIt-Anchor" href="#四-开始创建"></a> 四、开始创建</h3>
+<p>这个 run 方法定义在 Compiler 类型中，具体文件在 webpack 模块下的 lib/Compiler.js 中，方法内部就是先触发了beforeRun 和 run 两个钩子，然后最关键的是调用了当前对象的 compile 方法，真正开始编译整个项目，具体实现如下：</p>
+<img src="/assets/webpack-runtime/08.png" />
+<p>compile 方法内部主要就是创建了一个 Compilation 对象，Compilation 字面意思是“合集”，实际上可以理解为一次构建过程中的上下文对象，里面包含了这次构建中全部的资源和信息。</p>
+<img src="/assets/webpack-runtime/09.png" />
+<p>创建完 Compilation 对象过后，紧接着触发了一个叫作 make 的钩子，进入整个构建过程最核心的 make 阶段。<br />
+至此 Compiler 作为 Webpack 事件派发模式中的委派者，其整体流程的分析已经结束，其流程图以及各个阶段触发的hooks如下图所示：</p>
+<img src="/assets/webpack-runtime/10.png" />
+<h3 id="五-make构建阶段"><a class="markdownIt-Anchor" href="#五-make构建阶段"></a> 五、make（构建）阶段</h3>
+<p>make 阶段主体的目标就是：根据 entry 配置找到入口模块，开始依次递归出所有依赖，形成依赖关系树，然后将递归到的每个模块交给不同的 Loader 处理。</p>
+<img src="/assets/webpack-runtime/11.png" />
+<p>这个阶段的调用过程并不像之前一样，直接调用某个对象的某个方法，而是采用事件触发机制，让外部监听这个 make 事件的地方开始执行，首先执行的是入口插件，Webpack 中入口插件实际有三个：</p>
+<ul>
+<li>SingleEntryPlugin: 单入口打包，当 options.entry 的数据类型为 String 或 Object 时使用</li>
+<li>MultiEntryPlugin: 多入口打包，当 options.entry 的数据类型为 Array 时使用</li>
+<li>DynamicEntryPlugin: 动态打包，当 options.entry 的数据类型为 Function 时使用</li>
+</ul>
+<p>因为我们默认使用的就是单一入口打包的方式，所以这里接下来会执行其中的 SingleEntryPlugin，</p>
+<img src="/assets/webpack-runtime/12.png" />
+<p>这个插件中调用了 Compilation 对象的 addEntry 方法，开始解析我们源代码中的入口文件:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">addEntry</span>(<span class="params">context, entry, name, callback</span>)</span> &#123;</span><br><span class="line">  <span class="comment">// 外部监听 addEntry 事件的地方开始执行</span></span><br><span class="line">  <span class="built_in">this</span>.hooks.addEntry.call(entry, name);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 将入口模块添加到模块依赖列表中</span></span><br><span class="line">  <span class="keyword">const</span> slot = &#123;</span><br><span class="line">    name: name,</span><br><span class="line">    <span class="comment">// TODO webpack 5 remove `request`</span></span><br><span class="line">    request: <span class="literal">null</span>,</span><br><span class="line">    <span class="built_in">module</span>: <span class="literal">null</span></span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (entry <span class="keyword">instanceof</span> ModuleDependency) &#123;</span><br><span class="line">    slot.request = entry.request;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// TODO webpack 5: merge modules instead when multiple entry modules are supported</span></span><br><span class="line">  <span class="keyword">const</span> idx = <span class="built_in">this</span>._preparedEntrypoints.findIndex(<span class="function"><span class="params">slot</span> =&gt;</span> slot.name === name);</span><br><span class="line">  <span class="keyword">if</span> (idx &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">// Overwrite existing entrypoint</span></span><br><span class="line">    <span class="built_in">this</span>._preparedEntrypoints[idx] = slot;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>._preparedEntrypoints.push(slot);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">this</span>._addModuleChain(</span><br><span class="line">    context,</span><br><span class="line">    entry,</span><br><span class="line">    <span class="built_in">module</span> =&gt; &#123;</span><br><span class="line">      <span class="built_in">this</span>.entries.push(<span class="built_in">module</span>);</span><br><span class="line">    &#125;,</span><br><span class="line">    (err, <span class="built_in">module</span>) =&gt; &#123;</span><br><span class="line">      ...</span><br><span class="line">    &#125;</span><br><span class="line">  )</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们发现 addEntry 方法的主要逻辑就是将当前 entry 添加到缓存并调用了 _addModuleChain 方法，我们来查看 _addModuleChain 方法的源码：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">_addModuleChain</span>(<span class="params">context, dependency, onModule, callback</span>)</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> start = <span class="built_in">this</span>.profile &amp;&amp; <span class="built_in">Date</span>.now();</span><br><span class="line">  <span class="keyword">const</span> currentProfile = <span class="built_in">this</span>.profile &amp;&amp; &#123;&#125;;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> errorAndCallback = <span class="built_in">this</span>.bail</span><br><span class="line">    ? <span class="function"><span class="params">err</span> =&gt;</span> &#123;</span><br><span class="line">        callback(err);</span><br><span class="line">      &#125;</span><br><span class="line">    : <span class="function"><span class="params">err</span> =&gt;</span> &#123;</span><br><span class="line">        err.dependencies = [dependency];</span><br><span class="line">        <span class="built_in">this</span>.errors.push(err);</span><br><span class="line">        callback();</span><br><span class="line">      &#125;;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (</span><br><span class="line">    <span class="keyword">typeof</span> dependency !== <span class="string">&quot;object&quot;</span> ||</span><br><span class="line">    dependency === <span class="literal">null</span> ||</span><br><span class="line">    !dependency.constructor</span><br><span class="line">  ) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">&quot;Parameter &#x27;dependency&#x27; must be a Dependency&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">const</span> Dep = <span class="comment">/** <span class="doctag">@type <span class="type">&#123;DepConstructor&#125;</span> </span>*/</span> (dependency.constructor);</span><br><span class="line">  <span class="keyword">const</span> moduleFactory = <span class="built_in">this</span>.dependencyFactories.get(Dep);</span><br><span class="line">  <span class="keyword">if</span> (!moduleFactory) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(</span><br><span class="line">      <span class="string">`No dependency factory available for this dependency type: <span class="subst">$&#123;dependency.constructor.name&#125;</span>`</span></span><br><span class="line">    );</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="built_in">this</span>.semaphore.acquire(<span class="function">() =&gt;</span> &#123;</span><br><span class="line">    moduleFactory.create(</span><br><span class="line">      &#123;</span><br><span class="line">        contextInfo: &#123;</span><br><span class="line">          issuer: <span class="string">&quot;&quot;</span>,</span><br><span class="line">          compiler: <span class="built_in">this</span>.compiler.name</span><br><span class="line">        &#125;,</span><br><span class="line">        context: context,</span><br><span class="line">        dependencies: [dependency]</span><br><span class="line">      &#125;,</span><br><span class="line">      (err, <span class="built_in">module</span>) =&gt; &#123;</span><br><span class="line">        <span class="keyword">if</span> (err) &#123;</span><br><span class="line">          <span class="built_in">this</span>.semaphore.release();</span><br><span class="line">          <span class="keyword">return</span> errorAndCallback(<span class="keyword">new</span> EntryModuleNotFoundError(err));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">let</span> afterFactory;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (currentProfile) &#123;</span><br><span class="line">          afterFactory = <span class="built_in">Date</span>.now();</span><br><span class="line">          currentProfile.factory = afterFactory - start;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">const</span> addModuleResult = <span class="built_in">this</span>.addModule(<span class="built_in">module</span>);</span><br><span class="line">        <span class="built_in">module</span> = addModuleResult.module;</span><br><span class="line"></span><br><span class="line">        onModule(<span class="built_in">module</span>);</span><br><span class="line"></span><br><span class="line">        dependency.module = <span class="built_in">module</span>;</span><br><span class="line">        <span class="built_in">module</span>.addReason(<span class="literal">null</span>, dependency);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">const</span> afterBuild = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">          <span class="keyword">if</span> (addModuleResult.dependencies) &#123;</span><br><span class="line">            <span class="built_in">this</span>.processModuleDependencies(<span class="built_in">module</span>, <span class="function"><span class="params">err</span> =&gt;</span> &#123;</span><br><span class="line">              <span class="keyword">if</span> (err) <span class="keyword">return</span> callback(err);</span><br><span class="line">              callback(<span class="literal">null</span>, <span class="built_in">module</span>);</span><br><span class="line">            &#125;);</span><br><span class="line">          &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> callback(<span class="literal">null</span>, <span class="built_in">module</span>);</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (addModuleResult.issuer) &#123;</span><br><span class="line">          <span class="keyword">if</span> (currentProfile) &#123;</span><br><span class="line">            <span class="built_in">module</span>.profile = currentProfile;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (addModuleResult.build) &#123;</span><br><span class="line">          <span class="built_in">this</span>.buildModule(<span class="built_in">module</span>, <span class="literal">false</span>, <span class="literal">null</span>, <span class="literal">null</span>, <span class="function"><span class="params">err</span> =&gt;</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (err) &#123;</span><br><span class="line">              <span class="built_in">this</span>.semaphore.release();</span><br><span class="line">              <span class="keyword">return</span> errorAndCallback(err);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (currentProfile) &#123;</span><br><span class="line">              <span class="keyword">const</span> afterBuilding = <span class="built_in">Date</span>.now();</span><br><span class="line">              currentProfile.building = afterBuilding - afterFactory;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="built_in">this</span>.semaphore.release();</span><br><span class="line">            afterBuild();</span><br><span class="line">          &#125;);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="built_in">this</span>.semaphore.release();</span><br><span class="line">          <span class="built_in">this</span>.waitForBuildingFinished(<span class="built_in">module</span>, afterBuild);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    )</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>_addModuleChain 方法入参中 context 是当前项目的绝对路径， dependency 是 entry 对象，onModule 和 callback 都是 addEntry 方法传入的回调，都接收module对象。我们知道webpack的核心功能就是通过入口找到所有依赖的模块，最后编译成一个或多个bundle。那么 _addModuleChain 就是这样一个遍历依赖，构建 module 依赖图的过程。semaphone 是 Nodejs 中最受欢迎的信号量模块，解决多线程的问题。在compilation 的构造函数中可以看到这样一行代码</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">this</span>.semaphore = <span class="keyword">new</span> Semaphore(options.parallelism || <span class="number">100</span>);</span><br></pre></td></tr></table></figure>
+<p>由此我们可以知道compilation允许并发解析多入口，如果 opitons 中没有设置，默认为并发100。<br />
+除此之外我们还看到代码中有一个 moduleFactory。那它是干嘛的呢？实际上 SingleEntryPlugin 的第二个重要功能就是把entry依赖对应的模块工厂类型存到了 compilation.dependencyFactories 这个 map 中。 moduleFactory 就是当前依赖的工厂构造函数。那么剩余的逻辑从字面上就很好理解了。</p>
+<ol>
+<li>获取当前 entry 对应的模块工厂构造器</li>
+<li>调用工厂函数的 create 方法创建 module</li>
+<li>构建解析 this.buildModule(module)</li>
+<li>afterBuild -&gt; processModuleDependencies, 处理当前 module 依赖</li>
+</ol>
+<p>在 buildModule 前打上断点，查看当前module的值:</p>
+<img src="/assets/webpack-runtime/13.jpg" />
+<p>我们可以看到里面很多属性都是 undefined/null，尤其是 _source。这说明，在 create 之后，当前创建出的 module 是还没有加载相应资源的。那我们可以推测，buildModule 就是加载并解析资源的过程。继续看代码，可以发现 buildModule 中直接调用了 module.build:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">buildModule</span>(<span class="params"><span class="built_in">module</span>, optional, origin, dependencies, thisCallback</span>)</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="built_in">this</span>.hooks.buildModule.call(<span class="built_in">module</span>);</span><br><span class="line">  <span class="built_in">module</span>.build(</span><br><span class="line">    <span class="built_in">this</span>.options,</span><br><span class="line">    <span class="built_in">this</span>,</span><br><span class="line">    <span class="built_in">this</span>.resolverFactory.get(<span class="string">&quot;normal&quot;</span>, <span class="built_in">module</span>.resolveOptions),</span><br><span class="line">    <span class="built_in">this</span>.inputFileSystem,</span><br><span class="line">    error =&gt; &#123;</span><br><span class="line">      ...</span><br><span class="line">    &#125;</span><br><span class="line">  )</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么剩下的资源加载，解析过程都是交给了 NormalModule.js 完成的。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// NormalModule.js</span></span><br><span class="line"><span class="function"><span class="title">build</span>(<span class="params">options, compilation, resolver, fs, callback</span>)</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">this</span>.doBuild(options, compilation, resolver, fs, <span class="function"><span class="params">err</span> =&gt;</span> &#123;...&#125;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">doBuild</span>(<span class="params">options, compilation, resolver, fs, callback</span>)</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> loaderContext = <span class="built_in">this</span>.createLoaderContext(</span><br><span class="line">    resolver,</span><br><span class="line">    options,</span><br><span class="line">    compilation,</span><br><span class="line">    fs</span><br><span class="line">  );</span><br><span class="line"></span><br><span class="line">  runLoaders(</span><br><span class="line">    &#123;</span><br><span class="line">      resource: <span class="built_in">this</span>.resource,</span><br><span class="line">      loaders: <span class="built_in">this</span>.loaders,</span><br><span class="line">      context: loaderContext,</span><br><span class="line">      readResource: fs.readFile.bind(fs)</span><br><span class="line">    &#125;,</span><br><span class="line">    (err, result) =&gt; &#123;</span><br><span class="line">      ...</span><br><span class="line">      <span class="built_in">this</span>._source = <span class="built_in">this</span>.createSource(</span><br><span class="line">        <span class="built_in">this</span>.binary ? asBuffer(source) : asString(source),</span><br><span class="line">        resourceBuffer,</span><br><span class="line">        sourceMap</span><br><span class="line">      );</span><br><span class="line">      <span class="built_in">this</span>._ast =</span><br><span class="line">        <span class="keyword">typeof</span> extraInfo === <span class="string">&quot;object&quot;</span> &amp;&amp;</span><br><span class="line">        extraInfo !== <span class="literal">null</span> &amp;&amp;</span><br><span class="line">        extraInfo.webpackAST !== <span class="literal">undefined</span></span><br><span class="line">          ? extraInfo.webpackAST</span><br><span class="line">          : <span class="literal">null</span>;</span><br><span class="line">      <span class="keyword">return</span> callback();</span><br><span class="line">    &#125;</span><br><span class="line">  );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>doBuild 方法中又调用了 runLoaders 方法，并在参数中通过将 fs.readFile.bind(fs) 将 loader 资源文件传入。在 runLoaders 的回调中，可以看到用 createSource 给this._source 赋值。证明我们之前的推测是正确的，buildModule 方法中执行具体的 Loader，处理特殊资源加载。</p>
+<p>当 buildModule 方法执行具体的 Loader 之后我们再看 build 方法中给 doBuild 方法传入的回调函数：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">build</span>(<span class="params">options, compilation, resolver, fs, callback</span>)</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">this</span>.doBuild(options, compilation, resolver, fs, <span class="function"><span class="params">err</span> =&gt;</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="keyword">const</span> result = <span class="built_in">this</span>.parser.parse(</span><br><span class="line">        <span class="built_in">this</span>._ast || <span class="built_in">this</span>._source.source(),</span><br><span class="line">        &#123;</span><br><span class="line">          current: <span class="built_in">this</span>,</span><br><span class="line">          <span class="built_in">module</span>: <span class="built_in">this</span>,</span><br><span class="line">          compilation: compilation,</span><br><span class="line">          options: options</span><br><span class="line">        &#125;,</span><br><span class="line">        (err, result) =&gt; &#123;</span><br><span class="line">          <span class="keyword">if</span> (err) &#123;</span><br><span class="line">            handleParseError(err);</span><br><span class="line">          &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            handleParseResult(result);</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      );</span><br><span class="line">      <span class="keyword">if</span> (result !== <span class="literal">undefined</span>) &#123;</span><br><span class="line">        <span class="comment">// parse is sync</span></span><br><span class="line">        handleParseResult(result);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">catch</span> (e) &#123;</span><br><span class="line">      handleParseError(e);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们发现这儿调用了 parser 的 parse 方法，我们接下来查看其具体实现：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Parser.js</span></span><br><span class="line"><span class="keyword">static</span> <span class="function"><span class="title">parse</span>(<span class="params">code, options</span>)</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">const</span> parserOptions = <span class="built_in">Object</span>.assign(</span><br><span class="line">    <span class="built_in">Object</span>.create(<span class="literal">null</span>),</span><br><span class="line">    defaultParserOptions,</span><br><span class="line">    options</span><br><span class="line">  );</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    ast = acorn.parse(code, parserOptions);</span><br><span class="line">    threw = <span class="literal">false</span>;</span><br><span class="line">  &#125; <span class="keyword">catch</span> (e) &#123;</span><br><span class="line">    threw = <span class="literal">true</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (threw) &#123;</span><br><span class="line">    <span class="keyword">throw</span> error;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> ast;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们发现在 parse 方法中调用 acorn 库解析经 loader 处理后的源文件生成抽象语法树 AST 语法树。<br />
+当当前依赖 build 完成后 _addModuleChain 方法会接着执行 afterBuild 方法：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Compilation.js</span></span><br><span class="line"><span class="function"><span class="title">_addModuleChain</span>(<span class="params">context, dependency, onModule, callback</span>)</span> &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">const</span> afterBuild = <span class="function">() =&gt;</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (addModuleResult.dependencies) &#123;</span><br><span class="line">      <span class="built_in">this</span>.processModuleDependencies(<span class="built_in">module</span>, <span class="function"><span class="params">err</span> =&gt;</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (err) <span class="keyword">return</span> callback(err);</span><br><span class="line">        callback(<span class="literal">null</span>, <span class="built_in">module</span>);</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> callback(<span class="literal">null</span>, <span class="built_in">module</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">if</span> (addModuleResult.build) &#123;</span><br><span class="line">    <span class="built_in">this</span>.buildModule(<span class="built_in">module</span>, <span class="literal">false</span>, <span class="literal">null</span>, <span class="literal">null</span>, <span class="function"><span class="params">err</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (err) &#123;</span><br><span class="line">        <span class="built_in">this</span>.semaphore.release();</span><br><span class="line">        <span class="keyword">return</span> errorAndCallback(err);</span><br><span class="line">      &#125;</span><br><span class="line">      ...</span><br><span class="line">      <span class="built_in">this</span>.semaphore.release();</span><br><span class="line">      afterBuild();</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.semaphore.release();</span><br><span class="line">    <span class="built_in">this</span>.waitForBuildingFinished(<span class="built_in">module</span>, afterBuild);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">processModuleDependencies</span>(<span class="params"><span class="built_in">module</span>, callback</span>)</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> addDependency = <span class="function"><span class="params">dep</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> resourceIdent = dep.getResourceIdentifier();</span><br><span class="line">    <span class="keyword">if</span> (resourceIdent) &#123;</span><br><span class="line">      <span class="keyword">const</span> factory = <span class="built_in">this</span>.dependencyFactories.get(dep.constructor);</span><br><span class="line">      <span class="keyword">if</span> (factory === <span class="literal">undefined</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(</span><br><span class="line">          <span class="string">`No module factory available for dependency type: <span class="subst">$&#123;</span></span></span><br><span class="line"><span class="string"><span class="subst">            dep.constructor.name</span></span></span><br><span class="line"><span class="string"><span class="subst">          &#125;</span>`</span></span><br><span class="line">        );</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">let</span> innerMap = dependencies.get(factory);</span><br><span class="line">      <span class="keyword">if</span> (innerMap === <span class="literal">undefined</span>) &#123;</span><br><span class="line">        dependencies.set(factory, (innerMap = <span class="keyword">new</span> <span class="built_in">Map</span>()));</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">let</span> list = innerMap.get(resourceIdent);</span><br><span class="line">      <span class="keyword">if</span> (list === <span class="literal">undefined</span>) innerMap.set(resourceIdent, (list = []));</span><br><span class="line">      list.push(dep);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;;</span><br><span class="line">  <span class="keyword">const</span> addDependenciesBlock = <span class="function"><span class="params">block</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (block.dependencies) &#123;</span><br><span class="line">      iterationOfArrayCallback(block.dependencies, addDependency);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (block.blocks) &#123;</span><br><span class="line">      iterationOfArrayCallback(block.blocks, addDependenciesBlock);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (block.variables) &#123;</span><br><span class="line">      iterationBlockVariable(block.variables, addDependency);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    addDependenciesBlock(<span class="built_in">module</span>);</span><br><span class="line">  &#125; <span class="keyword">catch</span> (e) &#123;</span><br><span class="line">    callback(e);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> iterationOfArrayCallback = <span class="function">(<span class="params">arr, fn</span>) =&gt;</span> &#123;</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">let</span> index = <span class="number">0</span>; index &lt; arr.length; index++) &#123;</span><br><span class="line">		fn(arr[index]);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>对于当前模块，或许存在着多个依赖模块。当前模块会开辟一个依赖模块的数组，在遍历 AST 时，将 require() 中的模块通过 addDependency() 添加到数组中。当前模块构建完成后，webpack 调用 processModuleDependencies 开始递归处理依赖的 module，接着就会重复之前的构建步骤。</p>
+<p><strong>补充</strong><br />
+Module 是 webpack 构建的核心实体，也是所有 module 的 父类，它有几种不同子类：NormalModule , MultiModule , ContextModule , DelegatedModule 等。但这些核心实体都是在构建中都会去调用对应的构建方法，也就是 build() 。它还包括了从构建到输出的一系列的有关 module 生命周期的函数，我们通过 module 父类类图其子类类图(这里以 NormalModule 为例)来观察其真实形态：</p>
+<img src="/assets/webpack-runtime/15.png" />
+<p>可以看到无论是构建流程，处理依赖流程，包括后面的封装流程都是与 module 密切相关的。</p>
+<h3 id="六-打包输出"><a class="markdownIt-Anchor" href="#六-打包输出"></a> 六、打包输出</h3>
+<p>在所有模块及其依赖模块 build 完成后，webpack 会监听 seal 事件调用各插件对构建后的结果进行封装，要逐次对每个 module 和 chunk 进行整理，生成编译后的源码，合并，拆分，生成 hash 。 同时这是我们在开发时进行代码优化和功能添加的关键环节。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="title">seal</span>(<span class="params">callback</span>)</span> &#123;</span><br><span class="line">  <span class="built_in">this</span>.hooks.seal.call();</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">const</span> preparedEntrypoint <span class="keyword">of</span> <span class="built_in">this</span>._preparedEntrypoints) &#123;</span><br><span class="line">    <span class="comment">// 整理每个Module和chunk，每个chunk对应一个输出文件。</span></span><br><span class="line">    <span class="keyword">const</span> <span class="built_in">module</span> = preparedEntrypoint.module;</span><br><span class="line">    <span class="keyword">const</span> name = preparedEntrypoint.name;</span><br><span class="line">    <span class="keyword">const</span> chunk = <span class="built_in">this</span>.addChunk(name);</span><br><span class="line">    <span class="keyword">const</span> entrypoint = <span class="keyword">new</span> Entrypoint(name);</span><br><span class="line">    entrypoint.setRuntimeChunk(chunk);</span><br><span class="line">    entrypoint.addOrigin(<span class="literal">null</span>, name, preparedEntrypoint.request);</span><br><span class="line">    <span class="built_in">this</span>.namedChunkGroups.set(name, entrypoint);</span><br><span class="line">    <span class="built_in">this</span>.entrypoints.set(name, entrypoint);</span><br><span class="line">    <span class="built_in">this</span>.chunkGroups.push(entrypoint);</span><br><span class="line"></span><br><span class="line">    GraphHelpers.connectChunkGroupAndChunk(entrypoint, chunk);</span><br><span class="line">    GraphHelpers.connectChunkAndModule(chunk, <span class="built_in">module</span>);</span><br><span class="line"></span><br><span class="line">    chunk.entryModule = <span class="built_in">module</span>;</span><br><span class="line">    chunk.name = name;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">this</span>.assignDepth(<span class="built_in">module</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">  <span class="built_in">this</span>.hooks.beforeModuleAssets.call();</span><br><span class="line">  <span class="built_in">this</span>.createModuleAssets();</span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">this</span>.hooks.shouldGenerateChunkAssets.call() !== <span class="literal">false</span>) &#123;</span><br><span class="line">    <span class="built_in">this</span>.hooks.beforeChunkAssets.call();</span><br><span class="line">    <span class="comment">// 生成最终的assets</span></span><br><span class="line">    <span class="built_in">this</span>.createChunkAssets();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在封装过程中，webpack 会调用 Compilation 中的 createChunkAssets 方法进行打包后代码的生成。 createChunkAssets 流程如下：</p>
+<img src="/assets/webpack-runtime/14.png" />
+<p>从上图可以看出通过判断是入口 js 还是需要异步加载的 js 来选择不同的模板对象进行封装，入口 js 会采用 webpack 事件流的 render 事件来触发 Template类 中的renderChunkModules() (异步加载的 js 会调用 chunkTemplate 中的 render 方法)。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> template = chunk.hasRuntime() ? <span class="built_in">this</span>.mainTemplate : <span class="built_in">this</span>.chunkTemplate;</span><br><span class="line"><span class="keyword">const</span> manifest = template.getRenderManifest(&#123;</span><br><span class="line">  chunk,</span><br><span class="line">  hash: <span class="built_in">this</span>.hash,</span><br><span class="line">  fullHash: <span class="built_in">this</span>.fullHash,</span><br><span class="line">  outputOptions,</span><br><span class="line">  moduleTemplates: <span class="built_in">this</span>.moduleTemplates,</span><br><span class="line">  dependencyTemplates: <span class="built_in">this</span>.dependencyTemplates</span><br><span class="line">&#125;); </span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">const</span> fileManifest <span class="keyword">of</span> manifest) &#123;</span><br><span class="line">  <span class="keyword">const</span> cacheName = fileManifest.identifier;</span><br><span class="line">  <span class="keyword">const</span> usedHash = fileManifest.hash;</span><br><span class="line">  filenameTemplate = fileManifest.filenameTemplate;</span><br><span class="line">  file = <span class="built_in">this</span>.getPath(filenameTemplate, fileManifest.pathOptions);</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">this</span>.cache &amp;&amp; <span class="built_in">this</span>.cache[cacheName] &amp;&amp; <span class="built_in">this</span>.cache[cacheName].hash === usedHash) &#123;</span><br><span class="line">    source = <span class="built_in">this</span>.cache[cacheName].source;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">//  调用 Template 类的 render 方法生成代码</span></span><br><span class="line">    source = fileManifest.render();</span><br><span class="line">    <span class="comment">// Ensure that source is a cached source to avoid additional cost because of repeated access</span></span><br><span class="line">    <span class="keyword">if</span> (!(source <span class="keyword">instanceof</span> CachedSource)) &#123;</span><br><span class="line">      <span class="keyword">const</span> cacheEntry = cachedSourceMap.get(source);</span><br><span class="line">      <span class="keyword">if</span> (cacheEntry) &#123;</span><br><span class="line">        source = cacheEntry;</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">const</span> cachedSource = <span class="keyword">new</span> CachedSource(source);</span><br><span class="line">        cachedSourceMap.set(source, cachedSource);</span><br><span class="line">        source = cachedSource;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.cache) &#123;</span><br><span class="line">      <span class="built_in">this</span>.cache[cacheName] = &#123;</span><br><span class="line">        hash: usedHash,</span><br><span class="line">        source</span><br><span class="line">      &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// assets文件生成</span></span><br><span class="line">  <span class="built_in">this</span>.assets[file] = source;</span><br><span class="line">  chunk.files.push(file);</span><br><span class="line">  <span class="built_in">this</span>.hooks.chunkAsset.call(chunk, file);</span><br><span class="line">  alreadyWrittenFiles.set(file, &#123;</span><br><span class="line">    hash: usedHash,</span><br><span class="line">    source,</span><br><span class="line">    chunk</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后一步，webpack 调用 Compiler 中的 emitAssets() ，按照 output 中的配置项将文件输出到了对应的 path 中，从而 webpack 整个打包过程结束。要注意的是，若想对结果进行处理，则需要在 emit 触发后对自定义插件进行扩展。</p>
+<h3 id="七-总结"><a class="markdownIt-Anchor" href="#七-总结"></a> 七、总结</h3>
+<p>webpack 的整体打包流程主要还是依赖于 compilation 和 module 这两个对象，compiliation 对象负责协调整个构建过程， module 是 webpack 构建的核心实体，由这两者合作完成了整体项目的打包，由 tapable 控制各插件在 webpack 事件流上运行，最终成就了 Webpack 这目前使用最广泛的打包工具。</p>
+<p>整个流程主要完成了<strong>内容转换 + 资源合并</strong>两种功能，实现上包含三个阶段：</p>
+<h4 id="1-初始化阶段"><a class="markdownIt-Anchor" href="#1-初始化阶段"></a> 1、初始化阶段</h4>
+<ul>
+<li>初始化参数：从配置文件、 配置对象、Shell 参数中读取，与默认配置结合得出最终的参数</li>
+<li>创建编译器对象：用上一步得到的参数创建 Compiler 对象</li>
+<li>初始化编译环境：包括注入内置插件、注册各种模块工厂、初始化 RuleSet 集合、加载配置的插件等</li>
+<li>开始编译：执行 compiler 对象的 run 方法</li>
+<li>确定入口：根据配置中的 entry 找出所有的入口文件，调用 compilition.addEntry 将入口文件转换为 dependence 对象</li>
+</ul>
+<img src="/assets/webpack-runtime/16.jpg">
+<h4 id="2-构建阶段"><a class="markdownIt-Anchor" href="#2-构建阶段"></a> 2、构建阶段</h4>
+<ul>
+<li>编译模块(make)：根据 entry 对应的 dependence 创建 module 对象，调用 loader 将模块转译为标准 JS 内容，调用 JS 解释器将内容转换为 AST 对象，从中找出该模块依赖的模块，再递归本步骤直到所有入口依赖的文件都经过了本步骤的处理</li>
+<li>完成模块编译：上一步递归处理所有能触达到的模块后，得到了每个模块被翻译后的内容以及它们之间的依赖关系图</li>
+</ul>
+<img src="/assets/webpack-runtime/17.jpg">
+<ol>
+<li>调用 handleModuleCreate ，根据文件类型构建 module 子类</li>
+<li>调用 loader-runner 仓库的 runLoaders 转译 module 内容，通常是从各类资源类型转译为 JavaScript 文本</li>
+<li>调用 acorn 将 JS 文本解析为AST</li>
+<li>遍历 AST，触发各种钩子：在 HarmonyExportDependencyParserPlugin 插件监听 exportImportSpecifier 钩子，解读 JS 文本对应的资源依赖；调用 module 对象的 addDependency 将依赖对象加入到 module 依赖列表中</li>
+<li>AST 遍历完毕后，调用 module.handleParseResult 处理模块依赖</li>
+<li>对于 module 新增的依赖，调用 handleModuleCreate ，控制流回到第一步</li>
+<li>所有依赖都解析完毕后，构建阶段结束</li>
+</ol>
+<p>这个过程中数据流 module =&gt; ast =&gt; dependences =&gt; module ，先转 AST 再从 AST 找依赖。这就要求 loaders 处理完的最后结果必须是可以被 acorn 处理的标准 JavaScript 语法，比如说对于图片，需要从图像二进制转换成类似于 <code>export default &quot;data:image/png;base64,xxx&quot;</code> 这类 base64 格式或者 <code>export default &quot;http://xxx&quot;</code> 这类 url 格式。</p>
+<p>compilation 按这个流程递归处理，逐步解析出每个模块的内容以及 module 依赖关系，后续就可以根据这些内容打包输出。</p>
+<h4 id="3-生成阶段"><a class="markdownIt-Anchor" href="#3-生成阶段"></a> 3、生成阶段</h4>
+<ul>
+<li>输出资源(seal)：根据入口和模块之间的依赖关系，组装成一个个包含多个模块的 Chunk，再把每个 Chunk 转换成一个单独的文件加入到输出列表，这步是可以修改输出内容的最后机会，因此打包的优化主要就在这个阶段</li>
+<li>写入文件系统(emitAssets)：在确定好输出内容后，根据配置确定输出的路径和文件名，把文件内容写入到文件系统</li>
+</ul>
+<img src="/assets/webpack-runtime/18.jpeg">
+<ol>
+<li>构建本次编译的 ChunkGraph 对象；</li>
+<li>遍历 compilation.modules 集合，将 module 按 entry/动态引入 的规则分配给不同的 Chunk 对象；</li>
+<li>compilation.modules 集合遍历完毕后，得到完整的 chunks 集合对象，调用 createXxxAssets 方法</li>
+<li>createXxxAssets 遍历 module/chunk ，调用 compilation.emitAssets 方法将 assets 信息记录到 compilation.assets 对象中</li>
+<li>触发 seal 回调，控制流回到 compiler 对象</li>
+</ol>
+<p>这一步的关键逻辑是将 module 按规则组织成 chunks ，webpack 内置的 chunk 封装规则比较简单：</p>
+<ul>
+<li>entry 及 entry 触达到的模块，组合成一个 chunk</li>
+<li>使用动态引入语句引入的模块，各自组合成一个 chunk</li>
+</ul>
+<h2 id="参考资料"><a class="markdownIt-Anchor" href="#参考资料"></a> 参考资料</h2>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6844903861451227150">编写一个webpack的loader（1）</a></p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6909459619324788750">webpack-loader简简单单配置入门</a></p>
+<p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/xT12rUsYOkypXS8YFYQEzQ">Webpack 核心知识有哪些？</a></p>
+<p><a target="_blank" rel="noopener" href="https://developer.aliyun.com/article/61047">细说 webpack 之流程篇</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/363928061">[万字总结] 一文吃透 Webpack 核心原理</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/weixin.png" alt="kyleezhang 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/alipay.png" alt="kyleezhang 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>kyleezhang
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://kyleezhang.com/2020/12/16/webpack-runtime/" title="Webpack运行机制">http://kyleezhang.com/2020/12/16/webpack-runtime/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/assets/config/wechat.png">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E5%89%8D%E7%AB%AF%E5%B7%A5%E7%A8%8B%E5%8C%96/" rel="tag"><i class="fa fa-tag"></i>前端工程化</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/11/28/typescript-08/" rel="prev" title="TypeScript学习笔记（七）——高级类型">
+      <i class="fa fa-chevron-left"></i> TypeScript学习笔记（七）——高级类型
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/01/03/webpack-codesplitting/" rel="next" title="Webpack中的CodeSplitting">
+      Webpack中的CodeSplitting <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#loader%E6%9C%BA%E5%88%B6"><span class="nav-text"> Loader机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80-loader%E7%9A%84%E5%8C%B9%E9%85%8D%E8%A7%84%E5%88%99"><span class="nav-text"> 一、loader的匹配规则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C-loader%E9%85%8D%E7%BD%AE"><span class="nav-text"> 二、loader配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89-%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAloader"><span class="nav-text"> 三、实现一个loader</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%90%8C%E6%AD%A5loader"><span class="nav-text"> 1、同步loader</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%BC%82%E6%AD%A5loader"><span class="nav-text"> 2、异步loader</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#plugin%E6%9C%BA%E5%88%B6"><span class="nav-text"> Plugin机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80-%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAplugin"><span class="nav-text"> 一、实现一个plugin</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#webpack%E6%89%93%E5%8C%85%E6%B5%81%E7%A8%8B"><span class="nav-text"> Webpack打包流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80-%E5%88%9D%E5%A7%8B%E5%8C%96%E5%90%AF%E5%8A%A8"><span class="nav-text"> 一、初始化启动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C-webpack-cli"><span class="nav-text"> 二、webpack-cli</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89-%E5%88%9B%E5%BB%BA-compiler-%E5%AF%B9%E8%B1%A1"><span class="nav-text"> 三、创建 Compiler 对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B-%E5%BC%80%E5%A7%8B%E5%88%9B%E5%BB%BA"><span class="nav-text"> 四、开始创建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%94-make%E6%9E%84%E5%BB%BA%E9%98%B6%E6%AE%B5"><span class="nav-text"> 五、make（构建）阶段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%AD-%E6%89%93%E5%8C%85%E8%BE%93%E5%87%BA"><span class="nav-text"> 六、打包输出</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%83-%E6%80%BB%E7%BB%93"><span class="nav-text"> 七、总结</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%88%9D%E5%A7%8B%E5%8C%96%E9%98%B6%E6%AE%B5"><span class="nav-text"> 1、初始化阶段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E6%9E%84%E5%BB%BA%E9%98%B6%E6%AE%B5"><span class="nav-text"> 2、构建阶段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E7%94%9F%E6%88%90%E9%98%B6%E6%AE%B5"><span class="nav-text"> 3、生成阶段</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-text"> 参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="kyleezhang"
+      src="/assets/config/avatar.png">
+  <p class="site-author-name" itemprop="name">kyleezhang</p>
+  <div class="site-description" itemprop="description">学源于思</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">39</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/kyleezhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;kyleezhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/2942181559@qq.com" title="E-Mail → 2942181559@qq.com"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/u/6998903195" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;u&#x2F;6998903195" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">kyleezhang</span>
+</div>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">563k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">8:32</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  <!-- 背景动画 -->
+<script src="/js/particle.js"></script>
+
+</body>
+</html>

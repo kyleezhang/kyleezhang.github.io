@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/config/favicon.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kyleezhang.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"enable":false,"style":"tabs","active":false,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Flex布局又称弹性盒布局，是在CSS3中的一种新布局方式，可以简洁、方便、响应式地实现各种页面布局，因此自一提出受到了极大地追捧，目前也得到了各大主流浏览器的支持，因此迅速替代了之前的“display+float+position”的布局形式。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CSS Flex 弹性盒布局">
+<meta property="og:url" content="http://kyleezhang.com/2020/10/26/css-flex/index.html">
+<meta property="og:site_name" content="kyleezhang&#96;s Blog">
+<meta property="og:description" content="Flex布局又称弹性盒布局，是在CSS3中的一种新布局方式，可以简洁、方便、响应式地实现各种页面布局，因此自一提出受到了极大地追捧，目前也得到了各大主流浏览器的支持，因此迅速替代了之前的“display+float+position”的布局形式。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://kyleezhang.com/assets/css-flex/01.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/css-flex/02.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/css-flex/03.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/css-flex/04.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/css-flex/05.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/css-flex/06.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/css-flex/07.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/css-flex/08.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190804190226451.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190805133634588.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190805134254591.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190805134755617.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190805135302650.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190805141207455.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190805141442520.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190805141546242.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190805141735432.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190805141936809.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190805142502436.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190805150148493.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190805152403444.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190805155214788.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190805172356649.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/2019080517431075.png">
+<meta property="article:published_time" content="2020-10-26T13:20:48.000Z">
+<meta property="article:modified_time" content="2022-02-19T15:17:55.234Z">
+<meta property="article:author" content="kyleezhang">
+<meta property="article:tag" content="CSS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://kyleezhang.com/assets/css-flex/01.png">
+
+<link rel="canonical" href="http://kyleezhang.com/2020/10/26/css-flex/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>CSS Flex 弹性盒布局 | kyleezhang`s Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2KR3NK700N"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-2KR3NK700N');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?f1621cb3fb0792bb294fce1b938d5eef";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="kyleezhang`s Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+    <a target="_blank" rel="noopener" href="https://github.com/kyleezhang " class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#fff; color:#151513; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    </div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">kyleezhang`s Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://kyleezhang.com/2020/10/26/css-flex/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/assets/config/avatar.png">
+      <meta itemprop="name" content="kyleezhang">
+      <meta itemprop="description" content="学源于思">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="kyleezhang`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          CSS Flex 弹性盒布局
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-26 21:20:48" itemprop="dateCreated datePublished" datetime="2020-10-26T21:20:48+08:00">2020-10-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-02-19 23:17:55" itemprop="dateModified" datetime="2022-02-19T23:17:55+08:00">2022-02-19</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%89%8D%E7%AB%AF/" itemprop="url" rel="index"><span itemprop="name">前端</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>10k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>10 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Flex布局又称弹性盒布局，是在CSS3中的一种新布局方式，可以简洁、方便、响应式地实现各种页面布局，因此自一提出受到了极大地追捧，目前也得到了各大主流浏览器的支持，因此迅速替代了之前的“display+float+position”的布局形式。</p>
+<a id="more"></a>
+<h2 id="弹性盒布局简介"><a class="markdownIt-Anchor" href="#弹性盒布局简介"></a> 弹性盒布局简介</h2>
+<ul>
+<li>弹性盒子由弹性容器(Flex container)和弹性子元素(Flex item)组成。</li>
+<li>弹性容器通过设置 display 属性的值为flex 或 inline-flex将其定义为弹性容器，不遵循标准文档流的显示方式。</li>
+<li>弹性容器外以及弹性子元素内部仍遵循标准文档流，弹性盒布局只是定义了弹性子元素在弹性容器内部的布局方式。</li>
+<li>弹性容器添加display: flex属性显示为块级元素，添加display: inline-flex显示为行级元素。</li>
+<li>设为弹性盒布局以后弹性子元素的float、clear和vertical-align属性将失效，但position属性，依然生效。</li>
+</ul>
+<p>示例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="css"><span class="selector-id">#container</span> &#123;</span></span><br><span class="line">    border: 1px dashed red;</span><br><span class="line">    display: flex;</span><br><span class="line">    width: 350px;</span><br><span class="line">    height: 150px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="css"><span class="selector-id">#container</span> <span class="selector-tag">div</span> &#123;</span></span><br><span class="line">    background-color: yellow;</span><br><span class="line">    width: 80px;</span><br><span class="line">    height: 80px;</span><br><span class="line">    margin-right: 5px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;container&quot;</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;first&quot;</span>&gt;</span>first<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;second&quot;</span>&gt;</span>second<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;third&quot;</span>&gt;</span>third<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;forth&quot;</span>&gt;</span>forth<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>页面效果：<br />
+<img src="/assets/css-flex/01.png" width="423" height="200"></img><br />
+如上图所示，弹性子元素通常在弹性盒子内一行显示，默认情况每个容器只有一行。</p>
+<h2 id="父容器的六大属性"><a class="markdownIt-Anchor" href="#父容器的六大属性"></a> 父容器的六大属性</h2>
+<p>了解两个基本方向，这个牵扯到弹性布局的使用：</p>
+<blockquote>
+<p>主轴： 在弹性布局中，我们会通过属性规定水平/垂直方向为主轴<br />
+交叉轴： 与主轴垂直的另一方向，称为交叉轴</p>
+</blockquote>
+<h3 id="1-flex-direction属性"><a class="markdownIt-Anchor" href="#1-flex-direction属性"></a> 1、flex-direction属性</h3>
+<p>决定弹性子元素的排列方向（即定义了主轴方向），可选值：</p>
+<ul>
+<li>row（默认值）： 主轴为水平方向，起点在左端，子元素从左至右排列；</li>
+<li>row-reverse： 主轴在水平方向，起点在右端，子元素从右至左排列；</li>
+<li>column：主轴为垂直方向，起点在上沿，子元素从上向下排列；</li>
+<li>column-reverse：主轴为垂直方向，起点在下沿，子元素从下向上排列；</li>
+</ul>
+<h3 id="2-flex-wrap属性"><a class="markdownIt-Anchor" href="#2-flex-wrap属性"></a> 2、flex-wrap属性</h3>
+<p>定义如果一行排列不下如何换行，可选值：</p>
+<ul>
+<li>nowrap（默认）：不换行。当容器宽度不够时，每个项目会被挤压宽度；</li>
+<li>wrap： 换行，并且第一行在容器最上方；</li>
+<li>wrap-reverse： 换行，并且第一行在容器最下方；</li>
+</ul>
+<p>示例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="css"><span class="selector-id">#container</span> &#123;</span></span><br><span class="line">    border: 1px dashed red;</span><br><span class="line">    display: flex;</span><br><span class="line">    flex-wrap: wrap-reverse;</span><br><span class="line">    width: 350px;</span><br><span class="line">    height: 200px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="css"><span class="selector-id">#container</span> <span class="selector-tag">div</span> &#123;</span></span><br><span class="line">    background-color: yellow;</span><br><span class="line">    width: 80px;</span><br><span class="line">    height: 80px;</span><br><span class="line">    margin-right: 5px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"> 	<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;container&quot;</span>&gt;</span></span><br><span class="line">  		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;first&quot;</span>&gt;</span>first<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;second&quot;</span>&gt;</span>second<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;third&quot;</span>&gt;</span>third<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;forth&quot;</span>&gt;</span>forth<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;five&quot;</span>&gt;</span>five<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>页面效果：<br />
+<img src="/assets/css-flex/02.png" width="423" height="200"></img><br />
+当把wrap-reverse换成wrap：<br />
+<img src="/assets/css-flex/03.png" width="423" height="200"></img></p>
+<h3 id="3-flex-flow属性"><a class="markdownIt-Anchor" href="#3-flex-flow属性"></a> 3、flex-flow属性</h3>
+<p>flex-direction和flex-wrap的缩写形式，默认值为：row wrap，可以将flex-direction的可选值和flex-wrap的可选值进行任意组合，此处不再做过多赘述。</p>
+<h3 id="4-justify-content属性"><a class="markdownIt-Anchor" href="#4-justify-content属性"></a> 4、justify-content属性</h3>
+<p>定义了子元素在在主轴上的对齐方式（此属性与flex-direction息息相关，当flex-direction的取值为row时，起点在主轴左边，取值为row-reverse时起点在主轴右边，column起点在主轴上边，column-reverse-起点在主轴下边）</p>
+<ul>
+<li>flex-start（默认值）： 项目位于主轴起点。</li>
+<li>flex-end：项目位于主轴终点。</li>
+<li>center： 居中</li>
+<li>space-between：两端对齐，项目之间的间隔都相等。(开头和最后的项目，与父容器边缘没有间隔)</li>
+<li>space-around：每个项目两侧的间隔相等。所以，项目之间的间隔比项目与边框的间隔大一倍。(开头和最后的项目，与父容器边缘有一定的间隔，间隔为项目间间隔的一半)</li>
+</ul>
+<p>示例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="css"><span class="selector-id">#container</span> &#123;</span></span><br><span class="line">    border: 1px dashed red;</span><br><span class="line">    display: flex;</span><br><span class="line">    justify-content: flex-start;</span><br><span class="line">    width: 350px;</span><br><span class="line">    height: 200px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="css"><span class="selector-id">#container</span> <span class="selector-tag">div</span> &#123;</span></span><br><span class="line">    background-color: yellow;</span><br><span class="line">    width: 80px;</span><br><span class="line">    height: 80px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;container&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;first&quot;</span>&gt;</span>first<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;second&quot;</span>&gt;</span>second<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;third&quot;</span>&gt;</span>third<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;forth&quot;</span>&gt;</span>forth<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  	<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p><img src="/assets/css-flex/04.png" width="423" height="200"></img><br />
+justify-contet属性为flex-end时：<br />
+<img src="/assets/css-flex/05.png" width="423" height="200"></img><br />
+justify-content属性为center：<br />
+<img src="/assets/css-flex/06.png" width="423" height="200"></img><br />
+justify-content属性为space-between：<br />
+<img src="/assets/css-flex/07.png" width="423" height="200"></img><br />
+justify-content属性为space-around：<br />
+<img src="/assets/css-flex/08.png" width="423" height="200"></img></p>
+<h3 id="5-align-items属性"><a class="markdownIt-Anchor" href="#5-align-items属性"></a> 5、align-items属性</h3>
+<p>定义子元素在交叉轴上的对齐方式（flex-direction属性定义主轴方向，与之相垂直的就是交叉轴方向）</p>
+<ul>
+<li>flex-start：子元素按照交叉轴的起点对齐。</li>
+<li>flex-end：子元素按照交叉轴的终点对齐。</li>
+<li>center：子元素按照交叉轴的中点对齐。</li>
+<li>baseline：子元素按照第一行文字的基线对齐。(文字的行高、字体大小会影响每行的基线)</li>
+<li>stretch（默认值）：如果项目未设置高度或设为auto，将占满整个容器的高度。</li>
+</ul>
+<p>示例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="css"><span class="selector-id">#container</span> &#123;</span></span><br><span class="line">    border: 1px dashed red;</span><br><span class="line">    display: flex;</span><br><span class="line">    flex-direction: row;</span><br><span class="line">    align-items: flex-start;</span><br><span class="line">    width: 350px;</span><br><span class="line">    height: 200px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="css"><span class="selector-id">#container</span> <span class="selector-tag">div</span> &#123;</span></span><br><span class="line">    background-color: yellow;</span><br><span class="line">    width: 80px;</span><br><span class="line">    height: 80px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;container&quot;</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;first&quot;</span>&gt;</span>first<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;second&quot;</span>&gt;</span>second<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;third&quot;</span>&gt;</span>third<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;four&quot;</span>&gt;</span>four<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>页面效果：<br />
+<img src="https://img-blog.csdnimg.cn/20190804190226451.png" alt="" /><br />
+align-items属性取flex-end:<br />
+<img src="https://img-blog.csdnimg.cn/20190805133634588.png" alt="" /><br />
+align-items属性取center<br />
+<img src="https://img-blog.csdnimg.cn/20190805134254591.png" alt="" /><br />
+增加第一个子元素的高度和字体大小，align-items属性取baseline<br />
+<img src="https://img-blog.csdnimg.cn/20190805134755617.png" alt="" /></p>
+<p>我们尝试将flex-direction属性修改为column，我们一起来看看会对align-items属性的页面效果产生什么影响：<br />
+示例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="css"><span class="selector-id">#container</span> &#123;</span></span><br><span class="line">    border: 1px dashed red;</span><br><span class="line">    display: flex;</span><br><span class="line">    flex-direction: column;</span><br><span class="line">    align-items: flex-start;</span><br><span class="line">    width: 350px;</span><br><span class="line">    height: 200px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="css"><span class="selector-id">#container</span> <span class="selector-tag">div</span> &#123;</span></span><br><span class="line">    background-color: yellow;</span><br><span class="line">    width: 80px;</span><br><span class="line">    height: 80px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;container&quot;</span>&gt;</span></span><br><span class="line">  		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;first&quot;</span>&gt;</span>first<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;second&quot;</span>&gt;</span>second<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;third&quot;</span>&gt;</span>third<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;four&quot;</span>&gt;</span>four<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"> 	<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>页面效果：<br />
+<img src="https://img-blog.csdnimg.cn/20190805135302650.png" alt="" /><br />
+当我们通过flex-direction属性修改主轴方向时交叉轴的方向也随之改变，因此弹性子元素的交叉轴排列方式也随之改变。大家可以自己尝试不同flex-direction取值下align-items属性对于页面布局的影响，此处限于篇幅原因不再一一尝试。</p>
+<p>6、align-content属性<br />
+修改 flex-wrap 属性的行为，类似 align-items, 但不是设置子元素对齐，而是设置行对齐，即align-content属性定义了多根轴线的对齐方式。如果项目只有一根轴线，该属性不起作用。<br />
+（可以将其视为多行情形下的align-items属性）</p>
+<ul>
+<li>flex-start：子元素按照交叉轴的起点对齐。</li>
+<li>flex-end：子元素按照交叉轴的终点对齐。</li>
+<li>center：子元素按照交叉轴的中点对齐。</li>
+<li>space-between：子元素按照交叉轴两端对齐，轴线之间的间隔平均分布。</li>
+<li>space-around：每根轴线两侧的间隔都相等。所以，轴线之间的间隔比轴线与边框的间隔大一倍。</li>
+<li>stretch（默认值）：轴线占满整个交叉轴。</li>
+</ul>
+<p>示例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="css"><span class="selector-id">#container</span> &#123;</span></span><br><span class="line">    border: 1px dashed red;</span><br><span class="line">    display: flex;</span><br><span class="line">    flex-wrap: wrap;</span><br><span class="line">    align-content: flex-start;</span><br><span class="line">    width: 350px;</span><br><span class="line">    height: 200px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="css"><span class="selector-id">#container</span> <span class="selector-tag">div</span> &#123;</span></span><br><span class="line">    background-color: yellow;</span><br><span class="line">    width: 80px;</span><br><span class="line">    height: 80px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;container&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;first&quot;</span>&gt;</span>first<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;second&quot;</span>&gt;</span>second<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;third&quot;</span>&gt;</span>third<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;four&quot;</span>&gt;</span>four<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;five&quot;</span>&gt;</span>five<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;sex&quot;</span>&gt;</span>sex<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;seven&quot;</span>&gt;</span>seven<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;eight&quot;</span>&gt;</span>eight<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>页面效果：<br />
+<img src="https://img-blog.csdnimg.cn/20190805141207455.png" alt="" /><br />
+align-content属性为flex-end：<br />
+<img src="https://img-blog.csdnimg.cn/20190805141442520.png" alt="" /><br />
+align-content属性为center：<br />
+<img src="https://img-blog.csdnimg.cn/20190805141546242.png" alt="" /><br />
+align-content属性为space-between：<br />
+<img src="https://img-blog.csdnimg.cn/20190805141735432.png" alt="" /><br />
+align-content属性为space-around：<br />
+<img src="https://img-blog.csdnimg.cn/20190805141936809.png" alt="" /></p>
+<p>我们来尝试一下flex-wrap属性取wrap-reverse时会对align-content属性的页面效果产生什么影响<br />
+示例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="css"><span class="selector-id">#container</span> &#123;</span></span><br><span class="line">    border: 1px dashed red;</span><br><span class="line">    display: flex;</span><br><span class="line">    flex-wrap: wrap-reverse;</span><br><span class="line">    align-content: flex-start;</span><br><span class="line">    width: 350px;</span><br><span class="line">    height: 200px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="css"><span class="selector-id">#container</span> <span class="selector-tag">div</span> &#123;</span></span><br><span class="line">    background-color: yellow;</span><br><span class="line">    width: 80px;</span><br><span class="line">    height: 80px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"> 	<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;container&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;first&quot;</span>&gt;</span>first<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;second&quot;</span>&gt;</span>second<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;third&quot;</span>&gt;</span>third<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;four&quot;</span>&gt;</span>four<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;five&quot;</span>&gt;</span>five<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;sex&quot;</span>&gt;</span>sex<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;seven&quot;</span>&gt;</span>seven<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;eight&quot;</span>&gt;</span>eight<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"> 	<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>页面效果：<br />
+<img src="https://img-blog.csdnimg.cn/20190805142502436.png" alt="" /></p>
+<p>我们可以看到由于修改了flex-wrap属性，子元素对齐的交叉轴起点也发生了改变，因此此时flex-start从底部开始对齐，大家可以自己尝试一下不同flex-wrap属性下align-content属性页面效果的不同，此处由于篇幅原因不再一一展示。</p>
+<h2 id="子容器的六大属性"><a class="markdownIt-Anchor" href="#子容器的六大属性"></a> 子容器的六大属性</h2>
+<h3 id="1-order属性"><a class="markdownIt-Anchor" href="#1-order属性"></a> 1、order属性</h3>
+<p>定义弹性子元素排列顺序<br />
+用整数值来定义排列顺序，数值小的排在前面。可以为负值，默认为0<br />
+示例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="css"><span class="selector-id">#container</span> &#123;</span></span><br><span class="line">    border: 1px dashed red;</span><br><span class="line">    display: flex;</span><br><span class="line">    width: 350px;</span><br><span class="line">    height: 200px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="css"><span class="selector-id">#container</span> <span class="selector-tag">div</span> &#123;</span></span><br><span class="line">    background-color: yellow;</span><br><span class="line">    width: 80px;</span><br><span class="line">    height: 80px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">  	<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;container&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;first&quot;</span> <span class="attr">style</span>=<span class="string">&quot;order: 1;&quot;</span>&gt;</span>first<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;second&quot;</span>&gt;</span>second<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;third&quot;</span>&gt;</span>third<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;four&quot;</span>&gt;</span>four<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>页面效果：<br />
+<img src="https://img-blog.csdnimg.cn/20190805150148493.png" alt="" /><br />
+由于第一个子元素的order属性为1，其他都为0，所以first子元素排在最后面，其他的排在前面。</p>
+<h3 id="2-flex-grow属性"><a class="markdownIt-Anchor" href="#2-flex-grow属性"></a> 2、flex-grow属性</h3>
+<p>定义子元素的放大比例。用整数值规定项目将相对于其他灵活的项目进行扩展放大的量。默认值是 0，即如果存在剩余空间子元素也不扩展。<br />
+示例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="css"><span class="selector-id">#container</span> &#123;</span></span><br><span class="line">    border: 1px dashed red;</span><br><span class="line">    display: flex;</span><br><span class="line">    width: 480px;</span><br><span class="line">    height: 200px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="css"><span class="selector-id">#container</span> <span class="selector-tag">div</span> &#123;</span></span><br><span class="line">    background-color: yellow;</span><br><span class="line">    border: 1px solid green;</span><br><span class="line">    width: 80px;</span><br><span class="line">    height: 80px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">   	<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;container&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;first&quot;</span> <span class="attr">style</span>=<span class="string">&quot;flex-grow: 1;&quot;</span>&gt;</span>first<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;second&quot;</span>&gt;</span>second<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;third&quot;</span> <span class="attr">style</span>=<span class="string">&quot;flex-grow: 2;&quot;</span>&gt;</span>third<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;four&quot;</span>&gt;</span>four<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"> 	<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>页面效果：<br />
+<img src="https://img-blog.csdnimg.cn/20190805152403444.png" alt="" /><br />
+如上图所示，实际上first元素的宽度为原本元素宽度 + 剩余空间的宽度 x (1/3); third元素的宽度为原本元素的宽度 + 剩余空间的宽度 x (2/3)。</p>
+<h3 id="3-flex-shrink属性"><a class="markdownIt-Anchor" href="#3-flex-shrink属性"></a> 3、flex-shrink属性</h3>
+<p>定义了子元素的缩小比例。整数值规定项目将相对于其他灵活的项目进行收缩的量。默认值是 1，即如果空间不足，该子元素将缩小。如果值为0，则该子元素不挤压宽度，如果所有子元素的flex-shirnk属性全为0，当宽度不够时部分子元素将挤出父容器。如果值越大，则该子元素收缩的量越大。<br />
+示例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="css"><span class="selector-id">#container</span> &#123;</span></span><br><span class="line">    border: 1px dashed red;</span><br><span class="line">    display: flex;</span><br><span class="line">    width: 300px;</span><br><span class="line">    height: 200px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="css"><span class="selector-id">#container</span> <span class="selector-tag">div</span> &#123;</span></span><br><span class="line">    background-color: yellow;</span><br><span class="line">    border: 1px solid green;</span><br><span class="line">    width: 80px;</span><br><span class="line">    height: 80px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;container&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;first&quot;</span> <span class="attr">style</span>=<span class="string">&quot;flex-shrink: 1;&quot;</span>&gt;</span>first<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;second&quot;</span> <span class="attr">style</span>=<span class="string">&quot;flex-shrink: 0;&quot;</span>&gt;</span>second<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;third&quot;</span> <span class="attr">style</span>=<span class="string">&quot;flex-shrink: 2;&quot;</span>&gt;</span>third<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;four&quot;</span> <span class="attr">style</span>=<span class="string">&quot;flex-shrink: 0;&quot;</span>&gt;</span>four<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>页面效果：<br />
+<img src="https://img-blog.csdnimg.cn/20190805155214788.png" alt="" /><br />
+如上图所示：<br />
+second元素和forth元素的宽度都没有收缩，first元素的实际宽度 = first元素的正常宽度 - 不足的空间宽度 x (1/3)；third元素的实际宽度 = third元素的正常宽度 - 不足的空间宽度 x (2/3)</p>
+<h3 id="4-flex-basis属性"><a class="markdownIt-Anchor" href="#4-flex-basis属性"></a> 4、flex-basis属性</h3>
+<p>定义子元素占据的主轴空间，默认值为auto（如果主轴为水平，则设置这个属性类似于子元素宽度，子元素原width属性将失效；如果主轴为垂直，则设置这个属性类似于子元素的高度，子元素原height属性将失效）<br />
+可选值：</p>
+<ul>
+<li>整数值或百分比，规定子元素占据主轴空间的初始值；</li>
+<li>auto：默认值。长度等于元素的长度。如果该项目未指定长度，则长度将根据内容决定。</li>
+</ul>
+<p>示例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="css"><span class="selector-id">#container</span> &#123;</span></span><br><span class="line">    border: 1px dashed red;</span><br><span class="line">    display: flex;</span><br><span class="line">    width: 360px;</span><br><span class="line">    height: 200px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="css"><span class="selector-id">#container</span> <span class="selector-tag">div</span> &#123;</span></span><br><span class="line">    background-color: yellow;</span><br><span class="line">    border: 1px solid green;</span><br><span class="line">    width: 80px;</span><br><span class="line">    height: 80px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;container&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;first&quot;</span> <span class="attr">style</span>=<span class="string">&quot;flex-basis: 100px&quot;</span>&gt;</span>first<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;second&quot;</span>&gt;</span>second<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;third&quot;</span>&gt;</span>third<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;four&quot;</span>&gt;</span>four<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>页面效果：<br />
+<img src="https://img-blog.csdnimg.cn/20190805172356649.png" alt="" /><br />
+从上图我们可以看出，first元素的实际宽度为100px，覆盖之前定义的width：80px</p>
+<h3 id="5-flex属性"><a class="markdownIt-Anchor" href="#5-flex属性"></a> 5、flex属性</h3>
+<p>flex-grow, flex-shrink 和 flex-basis的简写，默认值为0 1 auto。除了直接分别给flex-grow、flex-shrink 和 flex-basis赋值还可以选取以下值：</p>
+<ul>
+<li>auto：与 1 1 auto 相同。</li>
+<li>none：与 0 0 auto 相同。</li>
+<li>initial：设置该属性为它的默认值，即为 0 1 auto。</li>
+<li>inherit：从父元素继承该属性。</li>
+</ul>
+<h3 id="6-align-self属性"><a class="markdownIt-Anchor" href="#6-align-self属性"></a> 6、align-self属性</h3>
+<p>定义单个项目自身在交叉轴上的排列方式，可以覆盖掉容器上的align-items属性。<br />
+属性值：与align-items相同，默认值为auto，表示继承父容器的align-items属性值。<br />
+示例：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="css"><span class="selector-id">#container</span> &#123;</span></span><br><span class="line">    border: 1px dashed red;</span><br><span class="line">    display: flex;</span><br><span class="line">    align-items: flex-start;</span><br><span class="line">    width: 360px;</span><br><span class="line">    height: 200px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="css"><span class="selector-id">#container</span> <span class="selector-tag">div</span> &#123;</span></span><br><span class="line">    background-color: yellow;</span><br><span class="line">    border: 1px solid green;</span><br><span class="line">    width: 80px;</span><br><span class="line">    height: 80px;</span><br><span class="line">&#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;container&quot;</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;first&quot;</span>&gt;</span>first<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;second&quot;</span>&gt;</span>second<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;third&quot;</span> <span class="attr">style</span>=<span class="string">&quot;slign-self: flex-end;&quot;</span>&gt;</span>third<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;forth&quot;</span>&gt;</span>forth<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>页面效果：<br />
+<img src="https://img-blog.csdnimg.cn/2019080517431075.png" alt="" /></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/weixin.png" alt="kyleezhang 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/alipay.png" alt="kyleezhang 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>kyleezhang
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://kyleezhang.com/2020/10/26/css-flex/" title="CSS Flex 弹性盒布局">http://kyleezhang.com/2020/10/26/css-flex/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/assets/config/wechat.png">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/CSS/" rel="tag"><i class="fa fa-tag"></i>CSS</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/10/26/css-bfc/" rel="prev" title="BFC-块状格式化上下文">
+      <i class="fa fa-chevron-left"></i> BFC-块状格式化上下文
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/10/29/css-float/" rel="next" title="浮动与清除浮动">
+      浮动与清除浮动 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%B9%E6%80%A7%E7%9B%92%E5%B8%83%E5%B1%80%E7%AE%80%E4%BB%8B"><span class="nav-text"> 弹性盒布局简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%88%B6%E5%AE%B9%E5%99%A8%E7%9A%84%E5%85%AD%E5%A4%A7%E5%B1%9E%E6%80%A7"><span class="nav-text"> 父容器的六大属性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-flex-direction%E5%B1%9E%E6%80%A7"><span class="nav-text"> 1、flex-direction属性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-flex-wrap%E5%B1%9E%E6%80%A7"><span class="nav-text"> 2、flex-wrap属性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-flex-flow%E5%B1%9E%E6%80%A7"><span class="nav-text"> 3、flex-flow属性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-justify-content%E5%B1%9E%E6%80%A7"><span class="nav-text"> 4、justify-content属性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-align-items%E5%B1%9E%E6%80%A7"><span class="nav-text"> 5、align-items属性</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%90%E5%AE%B9%E5%99%A8%E7%9A%84%E5%85%AD%E5%A4%A7%E5%B1%9E%E6%80%A7"><span class="nav-text"> 子容器的六大属性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-order%E5%B1%9E%E6%80%A7"><span class="nav-text"> 1、order属性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-flex-grow%E5%B1%9E%E6%80%A7"><span class="nav-text"> 2、flex-grow属性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-flex-shrink%E5%B1%9E%E6%80%A7"><span class="nav-text"> 3、flex-shrink属性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-flex-basis%E5%B1%9E%E6%80%A7"><span class="nav-text"> 4、flex-basis属性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-flex%E5%B1%9E%E6%80%A7"><span class="nav-text"> 5、flex属性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-align-self%E5%B1%9E%E6%80%A7"><span class="nav-text"> 6、align-self属性</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="kyleezhang"
+      src="/assets/config/avatar.png">
+  <p class="site-author-name" itemprop="name">kyleezhang</p>
+  <div class="site-description" itemprop="description">学源于思</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">39</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/kyleezhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;kyleezhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/2942181559@qq.com" title="E-Mail → 2942181559@qq.com"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/u/6998903195" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;u&#x2F;6998903195" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">kyleezhang</span>
+</div>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">563k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">8:32</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+  <!-- 背景动画 -->
+<script src="/js/particle.js"></script>
+
+</body>
+</html>
