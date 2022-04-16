@@ -91,7 +91,16 @@ console.log(typeof rg); // object(sarari5、chrome7前返回function)
 
 事实上，“类型”在 JavaScript 中是一个有争议的概念。一方面，标准中规定了运行时数据类型； 另一方面，JS 语言中提供了 typeof 这样的运算，用来返回操作数的类型，但 typeof 的运算结果，与运行时类型的规定有很多不一致的地方。我们可以看下表来对照一下。
 
-![](https://img-blog.csdnimg.cn/20190828094822559.jpg)
+
+| 示例表达式 | typeof结果 | 运行时类型行为 |
+| --- | --- | --- |
+| null | object | Object |
+| (function () {}) | function | Object |
+| 3 | number | Number |
+| "ok" | string | String |
+| true | boolean | Boolean |
+| void 0 | undefined | Undefined |
+| Symbol("a") | symbol | Symbol |
 
 总结：
 
@@ -116,24 +125,23 @@ typeof(typeof(a)); // string
 typeof(undefined); // undefined
 typeof(NaN); // number
 typeof(null); // object
-var a="123abc";
+var a = "123abc";
 typeof(+a); // number
 typeof(!!a); // boolean
-typeof(a+""); // string
+typeof(a + ""); // string
 ```
-
 ### 2、instanceof
 
 用来测试一个对象在其原型链中是否存在一个构造函数的 prototype 属性。
 
-语法：object instanceof constructor
-参数：object（要检测的对象）constructor（某个构造函数）
-描述：instanceof 运算符用来检测 constructor.prototype 是否存在于参数 object 的原型链上。
+- 语法：object instanceof constructor
+- 参数：object（要检测的对象）constructor（某个构造函数）
+- 描述：instanceof 运算符用来检测 constructor.prototype 是否存在于参数 object 的原型链上。
 
 ```javascript
 var a = new Array();
 console.log(a instanceof Array); // true
-console.log(a instanceof Object); // true, 这是因为 Array 是 object 的子类。
+console.log(a instanceof Object); // true, 这是因为 Array 是 Object 的子类。
 
 function test(){};
 var a = new test();
@@ -154,9 +162,13 @@ console.log(foo instanceof Aoo); // true
 
 ## 四、为什么给对象添加的方法可以用在基本类型上？
 
-在JavaScript的学习过程中我们往往会产生一个疑问，为什么给对象添加的方法能用在基本类型上？
+在 JavaScript 的学习过程中我们往往会产生一个疑问，为什么给对象添加的方法能用在基本类型上？
 
-实际上这是因为在 JavaScript 中，对象的定义是“属性的集合”。属性分为数据属性和访问器属性，二者都是 key-value 结构，key 可以是字符串或者 Symbol 类型。提到对象，我们必须要提到一个概念：类。因为 C++ 和 Java 的成功，在这两门语言中，每个类都是一个类型，二者几乎等同，以至于很多人常常会把 JavaScript 的“类”与类型混淆。事实上，JavaScript 中的“类”仅仅是运行时对象的一个私有属性，而 JavaScript 中是无法自定义类型的。JavaScript 中的几个基本类型，都在对象类型中有一个“亲戚”。它们是：Number、String、Boolean、Symbol。所以，我们必须认识到 3 与 new Number(3) 是完全不同的值，它们一个是 Number 类型， 一个是对象类型。Number、String 和 Boolean，三个构造器是两用的，当跟 new 搭配时，它们产生对象，当直接调用时，它们表示强制类型转换。Symbol 函数比较特殊，直接用 new 调用它会抛出错误，但它仍然是 Symbol 对象的构造器。
+实际上这是因为在 JavaScript 中，对象的定义是“属性的集合”。属性分为数据属性和访问器属性，二者都是 key-value 结构，key 可以是字符串或者 Symbol 类型。
+
+提到对象，我们必须要提到一个概念：类。因为 C++ 和 Java 的成功，在这两门语言中，每个类都是一个类型，二者几乎等同，以至于很多人常常会把 JavaScript 的“类”与类型混淆。事实上，**JavaScript 中的“类”仅仅是运行时对象的一个私有属性，而 JavaScript 中是无法自定义类型的**。JavaScript 中的几个基本类型，都在对象类型中有一个“亲戚”。它们是：Number、String、Boolean、Symbol。所以，我们必须认识到 3 与 new Number(3) 是完全不同的值，它们一个是 Number 类型， 一个是对象类型。
+
+Number、String 和 Boolean，三个构造器是两用的，当跟 new 搭配时，它们产生对象，当直接调用时，它们表示强制类型转换。Symbol 函数比较特殊，直接用 new 调用它会抛出错误，但它仍然是 Symbol 对象的构造器。
 
 JavaScript 语言设计上试图模糊对象和基本类型之间的关系，我们日常代码可以把对象的方法在基本类型上使用，比如：
 
@@ -187,12 +199,6 @@ console.log(output); // a
 var output = up.charAt(6);
 ```
 
-当执行
-
-```javascript
-var output = up.charAt(6);
-```
-
 这个步骤的时候后台会这样
 
 ```javascript
@@ -214,8 +220,8 @@ console.log(b.toUpperCase()); // ABCDEFG
 console.log(b); // abcdefg
 ```
 
-它只是返回一个变成大写的副本没有改变原始的变量，而且不能在原始数据类型上添加属性和方法。因为创建的只是一个临时对象，写的属性和方法只存在于临时对象上，引用完后随即销毁。
-这儿需要注意 null 和 undefined，首先是 null  它是一个关键字，表示为 “空" 并且 
+它只是返回一个变成大写的副本没有改变原始的变量，而且不能在原始数据类型上添加属性和方法。因为**创建的只是一个临时对象，写的属性和方法只存在于临时对象上，引用完后随即销毁**。
+这儿需要注意 null 和 undefined，首先是 null  它是一个关键字，表示为 “空",
 
 ```javascript
 console.log(typeof null); // object
@@ -223,18 +229,18 @@ console.log(typeof null); // object
 
 由此可见它是一个对象，但是它只是指向一个空对象的引用。
 
-然后是undefined，undefined是另一个表示“空值”特殊值，它表示未定义，当我们对变量只声明没有初始化时(赋值)，输出为undefined，当我们引用一个不存在的属性时，输出也为undefined，但是请注意它并不是一个关键字，它是一个变量，而且是一个全局变量，我们可以验证一下：
+然后是 undefined，undefined 是另一个表示“空值”特殊值，它表示未定义，当我们对变量只声明没有初始化时(赋值)，输出为 undefined，当我们引用一个不存在的属性时，输出也为 undefined，但是需要注意注意它并不是一个关键字，它是一个变量，而且是一个全局变量，我们可以验证一下：
 
 ```javascript
-console.log(undefined in window); //true
+console.log(undefined in window); // true
 ```
 而且
 
 ```javascript
-console.log(typeof undefined); //undefined
+console.log(typeof undefined); // undefined
 ```
 
-这严格表明undefined是这个类型的唯一成员，除了undefined，JavaScript里面其他一切的都可以看作是对象。
+这严格表明 undefined 是这个类型的唯一成员，除了 undefined，JavaScript 里面其他一切的都可以看作是对象。
 
 ## 五、装箱转换与拆箱转换
 
@@ -242,7 +248,7 @@ console.log(typeof undefined); //undefined
 
 每一种基本类型 Number、String、Boolean、Symbol 在对象中都有对应的类，所谓装箱转换，正是把基本类型转换为对应的对象，它是类型转换中一种相当重要的种类。
 
-我们都知道全局的 Symbol 函数无法使用 new 来调用，但我们仍可以利用装箱机制来得到一个 Symbol 对象，我们可以利用一个函数的 call 方法来强迫产生装箱。我们定义一个函数，函数里面只有 return this，然后我们调用函数的 call 方法到一个 Symbol 类型的值上，这样就会产生一个 symbol Object。我们可以用 console.log 看一下这个东西的 type of，它的值是 object，我们使用 symbolObject instanceof 可以看到，它是 Symbol 这个类的实例，我们找它的 constructor 也是等于 Symbol 的，所以我们无论从哪个角度看，它都是 Symbol 装箱过的对象：
+我们都知道全局的 Symbol 函数无法使用 new 来调用，但我们仍可以利用装箱机制来得到一个 Symbol 对象，我们可以利用一个函数的 call 方法来强迫产生装箱。我们定义一个函数，函数里面只有 `return this`，然后我们调用函数的 call 方法到一个 Symbol 类型的值上，这样就会产生一个 `symbol Object`。我们可以用 `console.log` 看一下这个东西的 type of，它的值是 object，我们使用 `symbolObject instanceof` 可以看到，它是 Symbol 这个类的实例，我们找它的 constructor 也是等于 Symbol 的，所以我们无论从哪个角度看，它都是 Symbol 装箱过的对象：
 
 ```javascript
 var symbolObject = (function(){ return this; }).call(Symbol("a"));
@@ -273,8 +279,9 @@ console.log(Object.prototype.toString.call(symbolObject)); // [object Symbol]
 
 ### 2、拆箱转换
 
-在 JavaScript 标准中，规定了 ToPrimitive 函数，它是对象类型到基本类型的转换（即，拆箱转换）。对象到 String 和 Number 的转换都遵循“先拆箱再转换”的规则。通过拆箱转换，把对象变成基本类型，再从基本类型转换为对应的 String 或者 Number。
-拆箱转换会尝试调用 valueOf 和 toString 来获得拆箱后的基本类型。如果 valueOf 和 toString 都不存在，或者没有返回基本类型，则会产生类型错误 TypeError。
+对象到 String 和 Number 的转换都遵循“先拆箱再转换”的规则。通过拆箱转换，把对象变成基本类型，再从基本类型转换为对应的 String 或者 Number。
+
+**拆箱转换会尝试调用 valueOf 和 toString 来获得拆箱后的基本类型。如果 valueOf 和 toString 都不存在，或者没有返回基本类型，则会产生类型错误 TypeError**。
 
 ```javascript
 var o = {
@@ -304,7 +311,7 @@ String(o)
 
 可以看到，toString 和 valueOf 的执行顺序并不固定，而是根据某个条件来决定的，那么是根据什么呢？
 
-实际上每个对象都有一个 Symbol.toPrimitive 属性，指向一个方法。该对象被转为基本类型的值时，会调用这个方法，返回该对象对应的基本类型值。Symbol.toPrimitive 被调用时，会接受一个字符串参数，表示当前运算的模式，一共有三种模式。
+实际上每个对象都有一个 `Symbol.toPrimitive` 属性，其指向一个方法。当对象需要被转为基本类型的值时，会调用这个方法，返回该对象对应的基本类型值。`Symbol.toPrimitive` 被调用时，会接受一个字符串参数，表示当前运算的模式，一共有三种模式。
 
 - Number：该场合需要转成数值
 - String：该场合需要转成字符串
@@ -334,23 +341,23 @@ obj == 'default' // true
 String(obj) // 'str'
 ```
 
-实际上拆箱转换的具体规则如下：
+因此实际上拆箱转换的具体规则如下：
 
-1. 检查对象中是否有用户显式定义的 [Symbol.toPrimitive] 方法，如果有，直接调用；
+1. 检查对象中是否有用户显式定义的 `[Symbol.toPrimitive]` 方法，如果有，直接调用；
 2. 如果没有，则执行原内部函数 ToPrimitive，然后判断传入的 hint 值，如果其值为 string，顺序调用对象的 toString 和 valueOf 方法（其中 toString 方法一定会执行，如果其返回一个基本类型值，则返回、终止运算，否则继续调用 valueOf 方法）；
 3. 如果判断传入的 hint 值不为 string，则就可能为 number 或者 default 了，均会顺序调用对象的 valueOf 和 toString 方法（其中 valueOf 方法一定会执行，如果其返回一个基本类型值，则返回、终止运算，否则继续调用 toString 方法）；
 
-因此对象通过显式指定 toPrimitive Symbol 来覆盖原有的行为，示例：
+因此对象可以通过显式指定 toPrimitive Symbol 来覆盖原有的行为，示例：
 
 ```javascript
 var o = {
-	valueOf : () => {console.log("valueOf"); return {}},
-    toString : () => {console.log("toString"); return {}}
+  valueOf : () => {console.log("valueOf"); return {}},
+  toString : () => {console.log("toString"); return {}}
 }
 
 o[Symbol.toPrimitive] = () => {
-	console.log("toPrimitive"); 
-	return "hello"
+  console.log("toPrimitive"); 
+  return "hello"
 }
 
 console.log(o + "")
@@ -358,15 +365,14 @@ console.log(o + "")
 // hello
 ```
 
-注：类型转换的内部实现是通过 toPrimitive(input[,PreferedType]) 方法进行转换的，这个方法的作用是将 input 转换成一个非对象类型。其中参数 PreferedType 是可选的，作用是指出了 input 期待被转成的类型，默认值为 number，如果 preferedType 的值是"string"，那么先执行 toString，后执行 valueOf，否则先执行 valueOf 后执行 toString。
 
 ## 六、类型转换方法
 
-JavaScript中类型转换的基本原理就是上述的装箱转换和拆箱转换，下面我们一起来看一下我们平时常用的内省转换
+JavaScript 中类型转换的基本原理就是上述的装箱转换和拆箱转换，下面我们一起来看一下我们平时常用的内省转换
 
 ### 1、显式类型转换
 
-**Number(mix)**  ：把mix转化成数字类型  可以转为数字的就转化为相应的数字，不能转化的就转为NaN ，其中：
+**Number(mix)**  ：把 mix 转化成数字类型  可以转为数字的就转化为相应的数字，不能转化的就转为NaN ，其中：
 ```javascript
 Number(true) // 1
 Number(false) // 0
@@ -374,36 +380,21 @@ Number(null) // 0
 Number(undefined) // NaN
 ```
 
-**parseInt(mix,radix)** ：把mix转化成整数 除了数字和能转化为数字的字符串，其他都转化为NaN，当mix为字符串时，则从第一位一直到非数字截止，即该方法可以截断 ，radix是将mix看成radix进制  来进行转化  若有小数部分则是直接去掉  。
-
-注意：
+**parseInt(mix,radix)** ：把 mix 转化成整数 除了数字和能转化为数字的字符串，其他都转化为 NaN。
 
 ```javascript
 parseInt(true) // NaN； 
 parseInt(false) // NaN；
 ```
 
-在把字符串转化为数字时，parseInt()可以截断，但Number()不能 ：
+当 mix 为字符串时，则从第一位一直到非数字截止，即该方法可以截断，但 `Number()` 不能 ：
 
 ```javascript
 parseInt("123qqq") // 123；
 Number("123qqq") // NaN
 ```
 
-**parseFloat(number)** ：转化成 浮点类型，从一位开始看，到除了第一个点以外的非数字位截止。
-
-**Boolean(mix)** ： 转化为boolean类型。
-
-**String(mix)** ：转化为字符串类型。
-
-注：mix.toString(radix)  与String(mix)用法不同，且undefined和null不能使用， radix是目标值的进制，将mix转化成radix进制。
-
-```javascript
-null.toString() // 报错
-String(null) // "null"
-```
-
-例如将二进制10100转化为16进制的过程是：先parseInt()转化为10进制，然后在toString()转化为16进制：
+radix 是目标值的进制，将 mix 看成 radix 进制来进行转化，若有小数部分则是直接去掉。例如将二进制 10100 转化为 16 进制的过程是：先 parseInt() 转化为10进制，然后在 toString() 转化为16进制：
 
 ```javascript
 var num = 10100;
@@ -411,31 +402,46 @@ var test = parseInt(num, 2);
 num.toString(16);
 ```
 
+**parseFloat(number)** ：转化成浮点类型，从一位开始看，到除了第一个点以外的非数字位截止。
+
+**Boolean(mix)** ： 转化为 boolean 类型。
+
+**String(mix)** ：转化为字符串类型。
+
+注：`mix.toString(radix)` 与 `String(mix)` 用法不同，且 undefined 和 null 不能使用
+
+```javascript
+null.toString() // 报错
+String(null) // "null"
+```
+
+
+
 ### 2、隐式类型转换
 
-**isNaN()**：内部隐式调用Number()进行类型转化，再判断Number()返回的值是否是NaN。如：
+**isNaN()**：内部隐式调用 Number()进行类型转化，再判断 Number()返回的值是否是NaN。如：
 
 ```javascript
 isNaN（null）// false   
 isNaN（underfined) // true
 ```
 
-**++、--、+、-**：内部隐式调用Number（）转化后再进行相应计算。
+**++、--、+、-**：内部隐式调用 `Number()` 转化后再进行相应计算。
 
-**+**： 当加号两边有一个是字符串的话，就会调用String，然后进行字符串的拼接。
+**+**: 当加号两边有一个是字符串的话，就会调用 `String()`，然后进行字符串的拼接。
 
-**-    *    /    %**：内部隐式调用Number（）进行类型后再计算。
+**-    *    /    %**：内部隐式调用 `Number()` 进行类型后再计算。
 
-**< > <=  >=**：字符串和数字比  会调用Number ()转化为数字。
+**< > <=  >=**：字符串和数字比会调用 `Number()` 转化为数字。
 
 **== 、!=**：转换规则如下表所示：
 |类型1| 类型2| 转换结果|
 |--|--|--|
-|null  | undefined | 不发生类型转换，直接返回true |
-| null或undefined |其它任何非null或undefined的类型 | 不发生类型转换，直接返回false |
-| NaN | 基本类型或引用类型 | false，NaN不等于任何东西，包括自身
-| string、number或boolean等基本类型 | Date等对象 | Date等对象发生拆箱转换
-| string、number或boolea等基本类型 | string、number或boolea等基本类型 | 基本类型转换为数字进行比较 |
+|null  | undefined | 不发生类型转换，直接返回 true |
+| null 或 undefined |其它任何非 null 或 undefined 的类型 | 不发生类型转换，直接返回 false |
+| NaN | 基本类型或引用类型 | false，NaN 不等于任何东西，包括自身
+| string、number 或 boolean 等基本类型 | Date 等对象 | Date 等对象发生拆箱转换
+| string、number 或 boolen 等基本类型 | string、number 或 boolea 等基本类型 | 基本类型转换为数字进行比较 |
 
 **&&、||、 ！**：
 
@@ -452,7 +458,8 @@ var b = 0 && 2+2; //0
 
 !：将后面的表达式转换为布尔值。
 
-
 ## 参考资料
 
 极客时间《重学前端》专栏
+《ES6标准入门》第三版
+
