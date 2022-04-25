@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"kyleezhang.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"enable":false,"style":"tabs","active":false,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"kyleezhang.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"enable":true,"style":"tabs","active":false,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
   <meta name="description" content="学源于思">
@@ -2368,7 +2368,7 @@ When webpack processes your application, it starts from a list of modules define
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-02-19 23:17:55" itemprop="dateModified" datetime="2022-02-19T23:17:55+08:00">2022-02-19</time>
+                <time title="修改时间：2022-04-17 00:38:49" itemprop="dateModified" datetime="2022-04-17T00:38:49+08:00">2022-04-17</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -2386,7 +2386,7 @@ When webpack processes your application, it starts from a list of modules define
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>10k</span>
+              <span>9.9k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -4036,7 +4036,7 @@ When webpack processes your application, it starts from a list of modules define
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-02-19 23:17:55" itemprop="dateModified" datetime="2022-02-19T23:17:55+08:00">2022-02-19</time>
+                <time title="修改时间：2022-04-16 22:06:43" itemprop="dateModified" datetime="2022-04-16T22:06:43+08:00">2022-04-16</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -4073,10 +4073,10 @@ When webpack processes your application, it starts from a list of modules define
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>作用域和作用域链在我学习 JavaScript 过程中曾经带给我很长时间的困惑，也曾经在CSDN总结过一篇博客，但当时好多想法在现在看来依然过于浅薄，所以想用这篇博客来梳理一下自己对于作用域和作用域链的一些全新认识和想法，也希望能帮助和我当初一样对此感到困惑的同学</p>
+          <p>作用域和作用域链在我学习 JavaScript 过程中曾经带给我很长时间的困惑，也曾经在CSDN总结过一篇<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_44196299/article/details/105492212?spm=1001.2014.3001.5501">博客</a>，但当时好多想法在现在看来依然过于浅薄，所以想用这篇博客来梳理一下自己对于作用域和作用域链的一些全新认识和想法，也希望能帮助和我当初一样对此感到困惑的同学，知识浅薄，希望大家不吝指教。</p>
 <h2 id="作用域到底是什么"><a class="markdownIt-Anchor" href="#作用域到底是什么"></a> 作用域到底是什么</h2>
-<p>我认为对于作用域认识的关键在于跳出 JavaScript 以一种更高的维度去看它，几乎所有编程语言最基本的功能之一就是能够储存变量当中的值，并且能够在之后对这个变量进行访问和修改，事实上正是这种储存和访问变量值的能力将状态带给了程序，因此程序语言需要制定这样一套规则来存储变量，同时能够方便在日后访问和修改这些变量，而这套规则就是<strong>作用域</strong>，我们由根据这套规则在何时生成将其分为<strong>词法作用域</strong>与<strong>动态作用域</strong><br />
-在详细介绍两者之前我们先需要了解编程语言的编译过程：</p>
+<p>我认为对于作用域认识的关键在于跳出 JavaScript 以一种更高的维度去看它，几乎所有编程语言最基本的功能之一就是能够储存变量当中的值，并且能够在之后对这个变量进行访问和修改，事实上正是这种储存和访问变量值的能力将状态带给了程序，因此程序语言需要制定这样一套规则来存储变量，同时能够方便在日后访问和修改这些变量，而这套规则就是<strong>作用域</strong>，我们由根据这套规则在何时生成将其分为<strong>词法作用域</strong>与<strong>动态作用域</strong>。</p>
+<p>在详细介绍两者之前我们先需要了解编程语言的编译过程：</p>
 <ol>
 <li>分词/词法分析</li>
 <li>解析/语法分析</li>
@@ -4682,6 +4682,7 @@ When webpack processes your application, it starts from a list of modules define
 
 
   
+
 
   <!-- 背景动画 -->
 <script src="/js/particle.js"></script>
