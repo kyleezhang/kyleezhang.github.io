@@ -69,6 +69,8 @@ footer:
   # Powered by Hexo & NexT
   powered: false
 
+  counter: true
+
   # Beian ICP and gongan information for Chinese users. See: https://beian.miit.gov.cn, http://www.beian.gov.cn
   beian:
     enable: false
@@ -103,7 +105,7 @@ scheme: Pisces
 #scheme: Gemini
 
 # Dark Mode
-darkmode: false
+darkmode: true
 
 
 # ---------------------------------------------------------------
@@ -566,7 +568,7 @@ quicklink:
 
 # Multiple Comment System Support
 comments:
-  enable: false
+  enable: true
   # Available values: tabs | buttons
   style: tabs
   # Choose a comment system to be displayed by default.
@@ -638,17 +640,17 @@ livere_uid: # <your_uid>
 # Gitalk
 # For more information: https://gitalk.github.io, https://github.com/gitalk/gitalk
 gitalk:
-  enable: false
-  github_id: # GitHub repo owner
-  repo: # Repository name to store issues
-  client_id: # GitHub Application Client ID
-  client_secret: # GitHub Application Client Secret
-  admin_user: # GitHub repo owner and collaborators, only these guys can initialize gitHub issues
+  enable: true
+  github_id: kyleezhang # GitHub repo owner
+  repo: kyleezhang.github.io # Repository name to store issues
+  client_id: 5cb74a324ff7b0f7b544 # GitHub Application Client ID
+  client_secret: cd372db5bb46f07eda7fae4b615fd27371c80dc7 # GitHub Application Client Secret
+  admin_user: kyleezhang # GitHub repo owner and collaborators, only these guys can initialize gitHub issues
   distraction_free_mode: true # Facebook-like distraction free mode
   # Gitalk's display language depends on user's browser or system environment
   # If you want everyone visiting your site to see a uniform language, you can set a force language value
   # Available values: en | es-ES | fr | ru | zh-CN | zh-TW
-  language:
+  language: zh-CN
 
 
 # ---------------------------------------------------------------
@@ -717,11 +719,11 @@ firestore:
 # Get more information on http://ibruce.info/2015/04/04/busuanzi
 busuanzi_count:
   enable: true
-  total_visitors: false
+  total_visitors: true
   total_visitors_icon: fa fa-user
-  total_views: false
+  total_views: true
   total_views_icon: fa fa-eye
-  post_views: false
+  post_views: true
   post_views_icon: fa fa-eye
 
 
