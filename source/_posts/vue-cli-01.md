@@ -4,9 +4,9 @@ date: 2021-01-28 21:03:53
 toc: true
 mathjax: false
 categories: 
-- 前端
-tags: 
 - 前端工程化
+tags: 
+- cli
 ---
 
 到底什么才是前端工程化呢？我们知道一个前端项目的开发往往要经历如下步骤：

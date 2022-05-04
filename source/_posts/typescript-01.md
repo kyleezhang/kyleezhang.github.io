@@ -4,7 +4,7 @@ date: 2020-11-15 16:30:03
 toc: true
 mathjax: false
 categories: 
-- 前端
+- TypeScript 学习笔记
 tags: 
 - TypeScript
 ---
@@ -187,6 +187,42 @@ var Enum;
 
 从示例我们可以发现异构枚举中的数字成员实现了反向映射，而字符串成员没有，但是异构枚举容易造成混淆，不推荐使用。
 
+**对于数字枚举和异构枚举，TypeScript 既允许通过值访问枚举，也允许通过键访问，不过这样极易导致问题**，举个🌰：
+
+```typescript
+// 数字枚举
+enum Direction1 {
+  NORTH, // 0
+  SOUTH, // 1
+  EAST, // 2
+  WEST, // 3
+}
+console.log(Direction1[0]) // 'NORTH'
+console.log(Direction1[10]) // undefined
+
+// 字符串枚举
+enum Direction2 {
+  NORTH = "NORTH",
+  SOUTH = "SOUTH",
+  EAST = "EAST",
+  WEST = "WEST",
+}
+console.log(Direction2[0]) // Error: Property '0' does not exist on type 'typeof Direction'.(7053)
+
+// 异构枚举
+enum Direction3 {
+  NORTH, // 0
+  SOUTH, // 1
+  EAST = "EAST",
+  WEST = "WEST",
+}
+console.log(Direction3[0]) // 'NORTH'
+console.log(Direction3[2]) // undefined
+console.log(Direction3[10]) // undefined
+```
+
+其实上述实例中部分枚举值并不存在例如 `Direction1[10]` ，但是 TypeScript 并没有阻止这种操作，为了避免这种不安全的访问操作，我们可以使用**常量枚举**。
+
 #### 4、常量枚举
 
 除了数字枚举和字符串枚举之外，还有一种特殊的枚举——常量枚举。它是使用 const 关键字修饰的枚举，常量枚举会使用内联语法，不会为枚举类型编译生成任何 JavaScript，举个🌰:
@@ -207,6 +243,21 @@ let dir: Direction = Direction.NORTH;
 ```javascript
 "use strict";
 var dir = 0 /* NORTH */;
+```
+
+常量枚举对于上述不安全操作有了更好的处理：
+
+```typescript
+const enum Direction {
+  NORTH,
+  SOUTH,
+  EAST,
+  WEST,
+}
+
+console.log(Direction.MIDDLE) // Error: Property 'MIDDLE' does not exist on type 'typeof Direction'.(2339)
+console.log(Direction[0]) // Error: A const enum member can only be accessed using a string literal.
+console.log(Direction[10]) // Error: A const enum member can only be accessed using a string literal.
 ```
 
 #### 5、枚举成员

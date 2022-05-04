@@ -48,7 +48,7 @@
     {%- if theme.scheme !== 'Gemini' %}
       {%- set next_site = 'https://' + theme.scheme | lower + '.theme-next.org' %}
     {%- endif %}
-    {{- __('footer.powered', next_url('https://hexo.io', 'Hexo', {class: 'theme-link'}) + ' & ' + next_url(next_site, 'NexT.' + theme.scheme, {class: 'theme-link'})) }}
+    {{- __('footer.powered', next_url('https://hexo.io', 'Hexo', {class: 'theme-link'}) + ' & ' + next_url(next_site, 'NexT.' + theme.scheme, {class: 'theme-link'})) }}  
   </div>
 {%- endif %}
 
@@ -57,10 +57,6 @@
     <script src="//s7.addthis.com/js/300/addthis_widget.js#pubid={{ theme.add_this_id }}" async="async"></script>
   </div>
 {%- endif %}
-
-{% if theme.footer.counter %}
-    <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
-{% endif %}
 
 {{- next_inject('footer') }}
 

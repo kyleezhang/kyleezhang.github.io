@@ -4,7 +4,7 @@ date: 2020-10-30 19:45:51
 toc: true
 mathjax: false
 categories: 
-- 前端
+- 深入理解 JavaScript
 tags: 
 - JavaScript
 - Chrome

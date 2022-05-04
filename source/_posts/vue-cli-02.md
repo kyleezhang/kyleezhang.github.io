@@ -4,9 +4,9 @@ date: 2021-05-15 12:00:35
 toc: true
 mathjax: false
 categories: 
-- 前端
-tags: 
 - 前端工程化
+tags: 
+- cli
 ---
 
 ## Vue CLI

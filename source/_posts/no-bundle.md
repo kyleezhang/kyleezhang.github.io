@@ -4,9 +4,9 @@ date: 2021-08-16 10:02:00
 toc: true
 mathjax: false
 categories: 
-- 前端
-tags: 
 - 前端工程化
+tags: 
+- Vite
 ---
 
 什么是无包构建呢？这是一个与基于模块化打包的构建方案相对的概念。

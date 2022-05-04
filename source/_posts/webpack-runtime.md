@@ -4,9 +4,9 @@ date: 2020-12-16 15:20:42
 toc: true
 mathjax: false
 categories: 
-- 前端
-tags: 
 - 前端工程化
+tags: 
+- webpack
 ---
 
 其实 Webpack 官网首屏的英雄区就已经很清楚地描述了它的工作原理，如下图所示：

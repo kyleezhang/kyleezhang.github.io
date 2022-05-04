@@ -4,9 +4,9 @@ date: 2021-08-05 10:37:42
 toc: true
 mathjax: false
 categories: 
-- 前端
-tags: 
 - 前端工程化
+tags: 
+- webpack
 ---
 
 在我的博客[Webpack运行机制](https://kyleezhang.github.io/2020/12/16/webpack-runtime/)中介绍了 Webpack 的基本工作流程，并介绍了 Compiler 和 Compilation 两个核心模块中的生命周期 Hooks，那么在 Compiler 和 Compilation 的工作流程里，最耗时的阶段分别是哪个呢？

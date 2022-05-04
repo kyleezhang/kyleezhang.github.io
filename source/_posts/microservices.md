@@ -4,7 +4,7 @@ date: 2021-08-15 21:41:42
 toc: true
 mathjax: false
 categories: 
-- 服务端
+- 应用架构
 tags: 
 - 微服务
 ---

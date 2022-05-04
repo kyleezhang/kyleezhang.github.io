@@ -5,7 +5,7 @@ date: 2020-10-25 22:12:57
 toc: true
 mathjax: false
 categories: 
-- 前端
+- 浏览器工作原理
 tags:
 - Chrome
 ---

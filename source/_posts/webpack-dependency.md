@@ -4,9 +4,9 @@ date: 2021-08-12 11:31:12
 toc: true
 mathjax: false
 categories: 
-- 前端
-tags: 
 - 前端工程化
+tags: 
+- webpack
 ---
 
 > 非原创：原文地址[有点难的 webpack 知识点：Dependency Graph 深度解析](https://mp.weixin.qq.com/s/kr73Epnn6wAx9DH7KRVUaA)

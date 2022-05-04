@@ -4,7 +4,7 @@ date: 2020-11-18 11:06:03
 toc: true
 mathjax: false
 categories:
-- 前端
+- TypeScript 学习笔记
 tags: 
 - TypeScript
 ---
