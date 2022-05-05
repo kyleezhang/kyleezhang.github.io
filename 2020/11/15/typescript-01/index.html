@@ -30,7 +30,7 @@
 <meta property="og:image" content="http://kyleezhang.com/assets/typescript-01/01.png">
 <meta property="og:image" content="http://kyleezhang.com/assets/typescript-01/02.png">
 <meta property="article:published_time" content="2020-11-15T16:30:03.000Z">
-<meta property="article:modified_time" content="2022-04-25T02:54:17.391Z">
+<meta property="article:modified_time" content="2022-05-05T01:40:34.646Z">
 <meta property="article:author" content="kyleezhang">
 <meta property="article:tag" content="TypeScript">
 <meta name="twitter:card" content="summary">
@@ -221,7 +221,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-04-25 02:54:17" itemprop="dateModified" datetime="2022-04-25T02:54:17+00:00">2022-04-25</time>
+                <time title="修改时间：2022-05-05 01:40:34" itemprop="dateModified" datetime="2022-05-05T01:40:34+00:00">2022-05-05</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -229,7 +229,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%89%8D%E7%AB%AF/" itemprop="url" rel="index"><span itemprop="name">前端</span></a>
+                  <a href="/categories/TypeScript-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">TypeScript 学习笔记</span></a>
                 </span>
             </span>
 
@@ -246,14 +246,14 @@
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>13k</span>
+              <span>14k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>12 分钟</span>
+              <span>13 分钟</span>
             </span>
 
         </div>
@@ -321,11 +321,16 @@
 <p>对应的ES5代码如下：</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&quot;use strict&quot;</span>;</span><br><span class="line"><span class="keyword">var</span> Enum;</span><br><span class="line">(<span class="function"><span class="keyword">function</span> (<span class="params">Enum</span>) </span>&#123;</span><br><span class="line">  Enum[Enum[<span class="string">&quot;A&quot;</span>] = <span class="number">0</span>] = <span class="string">&quot;A&quot;</span>;</span><br><span class="line">  Enum[Enum[<span class="string">&quot;B&quot;</span>] = <span class="number">1</span>] = <span class="string">&quot;B&quot;</span>;</span><br><span class="line">  Enum[<span class="string">&quot;C&quot;</span>] = <span class="string">&quot;C&quot;</span>;</span><br><span class="line">  Enum[<span class="string">&quot;D&quot;</span>] = <span class="string">&quot;D&quot;</span>;</span><br><span class="line">  Enum[Enum[<span class="string">&quot;E&quot;</span>] = <span class="number">8</span>] = <span class="string">&quot;E&quot;</span>;</span><br><span class="line">  Enum[Enum[<span class="string">&quot;F&quot;</span>] = <span class="number">9</span>] = <span class="string">&quot;F&quot;</span>;</span><br><span class="line">&#125;)(Enum || (Enum = &#123;&#125;));</span><br></pre></td></tr></table></figure>
 <p>从示例我们可以发现异构枚举中的数字成员实现了反向映射，而字符串成员没有，但是异构枚举容易造成混淆，不推荐使用。</p>
+<p><strong>对于数字枚举和异构枚举，TypeScript 既允许通过值访问枚举，也允许通过键访问，不过这样极易导致问题</strong>，举个🌰：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 数字枚举</span></span><br><span class="line"><span class="built_in">enum</span> Direction1 &#123;</span><br><span class="line">  NORTH, <span class="comment">// 0</span></span><br><span class="line">  SOUTH, <span class="comment">// 1</span></span><br><span class="line">  EAST, <span class="comment">// 2</span></span><br><span class="line">  WEST, <span class="comment">// 3</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">console</span>.log(Direction1[<span class="number">0</span>]) <span class="comment">// &#x27;NORTH&#x27;</span></span><br><span class="line"><span class="built_in">console</span>.log(Direction1[<span class="number">10</span>]) <span class="comment">// undefined</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 字符串枚举</span></span><br><span class="line"><span class="built_in">enum</span> Direction2 &#123;</span><br><span class="line">  NORTH = <span class="string">&quot;NORTH&quot;</span>,</span><br><span class="line">  SOUTH = <span class="string">&quot;SOUTH&quot;</span>,</span><br><span class="line">  EAST = <span class="string">&quot;EAST&quot;</span>,</span><br><span class="line">  WEST = <span class="string">&quot;WEST&quot;</span>,</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">console</span>.log(Direction2[<span class="number">0</span>]) <span class="comment">// Error: Property &#x27;0&#x27; does not exist on type &#x27;typeof Direction&#x27;.(7053)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 异构枚举</span></span><br><span class="line"><span class="built_in">enum</span> Direction3 &#123;</span><br><span class="line">  NORTH, <span class="comment">// 0</span></span><br><span class="line">  SOUTH, <span class="comment">// 1</span></span><br><span class="line">  EAST = <span class="string">&quot;EAST&quot;</span>,</span><br><span class="line">  WEST = <span class="string">&quot;WEST&quot;</span>,</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">console</span>.log(Direction3[<span class="number">0</span>]) <span class="comment">// &#x27;NORTH&#x27;</span></span><br><span class="line"><span class="built_in">console</span>.log(Direction3[<span class="number">2</span>]) <span class="comment">// undefined</span></span><br><span class="line"><span class="built_in">console</span>.log(Direction3[<span class="number">10</span>]) <span class="comment">// undefined</span></span><br></pre></td></tr></table></figure>
+<p>其实上述实例中部分枚举值并不存在例如 <code>Direction1[10]</code> ，但是 TypeScript 并没有阻止这种操作，为了避免这种不安全的访问操作，我们可以使用<strong>常量枚举</strong>。</p>
 <h4 id="4-常量枚举"><a class="markdownIt-Anchor" href="#4-常量枚举"></a> 4、常量枚举</h4>
 <p>除了数字枚举和字符串枚举之外，还有一种特殊的枚举——常量枚举。它是使用 const 关键字修饰的枚举，常量枚举会使用内联语法，不会为枚举类型编译生成任何 JavaScript，举个🌰:</p>
 <figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="built_in">enum</span> Direction &#123;</span><br><span class="line">  NORTH,</span><br><span class="line">  SOUTH,</span><br><span class="line">  EAST,</span><br><span class="line">  WEST,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> dir: Direction = Direction.NORTH;</span><br></pre></td></tr></table></figure>
 <p>对应的ES5代码如下：</p>
 <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&quot;use strict&quot;</span>;</span><br><span class="line"><span class="keyword">var</span> dir = <span class="number">0</span> <span class="comment">/* NORTH */</span>;</span><br></pre></td></tr></table></figure>
+<p>常量枚举对于上述不安全操作有了更好的处理：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="built_in">enum</span> Direction &#123;</span><br><span class="line">  NORTH,</span><br><span class="line">  SOUTH,</span><br><span class="line">  EAST,</span><br><span class="line">  WEST,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(Direction.MIDDLE) <span class="comment">// Error: Property &#x27;MIDDLE&#x27; does not exist on type &#x27;typeof Direction&#x27;.(2339)</span></span><br><span class="line"><span class="built_in">console</span>.log(Direction[<span class="number">0</span>]) <span class="comment">// Error: A const enum member can only be accessed using a string literal.</span></span><br><span class="line"><span class="built_in">console</span>.log(Direction[<span class="number">10</span>]) <span class="comment">// Error: A const enum member can only be accessed using a string literal.</span></span><br></pre></td></tr></table></figure>
 <h4 id="5-枚举成员"><a class="markdownIt-Anchor" href="#5-枚举成员"></a> 5、枚举成员</h4>
 <p>枚举成员的值具有如下特性：</p>
 <ul>
@@ -618,12 +623,12 @@
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-count">7</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-count">12</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -671,17 +676,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="站点总字数">563k</span>
+    <span title="站点总字数">564k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">8:32</span>
+    <span title="站点阅读时长">8:33</span>
 </div>
-
-
-    <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
-
 
 
 
