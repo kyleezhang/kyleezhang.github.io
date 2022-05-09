@@ -64,30 +64,39 @@ int add(C a, C b) {
 
 ## 基本类型&语法
 
-### 一、Boolean类型
+### 一、boolean类型
 
 ```typescript
-let bool: boolean = true
+let bool1: boolean = true
+let bool2 = false // boolean
+const bool3 = false // false
 ```
 
-### 二、Number类型
+### 二、number类型
 
 ```typescript
-let num: number = 123
+let num1: number = 123
+let num2 = 234 // number
+const num3 = 345 // 345
 ```
 
-### 三、String类型
+### 三、string类型
 
 ```typescript
-let str: string = 'abc'
+let str1: string = 'abc'
+let str2 = 'bcd' // string
+const str3 = 'cde' // 'cde'
 ```
 
-### 四、Symbol类型
+我们可以通过直接声明或让 TypeScript 推导等多种方式声明 boolean / number / string 类型，需要注意的是通过 const 关键字声明会将类型收敛为具体的属性值。
+
+### 四、symbol类型
 
 ```typescript
 let s1 = Symbol();
 let s2: symbol = Symbol()
 ```
+
 
 ### 五、Array类型
 
@@ -296,7 +305,7 @@ var Char;
 })(Char || (Char = {}));
 ```
 
-### 七、Any类型
+### 七、any类型
 
 在 TypeScript 中，任何类型都可以被归为 any 类型。这让 any 类型成为了类型系统的顶级类型（也被称作全局超级类型）。
 
@@ -318,7 +327,7 @@ new value(); // OK
 value[0][1]; // OK
 ```
 
-在许多场景下，这太宽松了。使用 any 类型，可以很容易地编写类型正确但在运行时有问题的代码。如果我们使用 any 类型，就无法使用 TypeScript 提供的大量的保护机制。为了解决 any 带来的问题，TypeScript 3.0 引入了 unknown 类型。
+在许多场景下，这太宽松了。使用 any 类型，可以很容易地编写类型正确但在运行时有问题的代码。如果我们使用 any 类型，就无法使用 TypeScript 提供的大量的保护机制。如果想让 TypeScript 在遇到隐式 any 类型报错我们可以在 tsconfig.json 中启用 noImplicitAny，为了解决 any 带来的问题，TypeScript 3.0 引入了 unknown 类型。
 
 ### 八、unknown类型
 
@@ -367,7 +376,15 @@ new value(); // Error
 value[0][1]; // Error
 ```
 
-将 value 变量类型设置为 unknown 后，这些操作都不再被认为是类型正确的。通过将 any 类型改变为 unknown 类型，我们已将允许所有更改的默认设置，更改为禁止任何更改。
+将 value 变量类型设置为 unknown 后，这些操作都不再被认为是类型正确的。通过将 any 类型改变为 unknown 类型，我们已将允许所有更改的默认设置，更改为禁止任何更改，因此我们执行操作时不能假定 unknown 类型的值为某种特定类型，必须先向 typeScript 证明一个值确实是某个类型，举个🌰:
+
+```typescript
+let a: unknown = 30
+let c = a + 30 // Error: object is of type 
+if (typeof a === 'number') {
+  let d = a + 10
+} 
+```
 
 ### 九、Tuple类型
 
@@ -508,7 +525,7 @@ type Foo = string | number | boolean;
 
 #### 1、object类型
 
-TypeScript 2.2 引入了被称为 object 类型的新类型，它用于表示非原始类型，在 JavaScript 中以下类型被视为原始类型：string、boolean、number、bigint、symbol、null 和 undefined。它的引入主要是因为随着 TypeScript 2.2 的发布，标准库的类型声明已经更新，例如 Object.create() 和 Object.setPrototypeOf() 方法都需要为它们的原型参数指定 object | null 类型：
+TypeScript 2.2 引入了被称为 object 类型的新类型，它用于表示非原始类型，在 JavaScript 中以下类型被视为原始类型：string、boolean、number、bigint、symbol、null 和 undefined。它的引入主要是因为随着 TypeScript 2.2 的发布，标准库的类型声明已经更新，例如 `Object.create()` 和 `Object.setPrototypeOf()` 方法都需要为它们的原型参数指定 `object | null` 类型：
 
 ```typescript
 // node_modules/typescript/lib/lib.es5.d.ts
@@ -519,17 +536,17 @@ interface ObjectConstructor {
 }
 ```
 
-将原始类型作为原型传递给 Object.setPrototypeOf() 或 Object.create() 将导致在运行时抛出类型错误。TypeScript 现在能够捕获这些错误，并在编译时提示相应的错误：
+将原始类型作为原型传递给 `Object.setPrototypeOf()` 或 `Object.create()` 将导致在运行时抛出类型错误。TypeScript 现在能够捕获这些错误，并在编译时提示相应的错误：
 
 ```typescript
 const proto = {};
 
 Object.create(proto);     // OK
 Object.create(null);      // OK
-Object.create(undefined); // Error
-Object.create(1337);      // Error
-Object.create(true);      // Error
-Object.create("oops");    // Error
+Object.create(undefined); // Error: Argument of type 'undefined' is not assignable to parameter of type 'object | null'.
+Object.create(1337);      // Error: Argument of type 'number' is not assignable to parameter of type 'object'.
+Object.create(true);      // Error: Argument of type 'boolean' is not assignable to parameter of type 'object'.
+Object.create("oops");    // Error: Argument of type 'string' is not assignable to parameter of type 'object'.
 ```
 
 object 类型的另一个用例是作为 ES2015 的一部分引入的 WeakMap 数据结构。它的键必须是对象，不能是原始值。这个要求现在反映在类型定义中：
@@ -545,7 +562,7 @@ interface WeakMap<K extends object, V> {
 
 #### 2、Object类型
 
-TypeScript 定义了另一个与新的 object 类型几乎同名的类型，那就是 Object 类型。该类型是所有 Object 类的实例的类型。它由以下两个接口来定义：
+TypeScript 定义了另一个与新的 object 类型几乎同名的类型，那就是 Object 类型。该类型是所有 Object 类的实例的类型，实际上 Object 类由以下两个接口来定义：
 
 - Object 接口定义了 Object.prototype 原型对象上的属性
 - ObjectConstructor 接口定义了 Object 类的属性
@@ -593,9 +610,9 @@ function f(x: Object): { toString(): string } {
 }
 ```
 
-当我们传入一个 Object 对象的实例时，它总是会满足该函数的返回类型 —— 即要求返回对象包含一个 toString() 方法。
+当我们传入一个 Object 对象的实例时，它总是会满足该函数的返回类型 —— 即要求返回对象包含一个 `toString()` 方法。
 
-有趣的是，类型Object包括原始值：
+有趣的是，类型 Object 包括原始值：
 
 ```typescript
 function func1(x: Object) { }
@@ -621,11 +638,8 @@ func2('semlinker'); // Error
 需要注意的是，当对 Object 类型的变量进行赋值时，如果值对象属性名与 Object 接口中的属性冲突，则 TypeScript 编译器会提示相应的错误：
 
 ```typescript
-// Type '() => number' is not assignable to type 
-// '() => string'.
-// Type 'number' is not assignable to type 'string'.
 const obj1: Object = { 
-  toString() { return 123 } // Error
+  toString() { return 123 } // Error: Type '() => number' is not assignable to type '() => string'.
 };
 ```
 
@@ -643,22 +657,20 @@ const obj2: object = {
 let strictTypeHeaders: { [key: string]: string } = {};
 let header: object = {};
 header = strictTypeHeaders; // OK
-// Type 'object' is not assignable to type '{ [key: string]: string; }'.
-strictTypeHeaders = header; // Error
+strictTypeHeaders = header; // Error: Type 'object' is not assignable to type '{ [key: string]: string; }'.
 ```
 
 在上述例子中，最后一行会出现编译错误，这是因为 `{ [key: string]: string }` 类型相比 object 类型更加精确。而 `header = strictTypeHeaders;` 这一行却没有提示任何错误，是因为这两种类型都是非基本类型，object 类型比 `{ [key: string]: string }` 类型更加通用。
 
 #### 3、{}类型
 
-还有另一种类型与之非常相似，即空类型：{}。它描述了一个没有成员的对象。当你试图访问这样一个对象的任意属性时，TypeScript 会产生一个编译时错误：
+还有另一种类型与之非常相似，即空对象类型：{}。它描述了一个没有成员的对象。当你试图访问这样一个对象的任意属性时，TypeScript 会产生一个编译时错误：
 
 ```typescript
 // Type {}
 const obj = {};
 
-// Error: Property 'prop' does not exist on type '{}'.
-obj.prop = "semlinker";
+obj.prop = "semlinker"; // Error: Property 'prop' does not exist on type '{}'.
 ```
 
 但是，你仍然可以使用在 Object 类型上定义的所有属性和方法，这些属性和方法可通过 JavaScript 的原型链隐式地使用：
@@ -667,9 +679,21 @@ obj.prop = "semlinker";
 // Type {}
 const obj = {};
 
-// "[object Object]"
-obj.toString();
+obj.toString(); // "[object Object]"
 ```
+
+并且除 null 和 undefined 之外的任何类型都可以赋值给空对象类型，举个🌰：
+
+```typescript
+let danger = {}
+danger = {}
+danger = { x: 1 }
+danger = []
+danger = 123
+danger = 'danger'
+```
+
+这极易造成误解，因此我们应该尽可能避免使用空对象类型，我们用以下示例说明空对象类型在日常写法中带来的快（tong）乐（ku）:
 
 在 JavaScript 中创建一个表示二维坐标点的对象很简单：
 
@@ -683,10 +707,8 @@ pt.y = 4;
 
 ```typescript
 const pt = {};
-// Property 'x' does not exist on type '{}'
-pt.x = 3; // Error
-// Property 'y' does not exist on type '{}'
-pt.y = 4; // Error
+pt.x = 3; // Error: Property 'x' does not exist on type '{}'
+pt.y = 4; // Error: Property 'y' does not exist on type '{}'
 ```
 
 这是因为第1行中的 pt 类型是根据它的值 {} 推断出来的，你只可以对已知的属性赋值。这个问题怎么解决呢？我们可能会先想到接口，比如这样子：
@@ -697,9 +719,7 @@ interface Point {
   y: number;
 }
 
-// Type '{}' is missing the following 
-// properties from type 'Point': x, y(2739)
-const pt: Point = {}; // Error
+const pt: Point = {}; // Error: Type '{}' is missing the following properties from type 'Point': x, y(2739)
 pt.x = 3;
 pt.y = 4;
 ```
@@ -738,8 +758,7 @@ const id = { name: "semlinker" };
 const namedPoint = {};
 Object.assign(namedPoint, pt, id);
 
-// Property 'name' does not exist on type '{}'.(2339)
-namedPoint.name; // Error
+namedPoint.name; // Error: Property 'name' does not exist on type '{}'.(2339)
 ```
 
 这时候你可以使用对象展开运算符 ... 来解决上述问题：
@@ -749,7 +768,6 @@ const pt = { x: 666, y: 888 };
 const id = { name: "semlinker" };
 const namedPoint = {...pt, ...id}
 
-//(property) name: string
 namedPoint.name // "semlinker"
 ```
 
