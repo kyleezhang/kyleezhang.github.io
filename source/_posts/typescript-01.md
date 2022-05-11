@@ -62,9 +62,9 @@ int add(C a, C b) {
 
 由此可以看到动态类型语言无论在时间还是空间上都有比较多的性能损耗，虽然实际上 V8 为了提升 JavaScript 运行时的性能做了很多优化，但是 TypeScript 更重要的价值在于将静态类型的编程思维引入了 JavaScript，让我们可以在编译阶段以一种完全不同的视角去看待我们的代码。
 
-## 基本类型&语法
+# 基本类型&语法
 
-### 一、boolean类型
+## 一、boolean类型
 
 ```typescript
 let bool1: boolean = true
@@ -72,7 +72,7 @@ let bool2 = false // boolean
 const bool3 = false // false
 ```
 
-### 二、number类型
+## 二、number类型
 
 ```typescript
 let num1: number = 123
@@ -80,7 +80,7 @@ let num2 = 234 // number
 const num3 = 345 // 345
 ```
 
-### 三、string类型
+## 三、string类型
 
 ```typescript
 let str1: string = 'abc'
@@ -88,28 +88,177 @@ let str2 = 'bcd' // string
 const str3 = 'cde' // 'cde'
 ```
 
-我们可以通过直接声明或让 TypeScript 推导等多种方式声明 boolean / number / string 类型，需要注意的是通过 const 关键字声明会将类型收敛为具体的属性值。
+我们可以通过直接声明或让 TypeScript 推导等多种方式声明 boolean / number / string 类型，需要注意的是**通过 const 关键字声明会将类型收敛为具体的属性值**。
 
-### 四、symbol类型
+## 四、symbol类型
 
 ```typescript
-let s1 = Symbol();
-let s2: symbol = Symbol()
+let s1 = Symbol('a'); // symbol
+let s2: symbol = Symbol('a')
+const s3 = Symbol('a') // typeof s3
+const s4: unique symbol = Symbol('a') // typeof s4
+let s5: unique symbol = Symbol('a') // Error: A variable whose type is a 'unique symbol' type must be 'const'.
 ```
 
+这儿需要注意的是使用 const 声明的符号，TypeScript 会推导为 unique symbol 类型，在代码编辑器中显示为 type of *yourVariablename*，而不是 unique symbol。
 
-### 五、Array类型
+## 五、any类型
+
+在 TypeScript 中，任何类型都可以被归为 any 类型。这让 any 类型成为了类型系统的顶级类型（也被称作全局超级类型）。
+
+```typescript
+let notSure: any = 666;
+notSure = "semlinker";
+notSure = false;
+```
+
+any 类型本质上是类型系统的一个逃逸舱。作为开发者，这给了我们很大的自由：TypeScript 允许我们对 any 类型的值执行任何操作，而无需事先执行任何形式的检查。比如:
+
+```typescript
+let value: any;
+
+value.foo.bar; // OK
+value.trim(); // OK
+value(); // OK
+new value(); // OK
+value[0][1]; // OK
+```
+
+在许多场景下，这太宽松了。使用 any 类型，可以很容易地编写类型正确但在运行时有问题的代码。如果我们使用 any 类型，就无法使用 TypeScript 提供的大量的保护机制。如果想让 TypeScript 在遇到隐式 any 类型报错我们可以在 tsconfig.json 中启用 noImplicitAny，为了解决 any 带来的问题，TypeScript 3.0 引入了 unknown 类型。
+
+## 六、unknown类型
+
+就像所有类型都可以赋值给 any，所有类型也都可以赋值给 unknown。这使得 unknown 成为 TypeScript 类型系统的另一种顶级类型。下面我们来看一下 unknown 类型的使用示例：
+
+```typescript
+let value: unknown;
+
+value = true; // OK
+value = 42; // OK
+value = "Hello World"; // OK
+value = []; // OK
+value = {}; // OK
+value = Math.random; // OK
+value = null; // OK
+value = undefined; // OK
+value = new TypeError(); // OK
+value = Symbol("type"); // OK
+```
+
+对 value 变量的所有赋值都被认为是类型正确的。但是，当我们尝试将类型为 unknown 的值赋值给其他类型的变量时会发生什么？
+
+```typescript
+let value: unknown;
+
+let value1: unknown = value; // OK
+let value2: any = value; // OK
+let value3: boolean = value; // Error
+let value4: number = value; // Error
+let value5: string = value; // Error
+let value6: object = value; // Error
+let value7: any[] = value; // Error
+let value8: Function = value; // Error
+```
+
+unknown 类型只能被赋值给 any 类型和 unknown 类型本身。直观地说，这是有道理的：只有能够保存任意类型值的容器才能保存 unknown 类型的值。毕竟我们不知道变量 value 中存储了什么类型的值。
+现在让我们看看当我们尝试对类型为 unknown 的值执行操作时会发生什么。以下是我们在之前 any 章节看过的相同操作：
+
+```typescript
+let value: unknown;
+
+value.foo.bar; // Error
+value.trim(); // Error
+value(); // Error
+new value(); // Error
+value[0][1]; // Error
+```
+
+将 value 变量类型设置为 unknown 后，这些操作都不再被认为是类型正确的。通过将 any 类型改变为 unknown 类型，我们已将允许所有更改的默认设置，更改为禁止任何更改，因此我们执行操作时不能假定 unknown 类型的值为某种特定类型，必须先向 typeScript 证明一个值确实是某个类型，举个🌰:
+
+```typescript
+let a: unknown = 30
+let c = a + 30 // Error: object is of type 
+if (typeof a === 'number') {
+  let d = a + 10
+} 
+```
+
+## 七、数组类型
 
 ```typescript
 let list: number[] = [1, 2, 3];
 let list: Array<number> = [1, 2, 3]; // Array<number>泛型语法
 ```
 
-### 六、Enum类型
+TypeScript 支持两种注解数组类型的句法：`T[]` 和 `Array<T>`，两者的作用和性能无异，可以根据个人喜好进行选择。
+
+一般情况下数组应该保持同质，TypeScript 在类型推断时也会尽可能收窄，举个🌰：
+
+```typescript
+let a = [1, 2, 3] // number[]
+let b = [1, 'a'] // (string | number)[]
+const c = [2, 'b'] // (string | number)[]
+let d = [] // any[]
+d.push(1) // number[]
+d.push('red') // (string | number)[]
+```
+
+我们可以注意到使用 const 声明数组并不会导致 TypeScript 推导出更窄的数据类型，事实上所有的引用类型都不会被 const 声明收窄，这也与 const 声明的引用类型的属性还可以再修改有关。
+
+在初始化空数组时，TypeScript 不知道数组中的元素类型，推导出类型为 any，向数组中添加元素后，TypeScript 开始拼凑数组的类型，当数组离开定义时所在的作用域后，TypeScript 将最终确定一个类型，不再扩张。举个🌰：
+
+```typescript
+function buildArray() {
+  let a = [] // any[]
+  a.push(1) // number[]
+  a.push('y') // (string | number)[]
+  return a
+}
+let myArray = buildArray() // (string | number)[]
+myArray.push(true) // Argument of type 'boolean' is not assignable to parameter of type 'string | number'.
+```
+
+## 八、元组类型
+
+众所周知，数组一般由同种类型的值组成，但有时我们需要在单个变量中存储不同类型的值，这时候我们就可以使用元组。在 JavaScript 中是没有元组的，元组是 TypeScript 中特有的类型，是数组的子类型，其工作方式类似于数组。
+元组可用于定义具有有限数量的未命名属性的类型。每个属性都有一个关联的类型。使用元组时，必须提供每个属性的值，举个🌰:
+
+```typescript
+let tupleType: [string, boolean];
+tupleType = ["semlinker", true];
+
+console.log(tupleType[0]) // 'semlinker'
+```
+
+在上述示例中我们定义了一个名为 tupleType 的变量，它的类型是一个类型数组 `[string, boolean]`，然后我们按照正确的类型依次初始化 tupleType 变量，并通过下标来访问其中元素，需要注意的是初始化元组时不仅仅需要保证每个属性类型的一致，同时必须提供每个属性的值，否则都会报错。
+
+元组也支持剩余元素，即为元组定义最小长度，举个🌰：
+
+```typescript
+// 字符串列表，至少一个元素
+let friends: [string, ...string[]] = ['一鸣', '化腾', '小云']
+// 元素类型不同的列表
+let list: [number, boolean, ...string[]] = [1, false, 'a']
+```
+
+常规数组是可变的，这也是多数时候我们想要的行为，不过有时我们希望数组不可变，修改之后得到新的数组而原数组没有变化，想要创建只读数组有如下方法注解类型：
+
+```typescript
+let a: readonly number[] = [1, 2, 3]
+let b: Readonly<number[]> = [1, 2, 3]
+let c: ReadonlyArray<number> = [1, 2, 3]
+
+let d: readonly [number, string] = [1, 'a']
+let e: Readonly<[number, string]> = [1, 'a']
+```
+
+上面示例中我们可以看出若想创建只读数组，要显式注解类型，若想更改只读数组，只能使用非变型方法，比如 `.concat` 和 `.slice`，不能使用可变型方法，例如 `.push` 和 `.splice`。
+
+## 九、枚举类型
 
 枚举类型：一组有名字的常量集合，使用枚举可以清晰地表达意图或创建一组有区别的用例。 TypeScript 支持数字的和基于字符串的枚举。
 
-#### 1、数字枚举
+### 1、数字枚举
 
 ```typescript
 enum Direction {
@@ -138,7 +287,7 @@ var dir = Direction.NORTH;
 
 从上面代码我们可以看到 TypeScript 通过反向映射实现了数字枚举，但是其他枚举却又有所不同。
 
-#### 2、字符串枚举
+### 2、字符串枚举
 
 ```typescript
 enum Direction {
@@ -164,7 +313,7 @@ var Direction;
 
 从上面示例中我们可以发现字符串枚举没有实现反向映射。
 
-#### 3、异构映射
+### 3、异构映射
 
 异构枚举的成员值是数字和字符串的混合：
 
@@ -232,7 +381,7 @@ console.log(Direction3[10]) // undefined
 
 其实上述实例中部分枚举值并不存在例如 `Direction1[10]` ，但是 TypeScript 并没有阻止这种操作，为了避免这种不安全的访问操作，我们可以使用**常量枚举**。
 
-#### 4、常量枚举
+### 4、常量枚举
 
 除了数字枚举和字符串枚举之外，还有一种特殊的枚举——常量枚举。它是使用 const 关键字修饰的枚举，常量枚举会使用内联语法，不会为枚举类型编译生成任何 JavaScript，举个🌰:
 
@@ -269,7 +418,7 @@ console.log(Direction[0]) // Error: A const enum member can only be accessed usi
 console.log(Direction[10]) // Error: A const enum member can only be accessed using a string literal.
 ```
 
-#### 5、枚举成员
+### 5、枚举成员
 
 枚举成员的值具有如下特性：
 
@@ -305,102 +454,10 @@ var Char;
 })(Char || (Char = {}));
 ```
 
-### 七、any类型
 
-在 TypeScript 中，任何类型都可以被归为 any 类型。这让 any 类型成为了类型系统的顶级类型（也被称作全局超级类型）。
 
-```typescript
-let notSure: any = 666;
-notSure = "semlinker";
-notSure = false;
-```
 
-any 类型本质上是类型系统的一个逃逸舱。作为开发者，这给了我们很大的自由：TypeScript 允许我们对 any 类型的值执行任何操作，而无需事先执行任何形式的检查。比如:
-
-```typescript
-let value: any;
-
-value.foo.bar; // OK
-value.trim(); // OK
-value(); // OK
-new value(); // OK
-value[0][1]; // OK
-```
-
-在许多场景下，这太宽松了。使用 any 类型，可以很容易地编写类型正确但在运行时有问题的代码。如果我们使用 any 类型，就无法使用 TypeScript 提供的大量的保护机制。如果想让 TypeScript 在遇到隐式 any 类型报错我们可以在 tsconfig.json 中启用 noImplicitAny，为了解决 any 带来的问题，TypeScript 3.0 引入了 unknown 类型。
-
-### 八、unknown类型
-
-就像所有类型都可以赋值给 any，所有类型也都可以赋值给 unknown。这使得 unknown 成为 TypeScript 类型系统的另一种顶级类型。下面我们来看一下 unknown 类型的使用示例：
-
-```typescript
-let value: unknown;
-
-value = true; // OK
-value = 42; // OK
-value = "Hello World"; // OK
-value = []; // OK
-value = {}; // OK
-value = Math.random; // OK
-value = null; // OK
-value = undefined; // OK
-value = new TypeError(); // OK
-value = Symbol("type"); // OK
-```
-
-对 value 变量的所有赋值都被认为是类型正确的。但是，当我们尝试将类型为 unknown 的值赋值给其他类型的变量时会发生什么？
-
-```typescript
-let value: unknown;
-
-let value1: unknown = value; // OK
-let value2: any = value; // OK
-let value3: boolean = value; // Error
-let value4: number = value; // Error
-let value5: string = value; // Error
-let value6: object = value; // Error
-let value7: any[] = value; // Error
-let value8: Function = value; // Error
-```
-
-unknown 类型只能被赋值给 any 类型和 unknown 类型本身。直观地说，这是有道理的：只有能够保存任意类型值的容器才能保存 unknown 类型的值。毕竟我们不知道变量 value 中存储了什么类型的值。
-现在让我们看看当我们尝试对类型为 unknown 的值执行操作时会发生什么。以下是我们在之前 any 章节看过的相同操作：
-
-```typescript
-let value: unknown;
-
-value.foo.bar; // Error
-value.trim(); // Error
-value(); // Error
-new value(); // Error
-value[0][1]; // Error
-```
-
-将 value 变量类型设置为 unknown 后，这些操作都不再被认为是类型正确的。通过将 any 类型改变为 unknown 类型，我们已将允许所有更改的默认设置，更改为禁止任何更改，因此我们执行操作时不能假定 unknown 类型的值为某种特定类型，必须先向 typeScript 证明一个值确实是某个类型，举个🌰:
-
-```typescript
-let a: unknown = 30
-let c = a + 30 // Error: object is of type 
-if (typeof a === 'number') {
-  let d = a + 10
-} 
-```
-
-### 九、Tuple类型
-
-众所周知，数组一般由同种类型的值组成，但有时我们需要在单个变量中存储不同类型的值，这时候我们就可以使用元组。在 JavaScript 中是没有元组的，元组是 TypeScript 中特有的类型，其工作方式类似于数组。
-元组可用于定义具有有限数量的未命名属性的类型。每个属性都有一个关联的类型。使用元组时，必须提供每个属性的值，举个🌰:
-
-```typescript
-let tupleType: [string, boolean];
-tupleType = ["semlinker", true];
-
-console.log(tupleType[0]) // 'semlinker'
-```
-
-在上述示例中我们定义了一个名为 tupleType 的变量，它的类型是一个类型数组 `[string, boolean]`，然后我们按照正确的类型依次初始化 tupleType 变量，并通过下标来访问其中元素，需要注意的是初始化元组时不仅仅需要保证每个属性类型的一致，同时必须提供每个属性的值，否则都会报错。
-
-### 十、Void类型
+## 十、void类型
 
 在 JavaScript 中 void 是关键字，最关键的用途是获取 undefined：
 
@@ -422,7 +479,7 @@ function func(): void {
 let unusable: void = undefined;
 ```
 
-### 十一、Null和Undefined类型
+## 十一、null和undefined类型
 
 TypeScript 里，undefined 和 null 两者有各自的类型分别为 undefined 和 null。
 
@@ -439,7 +496,47 @@ num = null;
 num = undefined;
 ```
 
-### 十二、BigInt类型
+## 十二、never类型
+
+never 类型表示的是那些永不存在的值的类型。 例如，never 类型是那些总是会抛出异常或根本就不会有返回值的函数表达式或箭头函数表达式的返回值类型。
+
+```typescript
+// 返回never的函数必须存在无法达到的终点
+function error(message: string): never {
+  throw new Error(message);
+}
+
+function infiniteLoop(): never {
+  while (true) {}
+}
+```
+
+在 TypeScript 中，可以利用 never 类型的特性来实现全面性检查，具体示例如下：
+
+```typescript
+type Foo = string | number;
+
+function controlFlowAnalysisWithNever(foo: Foo) {
+  if (typeof foo === "string") {
+    // 这里 foo 被收窄为 string 类型
+  } else if (typeof foo === "number") {
+    // 这里 foo 被收窄为 number 类型
+  } else {
+    // foo 在这里是 never
+    const check: never = foo;
+  }
+}
+```
+
+注意在 else 分支里面，我们把收窄为 never 的 foo 赋值给一个显式声明的 never 变量。如果一切逻辑正确，那么这里应该能够编译通过。但是假如后来有一天你的同事修改了 Foo 的类型：
+
+```typescript
+type Foo = string | number | boolean;
+```
+
+然而他忘记同时修改 controlFlowAnalysisWithNever 方法中的控制流程，这时候 else 分支的 foo 类型会被收窄为 boolean 类型，导致无法赋值给 never 类型，这时就会产生一个编译错误。通过这个方式，我们可以确保 controlFlowAnalysisWithNever 方法总是穷尽了 Foo 的所有可能类型。 通过这个示例，我们可以得出一个结论：使用 never 避免出现新增了联合类型没有对应的实现，目的就是写出类型绝对安全的代码。
+
+## 十三、bigint类型
 
 BigInt 是 ECMAScript 的一项提案，它在理论上允许我们建模任意大小的整数。但是 TypeScript 3.2 引入了一个新的原始类型 bigint，允许我们为 BigInit 数据类型进行类型检查，并支持在目标为 esnext 时输出 BigInit 字面量，我们可以通过调用 BigInt() 函数或书写 BigInt 字面量（或在整型数字字面量末尾添加 n）来获取 bigint:
 
@@ -481,49 +578,10 @@ function whatKindOfNumberIsIt(x: number | bigint) {
 }
 ```
 
-### 十三、Never类型
 
-never 类型表示的是那些永不存在的值的类型。 例如，never 类型是那些总是会抛出异常或根本就不会有返回值的函数表达式或箭头函数表达式的返回值类型。
+## 十四、object、Object和{}类型
 
-```typescript
-// 返回never的函数必须存在无法达到的终点
-function error(message: string): never {
-  throw new Error(message);
-}
-
-function infiniteLoop(): never {
-  while (true) {}
-}
-```
-
-在 TypeScript 中，可以利用 never 类型的特性来实现全面性检查，具体示例如下：
-
-```typescript
-type Foo = string | number;
-
-function controlFlowAnalysisWithNever(foo: Foo) {
-  if (typeof foo === "string") {
-    // 这里 foo 被收窄为 string 类型
-  } else if (typeof foo === "number") {
-    // 这里 foo 被收窄为 number 类型
-  } else {
-    // foo 在这里是 never
-    const check: never = foo;
-  }
-}
-```
-
-注意在 else 分支里面，我们把收窄为 never 的 foo 赋值给一个显式声明的 never 变量。如果一切逻辑正确，那么这里应该能够编译通过。但是假如后来有一天你的同事修改了 Foo 的类型：
-
-```typescript
-type Foo = string | number | boolean;
-```
-
-然而他忘记同时修改 controlFlowAnalysisWithNever 方法中的控制流程，这时候 else 分支的 foo 类型会被收窄为 boolean 类型，导致无法赋值给 never 类型，这时就会产生一个编译错误。通过这个方式，我们可以确保 controlFlowAnalysisWithNever 方法总是穷尽了 Foo 的所有可能类型。 通过这个示例，我们可以得出一个结论：使用 never 避免出现新增了联合类型没有对应的实现，目的就是写出类型绝对安全的代码。
-
-### 十四、object、Object和{}类型
-
-#### 1、object类型
+### 1、object类型
 
 TypeScript 2.2 引入了被称为 object 类型的新类型，它用于表示非原始类型，在 JavaScript 中以下类型被视为原始类型：string、boolean、number、bigint、symbol、null 和 undefined。它的引入主要是因为随着 TypeScript 2.2 的发布，标准库的类型声明已经更新，例如 `Object.create()` 和 `Object.setPrototypeOf()` 方法都需要为它们的原型参数指定 `object | null` 类型：
 
@@ -560,7 +618,7 @@ interface WeakMap<K extends object, V> {
 }
 ```
 
-#### 2、Object类型
+### 2、Object类型
 
 TypeScript 定义了另一个与新的 object 类型几乎同名的类型，那就是 Object 类型。该类型是所有 Object 类的实例的类型，实际上 Object 类由以下两个接口来定义：
 
@@ -662,7 +720,7 @@ strictTypeHeaders = header; // Error: Type 'object' is not assignable to type '{
 
 在上述例子中，最后一行会出现编译错误，这是因为 `{ [key: string]: string }` 类型相比 object 类型更加精确。而 `header = strictTypeHeaders;` 这一行却没有提示任何错误，是因为这两种类型都是非基本类型，object 类型比 `{ [key: string]: string }` 类型更加通用。
 
-#### 3、{}类型
+### 3、{}类型
 
 还有另一种类型与之非常相似，即空对象类型：{}。它描述了一个没有成员的对象。当你试图访问这样一个对象的任意属性时，TypeScript 会产生一个编译时错误：
 
@@ -776,6 +834,8 @@ namedPoint.name // "semlinker"
 极客时间《TypeScript开发实战》专栏
 
 《深入理解TypeScript》
+
+《TypeScript编程》
 
 [一文读懂 TS 中 Object, object, {} 类型之间的区别](http://www.semlinker.com/ts-object-type/)
 
