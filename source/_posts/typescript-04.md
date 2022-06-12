@@ -1,6 +1,6 @@
 ---
-title: TypeScript学习笔记（二）——接口与类
-date: 2020-11-17 10:05:53
+title: TypeScript学习笔记（四）——泛型
+date: 2020-11-23 10:27:51
 toc: true
 mathjax: false
 categories: 
@@ -9,508 +9,506 @@ tags:
 - TypeScript
 ---
 
+## 泛型
 
-## 接口与类
-
-### 一、接口
-
-在面向对象的语言中“接口”是个很重要的概念，它是对行为的抽象，而具体内容需要通过类实现，TypeScript 中的接口是一个非常灵活的概念，可以用来约束对象、函数以及类的结构和类型，是一种代码协作的契约，我们必须遵守而且不能改变。
+泛型（Generics）在编程语言中是一个较为普遍的概念，在像 C# 和 Java 这样的语言中，可以使用泛型来创建可重用的组件，一个组件可以支持多种类型的数据。 这样用户就可以以自己的数据类型来使用组件。这给软件工程带来了极高的灵活性，进一步提高了组件或函数的可重用性。那么泛型具体的定义是什么呢？
+泛型是指不预先确定的数据类型，具体的类型在使用的时候才能确定，它允许同一个函数可以接受不同类型参数的一个模板。设计泛型的关键目的是在成员之间提供有意义的约束，这些成员可以是：类的实例成员、类的方法、函数参数和函数返回值。
 
 <!-- more -->
 
-#### 1、对象类型接口
+### 一、泛型函数
 
-对象类型的接口用来设置对象需要存在的普通属性、可选属性和只读属性，另外还可以通过类型注解语法或 [propName: string]: any 来制定可以接受的其他任意额外属性，举个🌰:
+```typescript
+function log<T>(value: T): T {
+  console.log(value);
+  return value;
+}
+log<string>('hello'); // 'hello'
+```
+
+如上所示，当我们调用 `log<string>('hello')` 时，string 类型就像参数一样，它将在出现 `T` 的任何位置填充该类型。图中 `<T>` 内部的 `T` 被称为类型变量，它是我们希望传递给 log 函数的类型占位符，同时它被分配给 value 参数和函数返回值用来代替它的类型：此时 `T` 充当的是类型，而不是特定的 string 类型。
+我们除了可以这样显式定义泛型函数，还可以先通过类型别名指定泛型函数类型，然后指定函数实现，举个🌰:
+
+```typescript
+type Log = <T, U>(value: T, comment: U) => T;
+function log<T, U>(value: T, comment: U): T {
+  console.log(comment);
+  return value;
+}
+
+let myLog: Log = log
+```
+
+### 二、泛型接口
+
+上面函数我们也可以通过泛型接口实现定义：
+
+```typescript
+// 这儿接口与类型别名完全一致
+interface Log {
+  <T>(value: T): T
+}
+function log<T>(value: T): T {
+  console.log(value);
+  return value;
+}
+let mylog: Log = log;
+```
+
+在上述示例的接口中泛型仅仅约束了一个函数，我们也可以用泛型来约束接口的其他成员，举个🌰:
+
+```typescript
+interface Obj<T> {
+  value: T;
+  name: string;
+}
+// 需要注意这种情形下我们必须注明泛型类型，不支持类型推断
+const obj1: Obj<number> = {
+  value: 21,
+  name: 'age'
+}
+// Generic type 'Obj<T>' requires 1 type argument(s).
+const obj2: Obj = {
+  value: 21,
+  name: 'age'
+}
+```
+
+除此之外我们还可以为泛型接口指定一个默认类型，举个🌰:
+
+```typescript
+interface Obj<T = number> {
+  value: T;
+  name: string;
+}
+
+const obj: Obj = {
+  value: 2021,
+  name: 'year'
+}
+```
+
+### 三、泛型类
+
+与接口类似，泛型还可以约束类的成员，举个🌰:
+
+```typescript
+// 我们将泛型放在类的后面这样就可以约束类的所有成员了
+class Log<T> {
+  run(value: T) {
+    console.log(value);
+    return value
+  }
+}
+
+const log1 = new Log<number>()
+log1.run(1234)
+
+// 如果不指定泛型则可以使用任意类型
+const log2 = new Log()
+log2.run('12')
+log2.run({ name: 'kylee' })
+```
+
+此处需要注意的是泛型约束不能作用于静态属性和方法，举个🌰:
+
+```typescript
+class Greeter<T> {
+  // 静态属性是只读属性，必须在初始化的时候赋值，因此无法使用泛型
+  static cname: string = "Greeter";
+
+  // 静态方法添加到类自身，不能获取到类实例内部的泛型参数
+  // Parameter 'value' of public static method from exported class has or is using private name 'T'.
+  static getClassName(value: T) {
+    return value;
+  }
+}
+```
+
+### 四、泛型约束
+
+在部分情况下我们需要对泛型做一些约束，这个时候我们就需要用到泛型约束，举个🌰:
+
+```typescript
+function log<T> (value: T): T {
+  // 这种情况下TypeScript编译器会提示泛型T上不存在length属性
+  console.log(value, value.length);
+  return value;
+}
+
+// 此处我们可以通过接口实现对泛型的约束
+interface Log {
+  length: number;
+}
+// 此时我们为泛型T引入约束，必须具备length属性
+function log<T extends Log> (value: T): T {
+  console.log(value, value.length);
+  return value;
+}
+
+// 泛型约束能够带来很多场景的巧妙使用，比如上述示例我们在不指定泛型的情况下我们可以传入所有带有length属性的变量
+log([1]);
+log('12334');
+leo({ length: 23 });
+```
+
+### 五、泛型工具
+
+为了方便开发者 TypeScript 内置了一些常用的工具类型，比如 Partial、Required、Readonly、Record 和 ReturnType 等等，不过在具体介绍之前，我们得先介绍一些相关的基础知识：
+
+#### 1、基础知识
+
+(1) **typeof**
+
+在 TypeScript 中，typeof 操作符可以用来获取一个变量声明或对象的类型，举个🌰:
 
 ```typescript
 interface Person {
-  name: string
-  bool?: boolean
-  readonly timestamp: number
-  readonly arr: ReadonlyArray<number> // 此外还有 ReadonlyMap/ReadonlySet
+  name: string;
+  age: number;
 }
 
-let p1: Person = {
-  name: 'oliver',
-  bool: true, // 可选属性并非必要,可写可不写
-  timestamp: + new Date(), // 设置只读属性
-  arr: [1, 2, 3] // 设置只读数组
+const sem: Person = { name: 'semlinker', age: 33 };
+type Sem = typeof sem; // Person
+
+function toArray(x: number): Array<number> {
+  return [x];
 }
 
-let p2: Person = {
-  // Type '{ age: string; }' is not assignable to type 'Person'
-  age: 'oliver', 
-  // Type 'number' is not assignable to type 'string'
-  name: 123 
-}
-
-// Cannot assign to 'timestamp' because it is a constant or a read-only property.
-p1.timestamp = 123
-// Property 'pop' does not exist on type 'ReadonlyArray<number>'.
-p1.arr.pop()
+type Func = typeof toArray; // (x: number) => number[]
 ```
 
-需要注意的是此处 `ReadonlyArray<T>` 类型，它与 `Array<T>` 相似，只是把所有可变方法去掉了，因此可以确保数组创建后再也不能被修改，`ReadonlyMap<T>` 和 `ReadonlySet<T>` 与之类似。
+(2) **keyof**
 
-#### 2、函数类型接口
-
-TypeScript 中接口还可以用来规范函数的形状，列出参数列表及返回值类型的函数定义。写法如下：
+keyof 操作符是在 TypeScript 2.1 版本引入的，该操作符可以用于获取某种类型的所有键，其返回类型是联合类型。
 
 ```typescript
-let add: (x: number, y: number) => number // 常规函数类型写法
-// 函数类型接口写法，与常规类型完全一致
-interface Add {
-  (x: number, y: number): number
+interface Person {
+  name: string;
+  age: number;
 }
 
-let add: Add = (a, b) => a + b 
+type K1 = keyof Person; // "name" | "age"
+type K2 = keyof Person[]; // "length" | "toString" | "pop" | "push" | "concat" | "join" 
+type K3 = keyof { [x: string]: Person };  // string | number
 ```
 
-#### 3、可索引类型接口
-
-当我们不确定一个接口中有多少个属性时就可以使用可索引类型接口，接口可以通过字符串类型或数字类型索引:
+在 TypeScript 中支持两种索引签名，数字索引和字符串索引：
 
 ```typescript
-// 数字索引
-interface StringArr {
-  readonly [index: number]: string // index只能为number类型并且为只读属性
-  length: number // 可以指定其他属性
+interface StringArray {
+  // 字符串索引 keyof StringArray => string | number
+  [index: string]: string; 
 }
 
-let arr1: StringArr = ['hello', 'world']
-// Index signature in type 'StringArr' only permits reading.
-arr1[1] = ''
-// Type 'number' is not assignable to type 'string'.
-let arr2: StringArr = [23,12,3,21]
-// 字符串索引
-interface Names {
-  [index: string]: string // 索引签名为string类型
-}
-
-let names: Names = {
-  '1': 'xiaozhang'
-}
-// 两种类型混用
-interface Circle {
-  [x: string]: string
-  [y: number]: string // 需要注意数字索引签名的返回值必须为字符串索引签名返回值的子类型，这是因为javascript会对对象的数字属性转换成字符串，所以需要保持类型的兼容性
+interface StringArray1 {
+  // 数字索引 keyof StringArray1 => number
+  [index: number]: string;
 }
 ```
 
-#### 4、混合类型接口
+为了同时支持两种索引类型，就得要求数字索引的返回值必须是字符串索引返回值的子类。其中的原因就是当使用数值索引时，JavaScript在执行索引操作时，会先把数值索引先转换为字符串索引。所以 `keyof { [x: string]: Person }` 的结果会返回 `string | number`。
 
-混合类型接口就是接口既可以定义一个函数，也可以像对象一样拥有属性和方法，因此往往可以用来描述一个函数接收什么参数，输出什么结果，同时这个函数有另外什么方法或属性之类的，举个🌰:
+(3) **in**
+
+in 用来遍历枚举类型
 
 ```typescript
-interface Counter {
-  (start: number): void // 返回类型为函数
-  version: string // 增加version属性
-  add(): void // 增加add方法
-}
+type Keys = "a" | "b" | "c"
 
-function getCounter(): Counter { // 它返回的函数必须符合接口的三点
-  let count = 0
-  function counter (start: number) { count = start } // counter 方法函数
-  counter.version = '0.0.1'
-  counter.add = function() { count++ } // add 方法增加 count
-  return counter
-}
-
-const c = getCounter()
-c(10) // count 默认为 10
-c.version // '0.0.1'
-c.add()
+type Obj =  {
+  [p in Keys]: any
+} // -> { a: any, b: any, c: any }
 ```
 
-#### 5、接口的继承
+(4) **infer**
 
-跟类一样，接口通过extend关键字继承，更新新的形状，比方说继承接口并生成新的接口，这个新的接口可以设定一个新的方法检查。举个🌰:
+infer 表示在 extends 条件类型语句中待推断的类型变量，简单举个🌰:
 
 ```typescript
-interface PersonInfoInterface {
-  name: string
-  age: number
-  log?(): void
+type ParamType<T> = T extends (param: infer P) => any ? P : T;
+```
+
+在这个条件语句 `T extends (param: infer P) => any ? P : T` 中，`infer P` 表示待推断的函数参数。
+整句表示为：如果 T 能赋值给 `(param: infer P) => any`，则结果是 `(param: infer P) => any` 类型中的参数 `P`，否则返回为 `T`。
+
+```typescript
+interface User {
+  name: string;
+  age: number;
 }
 
-interface Student extends PersonInfoInterface {
-  doHomework(): boolean // 新增一个方法检查
-}
-interface Teacher extends PersonInfoInterface {
-  dispatchHomework(): void // 新增了一个方法检查
+type Func = (user: User) => void;
+
+type Param = ParamType<Func>; // Param = User
+type AA = ParamType<string>; // string
+```
+
+#### 2、Partial
+
+`Partial<T>` 的作用就是将某个类型里的属性全部变为可选项
+
+```typescript
+type Partial<T> = {
+  [P in keyof T]?: T[P];
+};
+```
+
+在以上代码中，首先通过 `keyof T` 拿到 T 的所有属性名，然后使用 in 进行遍历，将值赋给 P，最后通过 `T[P]` 取得相应的属性值。中间的 ? 号，用于将所有属性变为可选。举个🌰:
+
+```typescript
+interface Todo {
+  title: string;
+  description: string;
 }
 
-// interface Emmm extends Student, Teacher // 也可以继承多个接口
-
-let Alice: Teacher = {
-  name: 'Alice',
-  age: 34,
-  dispatchHomework() { // 必须满足继承的接口规范
-    console.log('dispatched')
-  }
+function updateTodo(todo: Todo, fieldsToUpdate: Partial<Todo>) {
+  return { ...todo, ...fieldsToUpdate };
 }
 
-let oliver: Student = {
-  name: 'oliver',
-  age: 12,
-  log() {
-    console.log(this.name, this.age)
+const todo1 = {
+  title: "Learn TS",
+  description: "Learn TypeScript",
+};
+
+const todo2 = updateTodo(todo1, {
+  description: "Xue Ge Chui Zi",
+});
+```
+
+#### 3、Required
+
+`Required<T>` 的作用是将传入的属性变为必选项
+
+```typescript
+type Required<T> = { [P in keyof T]-?: T[P] };
+```
+
+这里的 `-?` 就是将可选项代表的 `?` 去掉, 从而让这个类型变成必选项. 与之对应的还有个 `+?`, 这个含义自然与 `-?` 之前相反, 它是用来把属性变成可选项的。举个🌰:
+
+```typescript
+interface Todo {
+  title: string;
+  description?: string;
+}
+
+function updateTodo(todo: Required<Todo>, fieldsToUpdate: Todo) {
+  return { ...todo, ...fieldsToUpdate };
+}
+
+const todo1 = {
+  title: "Learn TS",
+  description: "Learn TypeScript",
+};
+
+const todo2 = updateTodo(todo1, {
+  title: "Learn Ge Chui Zi"
+});
+```
+
+#### 4、Readonly
+
+`Readonly<T>` 用于将所有传入的属性转变成只读项
+
+```typescript
+type Readonly<T> = { readonly [P in keyof T]: T[P] };
+```
+
+举个🌰:
+
+```typescript
+interface Todo {
+  title: string;
+  description: string;
+}
+
+function updateTodo(todo: Readonly<Todo>) {
+  // Cannot assign to 'title' because it is a read-only property.
+  todo.title = 'Learn JS'
+}
+
+const todo1 = {
+  title: "Learn TS",
+  description: "Learn TypeScript",
+};
+```
+
+#### 5、Record
+
+`Record<K, T>` 用于将 K 中所有的属性的值转化为 T 类型
+
+```typescript
+type Record<K extends keyof any, T> = { [P in K]: T };
+```
+
+举个🌰:
+
+```typescript
+type subjects = 'ts' | 'js';
+interface Todo {
+  title: string,
+  description: string
+}
+
+type Sub = Record<subjects, Todo>;
+
+const sub: Sub = {
+  ts: {
+    title: 'learn TS',
+    description: 'learn TypeScript'
   },
-  doHomework() { // 必须满足继承的接口规范
-    return true
+  js: {
+    title: 'learn JS',
+    description: 'learn JavaScript'
   }
 }
 ```
 
-### 二、类
+#### 6、Pick
 
-在面向对象语言中，类是一种面向对象计算机编程语言的构造，是创建对象的蓝图，描述了所创建的对象共同的属性和方法。
-
-#### 1、类的属性及方法
-
-在 JavaScript 中我们通过 class 关键字来定义一个类：
+`Pick<T, K>` 用于从 T 中取出一系列 K 的属性
 
 ```typescript
-class Greeter {
-  // 静态属性
-  static cname: string = "Greeter";
-
-  // 成员属性
-  greeting: string;
-
-  // 构造函数 - 执行初始化操作
-  constructor(message: string) {
-    this.greeting = message;
-  }
-
-  // 静态方法
-  static getClassName() {
-    return "Class name is Greeter";
-  }
-
-  // 成员方法
-  greet() {
-    return "Hello, " + this.greeting;
-  }
-}
-
-let greeter = new Greeter("world");
+type Pick<T, K extends keyof T> = { [P in K]: T[P] };
 ```
 
-那么成员属性与静态属性，成员方法与静态方法有什么区别呢？我们直接查看编译后的 ES5 代码：
-
-```javascript
-var Greeter = /** @class */ (function () {
-    // 构造函数 - 执行初始化操作
-    function Greeter(message) {
-        this.greeting = message;
-    }
-    // 静态方法
-    Greeter.getClassName = function () {
-        return "Class name is Greeter";
-    };
-    // 成员方法
-    Greeter.prototype.greet = function () {
-        return "Hello, " + this.greeting;
-    };
-    // 静态属性
-    Greeter.cname = "Greeter";
-    return Greeter;
-}());
-var greeter = new Greeter("world");
-```
-
-从编译后的代码我们不难看出成员属性会添加到类的实例上，成员方法会添加到类的原型对象上，因此对于类的实例而言是可调用的，而静态属性与静态方法都会只添加到类自身，只能被类自身调用。除此之外我们需要注意类的成员属性和方法还有 public、private 和 protected 可访问性修饰符，举个🌰:
+举个🌰:
 
 ```typescript
-class Dog {
-  name: string // 成员属性默认为添加了public修饰符，可被类自身、子类和实例对象访问
-  private age: number // 私有属性，只可被类自身访问，对于实例对象和子类皆不可见
-  protected sex: string // 保护属性，对于实例对象不可见，可被类自身和子类访问
-  constructor (name: string, age: number) {
-    this.name = name;
-    this.age = age;
-    this.sex = 'male'
-  }
-  private pri() { console.log('private') };  // 私有方法，不可被子类或实例对象调用
-  protected pro() { console.log('protected') } // 保护方法，不可被实例对象调用，可被子类调用
-}
-
-let dog = new Dog('wangcai', 2);
-// Property 'age' is private and only accessible within class 'Dog'.
-console.log(dog.age);
-// Property 'sex' is protected and only accessible within class 'Dog' and its subclasses.
-console.log(dog.sex);
-// Property 'pri' is private and only accessible within class 'Dog'.
-dog.pri();
-// Property 'pro' is protected and only accessible within class 'Dog' and its subclasses.
-dog.pro();
-
-class Husky extends Dog {
-  color: string
-  constructor(name: string, age: number) {
-    super(name, age);
-    this.color = 'yellow';
-    this.pro(); // 保护方法，可被子类调用
-    // Property 'pri' is private and only accessible within class 'Dog'.
-    this.pri(); // 似有方法，不可被子类调用
-  }
-}
-
-// Property 'pri' does not exist on type 'typeof Husky'.
-Husky.pri()
-Husky.pro()
-```
-
-需要注意当我们给构造函数添加 private 修饰符时表示类既不可以被继承也不可以被实例化，当我们给构造函数添加 protected 修饰符时表示类不可被实例化只能被继承，常用于声明基类。
-
-#### 2、ECMA私有字段
-
-在 TypeScript 3.8 版本就开始支持ECMAScript 私有字段，使用方式如下：
-
-```typescript
-class Person {
-  #name: string;
-
-  constructor(name: string) {
-    this.#name = name;
-  }
-
-  greet() {
-    console.log(`Hello, my name is ${this.#name}!`);
-  }
-}
-
-let semlinker = new Person("Semlinker");
-
-// Property '#name' is not accessible outside class 'Person' because it has a private identifier.
-semlinker.#name;
-```
-
-与常规属性（甚至使用private修饰符声明的属性）不同，私有字段具有以下规则：
-
-- 私有字段以 # 字符开头，有时我们称之为私有名称；
-- 每个私有字段名称都唯一的限定于其包含的类；
-- 不能在私有字段上使用 TypeScript 可访问性修饰符（如 public 或 private）；
-- 私有字段不能在包含的类之外访问，甚至不能被检测到。
-
-#### 3、访问器
-
-在 TypeScript 中，我们可以通过 getter 和 setter 方法来实现数据的封装和有效性校验，防止出现异常数据。
-
-```typescript
-let passcode = "Hello TypeScript";
-
-class Employee {
-  private _fullName: string = '';
-
-  get fullName(): string {
-    return this._fullName;
-  }
-
-  set fullName(newName: string) {
-    if (passcode && passcode == "Hello TypeScript") {
-      this._fullName = newName;
-    } else {
-      console.log("Error: Unauthorized update of employee!");
-    }
-  }
-}
-
-let employee = new Employee();
-employee.fullName = "Semlinker";
-if (employee.fullName) {
-  console.log(employee.fullName); // "Semlinker"
-}
-```
-
-#### 4、类的继承
-
-继承（Inheritance）是一种联结类与类的层次模型。指的是一个类（称为子类、子接口）继承另外的一个类（称为父类、父接口）的功能，并可以增加它自己的新功能的能力，继承是类与类或者接口与接口之间最常见的关系。在 TypeScript 中，我们通过 extends 关键字来实现继承，通过 super 关键字来调用父类的构造函数和方法，举个🌰:
-
-```typescript
-class Animal {
+interface Sup {
   name: string;
-  
-  constructor(theName: string) {
-    this.name = theName;
-  }
-  
-  move(distanceInMeters: number = 0) {
-    console.log(`${this.name} moved ${distanceInMeters}m.`);
-  }
+  value: string;
+  color: string;
 }
 
-class Snake extends Animal {
-  constructor(name: string) {
-    super(name); // 调用父类的构造函数
-  }
-  
-  move(distanceInMeters = 5) {
-    console.log("Slithering...");
-    super.move(distanceInMeters);
-  }
-}
+type Sub = 'name' | 'value';
 
-let sam = new Snake("Sammy the Python");
-sam.move();
-```
+type PickType = Pick<Sup, Sub>
 
-#### 5、抽象类
-
-使用 abstract 关键字声明的类，我们称之为抽象类。抽象类不能被实例化，因为它里面包含一个或多个抽象方法，所谓的抽象方法，是指不包含具体实现的方法，抽象类的好处在于可以抽离出一些事物的共性，有利于代码的复用和扩展，举个🌰:
-
-```typescript
-abstract class Person {
-  constructor(public name: string){}
-
-  abstract say(words: string) :void;
-}
-
-// Cannot create an instance of an abstract class.(2511)
-const lolo = new Person(); // Error
-```
-
-抽象类不能被直接实例化，我们只能实例化实现了所有抽象方法的子类。具体如下所示：
-
-```typescript
-abstract class Person {
-  constructor(public name: string){}
-
-  // 抽象方法
-  abstract say(words: string) :void;
-}
-
-class Developer extends Person {
-  constructor(name: string) {
-    super(name);
-  }
-  
-  say(words: string): void {
-    console.log(`${this.name} says ${words}`);
-  }
-}
-
-const lolo = new Developer("lolo");
-lolo.say("I love ts!"); // lolo says I love ts!
-```
-
-#### 6、基于抽象类实现多态
-
-面向对象（OOP）语言的三大特性分别是：封装（Encapsulation）、继承（Inheritance）和多态（Polymorphism），多态是指由继承而产生了相关的不同的类，对同一个方法可以有不同的响应。比如下面示例中 Cat 和 Dog 都继承自 Animal，但是分别实现了自己的 eat 方法。此时针对某一个实例，我们无需了解它是 Cat 还是 Dog，就可以直接调用 eat 方法，程序会自动判断出来应该如何执行 eat：
-
-```typescript
-abstract class Animal {
-  abstract sleep(): void
-}
-class Dog {
-  sleep() {
-    console.log("dog sleep")
-  }
-}
-let dog = new Dog();
-class Cat {
-  sleep() {
-    console.log("cat sleep")
-  }
-}
-
-let cat = new Cat()
-let animals: Animal[] = [dog, cat]
-animals.forEach(i => {
-  i.sleep()
-})
-// dog sleep
-// cat sleep
-```
-
-#### 7、类的方法的重载
-
-方法重载是指在同一个类中方法同名，参数不同（参数类型不同、参数个数不同或参数个数相同时参数的先后顺序不同），调用时根据实参的形式，选择与它匹配的方法执行操作的一种技术。所以类中成员方法满足重载的条件是：在同一个类中，方法名相同且参数列表不同，在以下示例中我们重载了 ProductService 类的 getProducts 成员方法：
-
-```typescript
-class ProductService {
-  // 重载签名
-  getProducts(): void;
-  getProducts(id: number): void;
-  // 重载实现
-  getProducts(id?: number) {
-    if(typeof id === 'number') {
-      console.log(`获取id为 ${id} 的产品信息`);
-    } else {
-      console.log(`获取所有的产品信息`);
-    }  
-  }
-}
-
-const productService = new ProductService();
-productService.getProducts(666); // 获取id为 666 的产品信息
-productService.getProducts(); // 获取所有的产品信息 
-```
-
-这里需要注意的是，当TypeScript编译器处理方法重载时，它会查找重载列表，尝试使用第一个重载定义。 如果匹配的话就使用这个。 因此，在定义重载的时候，一定要把最精确的定义放在最前面。另外在ProductService类中，`getProducts(id?: number){}`并不是重载列表的一部分，因此对于`getProducts`成员方法来说，我们只定义了两个重载方法。
-
-### 三、类与接口的关系
-
-#### 1、类可以实现接口
-
-如果你希望在类中使用必须要被遵循的接口（类）或别人定义的对象结构，可以使用 implements 关键字来确保其兼容性：
-
-```typescript
-interface Human {
-  name: string;
-  eat(): void;
-}
-
-class Asian implements Human {
-  name: string;
-  constructor (name: string) {
-    this.name = name;
-  }
-  eat() {}
+const pick: PickType = {
+  name: 'width',
+  value: '100px',
 }
 ```
 
-类实现接口需要注意的有以下几点：
+#### 7、Exclude
 
-- 类实现接口的时候必须实现接口定义的所有属性，但是类可以定义接口之外自己的属性
-- 接口只能约束类的公有成员
-- 接口也不能约束类的构造函数
-
-#### 2、接口可以继承类
-
-接口除了可以继承接口还可以继承类，相当于接口把类的成员都抽象了出来，也就是只有类的成员结构而没有具体的实现，举个🌰:
+在 TypeScript 2.8 中引入了一个条件类型, 示例如下:
 
 ```typescript
-class Auto {
-   state = 1
-}
-interface AutoInterface extends Auto {} // 接口内只有成员state且类型为number
-class C implements AutoInterface {
-    state = 1
-}
+T extends U ? X : Y
 ```
 
-需要注意的是接口在抽离类的成员时不仅抽离了公共成员，还抽离了私有成员和受保护成员，举个🌰:
+以上语句的意思就是 如果 T 是 U 的子类型的话，那么就会返回 X，否则返回 Y
+条件类型甚至可以组合多个，举个🌰:
 
 ```typescript
-class Auto {
-   state = 1
-   private num = 12
-}
-interface AutoInterface extends Auto {}
+type TypeName<T> =
+  T extends string ? "string" :
+  T extends number ? "number" :
+  T extends boolean ? "boolean" :
+  T extends undefined ? "undefined" :
+  T extends Function ? "function" :
+  "object";
+```
 
-// Property 'num' is missing in type 'C' but required in type 'AutoInterface'.
-class C implements AutoInterface {
-    state = 1;
+对于联合类型来说会自动分发条件，例如 `T extends U ? X : Y`，`T` 可能是 `A | B` 的联合类型, 那实际情况就变成 `(A extends U ? X : Y) | (B extends U ? X : Y)`。
+
+有了以上的了解我们再来了解工具泛型 Exclude，`Exclude<T, U>` 的作用是从 T 中找出 U 中没有的元素, 换种更加贴近语义的说法其实就是从 T 中排除 U
+
+```typescript
+type Exclude<T, U> = T extends U ? never : T;
+```
+
+举个🌰:
+
+```typescript
+type T = Exclude<1 | 2, 1 | 3> // -> 2
+```
+
+#### 8、Extract
+
+与 Exclude 恰好相反，`Extract<T, U>` 的作用是提取出 T 包含在 U 中的元素, 换种更加贴近语义的说法就是从 T 中提取出 U
+
+```typescript
+type Extract<T, U> = T extends U ? T : never;
+```
+
+举个🌰:
+
+```typescript
+type T = Exclude<1 | 2, 1 | 3> // -> 1
+```
+
+#### 9、ReturnType、Parameters、InstanceType、ConstructorParameters、
+
+在 2.8 版本中，TypeScript 内置了一些与 infer 有关的映射类型，当 infer 用于函数类型中，可用于参数位置 `new (...args: infer P) => any;` 和返回值位置 `new (...args: any[]) => infer P;`。
+因此就内置如下两个映射类型：
+
+**用于提取函数类型的返回值类型**:
+
+```typescript
+type ReturnType<T> = T extends (...args: any[]) => infer P ? P : any;
+```
+
+**用于提取函数中参数类型**
+
+```typescript
+type Parameters<T extends (...args: any[]) => any> = T extends (...args: infer P) => any ? P : never;
+```
+
+举个🌰:
+
+```typescript
+type return = ReturnType<() => string>; // string
+type parametersA = Parameters<() => void>;           // []
+type parametersB = Parameters<typeof Array.isArray>; // [any]
+```
+
+**用于提取构造函数中参数（实例）类型**:
+
+一个构造函数可以使用new来实例化，因此它的类型通常表示如下：
+
+```typescript
+type Constructor = new (...args: any[]) => any;
+```
+
+当 infer 用于构造函数类型中，可用于参数位置 `new (...args: infer P) => any;` 和返回值位置 `new (...args: any[]) => infer P;`。
+因此就内置如下两个映射类型：
+
+```typescript
+// 获取参数类型
+type ConstructorParameters<T extends new (...args: any[]) => any> = T extends new (...args: infer P) => any ? P : never;
+
+// 获取实例类型
+type InstanceType<T extends new (...args: any[]) => any> = T extends new (...args: any[]) => infer R ? R : any;
+```
+
+举个🌰:
+
+```typescript
+class TestClass {
+  constructor(public name: string, public age: number) {}
 }
 
-// 需要注意的是由于num是Auto的私有属性，而类Class并不是其子类，因此自然也不能包含它的非公有成员，所以即使我们在C中声明了num还是会报错
-// Property 'num' is private in type 'AutoInterface' but not in type 'C'.
-class C implements AutoInterface {
-  state = 1;
-  num = 14
-}
+type Params = ConstructorParameters<typeof TestClass>; // [string, number]
+
+type Instance = InstanceType<typeof TestClass>; // TestClass
+```
+
+#### 10、NonNullable
+
+`NonNullable<T>` 主要用于从 T 中剔除 null 和 undefined
+
+```typescript
+type NonNullable<T> = T extends null | undefined ? never : T;
+```
+
+举个🌰:
+
+```typescript
+type T0 = NonNullable<string | number | undefined>; // string | number
+type T1 = NonNullable<string[] | null | undefined>; // string[]
 ```
 
 ## 参考资料
@@ -522,3 +520,5 @@ class C implements AutoInterface {
 [一份不可多得的 TS 学习指南（1.8W字）](https://juejin.im/post/6872111128135073806#heading-21)
 
 [Typescript使用手册](https://www.bookstack.cn/read/TypeScript-3.6/doc-handbook-README)
+
+[TS一些工具泛型的使用及其实现](https://zhuanlan.zhihu.com/p/40311981)
