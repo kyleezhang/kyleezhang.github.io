@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/config/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/config/favicon.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"kyleezhang.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"enable":true,"style":"tabs","active":false,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="分布式  一、大型网站系统的特点  1、高并发，大流量 需要面对高并发用户，大流量访问。Google 日均 PV 35 亿，日 IP 访问数 3 亿；腾讯 QQ 的最大在线用户数 1.4 亿（2011年数据）。  2、高可用 系统 7 x 24 小时不间断服务。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="前端应该知道的服务端知识">
+<meta property="og:url" content="http://kyleezhang.com/2022/06/12/%E5%89%8D%E7%AB%AF%E5%BA%94%E8%AF%A5%E7%9F%A5%E9%81%93%E7%9A%84%E6%9C%8D%E5%8A%A1%E7%AB%AF%E7%9F%A5%E8%AF%86/index.html">
+<meta property="og:site_name" content="kyleezhang&#96;s Blog">
+<meta property="og:description" content="分布式  一、大型网站系统的特点  1、高并发，大流量 需要面对高并发用户，大流量访问。Google 日均 PV 35 亿，日 IP 访问数 3 亿；腾讯 QQ 的最大在线用户数 1.4 亿（2011年数据）。  2、高可用 系统 7 x 24 小时不间断服务。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://kyleezhang.com/assets/前端应该知道的服务端知识/01.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/前端应该知道的服务端知识/02.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/前端应该知道的服务端知识/03.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/前端应该知道的服务端知识/04.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/前端应该知道的服务端知识/05.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/前端应该知道的服务端知识/06.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/前端应该知道的服务端知识/07.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/前端应该知道的服务端知识/08.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/前端应该知道的服务端知识/09.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/前端应该知道的服务端知识/10.png">
+<meta property="og:image" content="http://kyleezhang.com/assets/前端应该知道的服务端知识/11.png">
+<meta property="article:published_time" content="2022-06-12T19:29:55.000Z">
+<meta property="article:modified_time" content="2022-06-16T02:32:58.933Z">
+<meta property="article:author" content="kyleezhang">
+<meta property="article:tag" content="服务端">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://kyleezhang.com/assets/前端应该知道的服务端知识/01.png">
+
+<link rel="canonical" href="http://kyleezhang.com/2022/06/12/%E5%89%8D%E7%AB%AF%E5%BA%94%E8%AF%A5%E7%9F%A5%E9%81%93%E7%9A%84%E6%9C%8D%E5%8A%A1%E7%AB%AF%E7%9F%A5%E8%AF%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>前端应该知道的服务端知识 | kyleezhang`s Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2KR3NK700N"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-2KR3NK700N');
+      }
+    </script>
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?f1621cb3fb0792bb294fce1b938d5eef";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="kyleezhang`s Blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband">
+    <a target="_blank" rel="noopener" href="https://github.com/kyleezhang " class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#fff; color:#151513; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    </div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">kyleezhang`s Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://kyleezhang.com/2022/06/12/%E5%89%8D%E7%AB%AF%E5%BA%94%E8%AF%A5%E7%9F%A5%E9%81%93%E7%9A%84%E6%9C%8D%E5%8A%A1%E7%AB%AF%E7%9F%A5%E8%AF%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/assets/config/avatar.png">
+      <meta itemprop="name" content="kyleezhang">
+      <meta itemprop="description" content="学源于思">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="kyleezhang`s Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          前端应该知道的服务端知识
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-06-12 19:29:55" itemprop="dateCreated datePublished" datetime="2022-06-12T19:29:55+00:00">2022-06-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-06-16 02:32:58" itemprop="dateModified" datetime="2022-06-16T02:32:58+00:00">2022-06-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%BA%94%E7%94%A8%E6%9E%B6%E6%9E%84/" itemprop="url" rel="index"><span itemprop="name">应用架构</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span><br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>8.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>8 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="分布式"><a class="markdownIt-Anchor" href="#分布式"></a> 分布式</h1>
+<h2 id="一-大型网站系统的特点"><a class="markdownIt-Anchor" href="#一-大型网站系统的特点"></a> 一、大型网站系统的特点</h2>
+<h3 id="1-高并发大流量"><a class="markdownIt-Anchor" href="#1-高并发大流量"></a> 1、<strong>高并发，大流量</strong></h3>
+<p>需要面对高并发用户，大流量访问。Google 日均 PV 35 亿，日 IP 访问数 3 亿；腾讯 QQ 的最大在线用户数 1.4 亿（2011年数据）。</p>
+<h3 id="2-高可用"><a class="markdownIt-Anchor" href="#2-高可用"></a> 2、<strong>高可用</strong></h3>
+<p>系统 7 x 24 小时不间断服务。</p>
+<a id="more"></a>
+<h3 id="3-海量数据"><a class="markdownIt-Anchor" href="#3-海量数据"></a> 3、<strong>海量数据</strong></h3>
+<p>需要存储、管理海量数据，需要使用大量服务器。Facebook 每周上传的照片数量接近 10 亿，百度收录的网页数目有数百亿，Google 有近百万台服务器为全球用户提供服务。</p>
+<h3 id="4-用户分布广泛网络情况复杂"><a class="markdownIt-Anchor" href="#4-用户分布广泛网络情况复杂"></a> 4、<strong>用户分布广泛，网络情况复杂</strong></h3>
+<p>许多大型互联网站都是为全球用户提供服务的，用户分布范围广，各地网络情况千差万别。在国内，还有各个运营商网络互通难的问题。</p>
+<h3 id="5-安全环境恶劣"><a class="markdownIt-Anchor" href="#5-安全环境恶劣"></a> 5、<strong>安全环境恶劣</strong></h3>
+<p>由于互联网的开放性，使得互联网站更容易受到攻击，大型网站几乎每天都会被黑客攻击。</p>
+<h3 id="6-需求快速变更发布频繁"><a class="markdownIt-Anchor" href="#6-需求快速变更发布频繁"></a> 6、<strong>需求快速变更，发布频繁</strong></h3>
+<p>和传统软件的版本发布频率不同，互联网产品为快速适应市场，满足用户需求，其产品发布频率极高。一般大型网站的产品每周都有新版本发布上线，中小型网站的发布更频繁，有时候一天会发布几十次。</p>
+<h3 id="7-渐进式发展"><a class="markdownIt-Anchor" href="#7-渐进式发展"></a> 7、<strong>渐进式发展</strong></h3>
+<p>几乎所有的大型互联网网站都是从一个小网站开始，渐进地发展起来的。Facebook 是扎克伯格同学在哈佛大学的宿舍里开发的；Google 的第一台服务器部署在斯坦福大学的实验室；阿里巴巴是在马云家的客厅诞生的。好的互联网产品都是慢慢运营出来的，不是一开始就开发好的，这也正好与网站架构的发展演化过程对应。</p>
+<h2 id="二-大型网站架构演化发展历程"><a class="markdownIt-Anchor" href="#二-大型网站架构演化发展历程"></a> 二、大型网站架构演化发展历程</h2>
+<p>大型网站的技术挑战主要来自于庞大的用户，高并发的访问和海量的数据，任何简单的业务一旦需要处理数以 P 计的数据和面对数以亿计的用户，问题就会变得很棘手。大型网站架构主要解决这类问题。</p>
+<h3 id="1-初始阶段的网站架构"><a class="markdownIt-Anchor" href="#1-初始阶段的网站架构"></a> 1、<strong>初始阶段的网站架构</strong></h3>
+<p>大型网站都是从小型网站发展而来，网站架构也是一样，是从小型网站架构逐步演化而来。小型网站最开始没有太多人访问，只需要一台服务器就绰绰有余，这时的网站架构如下图所示：</p>
+<img src="/assets/前端应该知道的服务端知识/01.png" width="600px" />
+<p>应用程序、数据库、文件等所有资源都在一台服务器上。</p>
+<h3 id="2-应用服务和数据服务分离"><a class="markdownIt-Anchor" href="#2-应用服务和数据服务分离"></a> 2、<strong>应用服务和数据服务分离</strong></h3>
+<p>随着网站业务的发展，一台服务器逐渐不能满足需求：越来越多的用户访问导致性能越来越差，越来越多的数据导致存储空间不足。这时就需要将应用和数据分离。应用和数据分离后整个网站使用3台服务器：应用服务器、文件服务器和数据库服务器。这 3 台服务器对硬件资源的要求各不相同：</p>
+<ul>
+<li>应用服务器需要处理大量的业务逻辑，因此需要更快更强大的CPU；</li>
+<li>数据库服务器需要快速磁盘检索和数据缓存，因此需要更快的磁盘和更大的内存；</li>
+<li>文件服务器需要存储大量用户上传的文件，因此需要更大的硬盘。</li>
+</ul>
+<p>此时，网站系统的架构如下图所示：</p>
+<img src="/assets/前端应该知道的服务端知识/02.png" width="600px" />
+<p>应用和数据分离后，不同特性的服务器承担不同的服务角色，网站的并发处理能力和数据存储空间得到了很大改善，支持网站业务进一步发展。但是随着用户逐渐增多，网站又一次面临挑战：数据库压力太大导致访问延迟，进而影响整个网站的性能，用户体验受到影响。这时需要对网站架构进一步优化。</p>
+<h3 id="3-使用缓存改善网站性能"><a class="markdownIt-Anchor" href="#3-使用缓存改善网站性能"></a> 3、<strong>使用缓存改善网站性能</strong></h3>
+<p>网站访问的特点和现实世界的财富分配一样遵循二八定律：80% 的业务访问集中在20% 的数据上。既然大部分业务访问集中在一小部分数据上，那么如果把这一小部分数据缓存在内存中，就可以减少数据库的访问压力，提高整个网站的数据访问速度，改善数据库的写入性能了。 网站使用的缓存可以分为两种：缓存在应用服务器上的本地缓存和缓存在专门的分布式缓存服务器上的远程缓存。</p>
+<p>本地缓存的访问速度更快一些，但是受应用服务器内存限制，其缓存数据量有限，而且会出现和应用程序争用内存的情况。</p>
+<p>远程分布式缓存可以使用集群的方式，部署大内存的服务器作为专门的缓存服务器，可以在理论上做到不受内存容量限制的缓存服务。</p>
+<img src="/assets/前端应该知道的服务端知识/03.png" width="600px" />
+<p>使用缓存后，数据访问压力得到有效缓解，但是单一应用服务器能够处理的请求连接有限，在网站访问高峰期，应用服务器成为整个网站的瓶颈。</p>
+<p><strong>使用应用服务器集群改善网站的并发处理能力</strong></p>
+<p>使用集群是网站解决高并发、海量数据问题的常用手段。当一台服务器的处理能力、存储空间不足时，不要企图去更换更强大的服务器，对大型网站而言，不管多么强大的服务器，都满足不了网站持续增长的业务需求。这种情况下，更恰当的做法是增加一台服务器分担原有服务器的访问及存储压力。 <strong>对网站架构而言，只要能通过增加一台服务器的方式改善负载压力，就可以以同样的方式持续增加服务器不断改善系统性能，从而实现系统的可伸缩性</strong>。应用服务器实现集群是网站可伸缩架构设计中较为简单成熟的一种，如下图所示：</p>
+<img src="/assets/前端应该知道的服务端知识/04.png" width="600px" />
+<p>通过负载均衡调度服务器，可以将来自用户浏览器的访问请求分发到应用服务器集群中的任何一台服务器上，如果有更多用户，就在集群中加入更多的应用服务器，使应用服务器的压力不再成为整个网站的瓶颈。</p>
+<h3 id="4-数据库读写分离"><a class="markdownIt-Anchor" href="#4-数据库读写分离"></a> 4、<strong>数据库读写分离</strong></h3>
+<p>网站在使用缓存后，使对大部分数据读操作访问都可以不通过数据库就能完成，但是仍有一部分读操作（缓存访问不命中、缓存过期）和全部的写操作都需要访问数据库，在网站的用户达到一定规模后，数据库因为负载压力过高而成为网站的瓶颈。 目前大部分的主流数据库都提供主从热备功能，通过配置两台数据库主从关系，可以将一台数据库服务器的数据更新同步到另一台服务器上。网站利用数据库的这一功能，实现数据库读写分离，从而改善数据库负载压力。如下图所示：</p>
+<img src="/assets/前端应该知道的服务端知识/05.png" width="600px" />
+<p>应用服务器在写数据的时候，访问主数据库，主数据库通过主从复制机制将数据更新同步到从数据库，这样当应用服务器读数据的时候，就可以通过从数据库获得数据。为了便于应用程序访问读写分离后的数据库，通常在应用服务器端使用专门的数据访问模块，使数据库读写分离对应用透明。</p>
+<h3 id="5-使用反向代理和-cdn-加速网站响应"><a class="markdownIt-Anchor" href="#5-使用反向代理和-cdn-加速网站响应"></a> 5、<strong>使用反向代理和 CDN 加速网站响应</strong></h3>
+<p>随着网站业务不断发展，用户规模越来越大，由于中国复杂的网络环境，不同地区的用户访问网站时，速度差别也极大。有研究表明，网站访问延迟和用户流失率正相关，网站访问越慢，用户越容易失去耐心而离开。为了提供更好的用户体验，留住用户，网站需要加速网站访问速度。主要手段有使用 CDN 和方向代理。如下图所示：</p>
+<img src="/assets/前端应该知道的服务端知识/06.png" width="600px" />
+<p>CDN 和反向代理的基本原理都是缓存。</p>
+<p>CDN 部署在网络提供商的机房，使用户在请求网站服务时，可以从距离自己最近的网络提供商机房获取数据</p>
+<p>反向代理则部署在网站的中心机房，当用户请求到达中心机房后，首先访问的服务器是反向代理服务器，如果反向代理服务器中缓存着用户请求的资源，就将其直接返回给用户</p>
+<p>使用 CDN 和反向代理的目的都是尽早返回数据给用户，一方面加快用户访问速度，另一方面也减轻后端服务器的负载压力。</p>
+<h3 id="6-使用分布式文件系统和分布式数据库系统"><a class="markdownIt-Anchor" href="#6-使用分布式文件系统和分布式数据库系统"></a> 6、<strong>使用分布式文件系统和分布式数据库系统</strong></h3>
+<p>任何强大的单一服务器都满足不了大型网站持续增长的业务需求。数据库经过读写分离后，从一台服务器拆分成两台服务器，但是随着网站业务的发展依然不能满足需求，这时需要使用分布式数据库。文件系统也一样，需要使用分布式文件系统。如下图所示：</p>
+<img src="/assets/前端应该知道的服务端知识/07.png" width="600px" />
+<p>分布式数据库是网站数据库拆分的最后手段，只有在单表数据规模非常庞大的时候才使用。不到不得已时，网站更常用的数据库拆分手段是业务分库，将不同业务的数据部署在不同的物理服务器上。</p>
+<h3 id="7-使用-nosql-和搜索引擎"><a class="markdownIt-Anchor" href="#7-使用-nosql-和搜索引擎"></a> 7、<strong>使用 NoSQL 和搜索引擎</strong></h3>
+<p>随着网站业务越来越复杂，对数据存储和检索的需求也越来越复杂，网站需要采用一些非关系数据库技术如 NoSQL 和非数据库查询技术如搜索引擎。如下图所示：</p>
+<img src="/assets/前端应该知道的服务端知识/08.png" width="600px" />
+<p>NoSQL 和搜索引擎都是源自互联网的技术手段，对可伸缩的分布式特性具有更好的支持。应用服务器则通过一个统一数据访问模块访问各种数据，减轻应用程序管理诸多数据源的麻烦。</p>
+<h3 id="8-业务拆分"><a class="markdownIt-Anchor" href="#8-业务拆分"></a> 8、<strong>业务拆分</strong></h3>
+<p>大型网站为了应对日益复杂的业务场景，通过使用分而治之的手段将整个网站业务分成不同的产品线。如大型购物交易网站都会将首页、商铺、订单、买家、卖家等拆分成不同的产品线，分归不同的业务团队负责。</p>
+<p>具体到技术上，也会根据产品线划分，将一个网站拆分成许多不同的应用，每个应用独立部署。应用之间可以通过一个超链接建立关系（在首页上的导航链接每个都指向不同的应用地址），也可以通过消息队列进行数据分发，当然最多的还是通过访问同一个数据存储系统来构成一个关联的完整系统，如下图所示：</p>
+<img src="/assets/前端应该知道的服务端知识/09.png" width="600px" />
+<h3 id="9-分布式微服务"><a class="markdownIt-Anchor" href="#9-分布式微服务"></a> 9、<strong>分布式微服务</strong></h3>
+<p>随着业务拆分越来越小，存储系统越来越庞大，应用系统的整体复杂度呈指数级增加，部署维护越来越困难。由于所有应用要和所有数据库系统连接，在数万台服务器规模的网站中，这些连接的数目是服务器规模的平方，导致数据库连接资源不足，拒绝服务。</p>
+<p>既然每一个应用系统都需要执行许多相同的业务操作，比如用户管理、商品管理等，那么可以将这些共用的业务提取出来，独立部署。由这些可复用的业务连接数据库，提供共用业务服务，而应用系统只需要管理用户界面，通过分布式服务调用共用业务服务完成具体业务操作。如下图所示：</p>
+<img src="/assets/前端应该知道的服务端知识/10.png" width="600px" />
+<h2 id="三-拆分-vs-集群"><a class="markdownIt-Anchor" href="#三-拆分-vs-集群"></a> <strong>三、拆分 VS 集群</strong></h2>
+<ol>
+<li>拆分：不同的<strong>多台服务器上面部署不同的服务模块</strong>，模块之间通过RPC通信和调用，用于拆分业务功能，独立部署，多个服务器共同组成一个整体对外提供服务。</li>
+<li>集群：不同的<strong>多台服务器上面部署相同的服务模块</strong>，通过分布式调度软件进行统一的调度，用于分流容灾，降低单个服务器的访问压力。</li>
+</ol>
+<h2 id="四-微服务-vs-soa"><a class="markdownIt-Anchor" href="#四-微服务-vs-soa"></a> <strong>四、微服务 VS SOA</strong></h2>
+<p>创始人：<strong>martin fowler</strong><a target="_blank" rel="noopener" href="https://martinfowler.com/articles/microservices.html">https://martinfowler.com/articles/microservices.html</a></p>
+<p>单体应用：ALL IN ONE</p>
+<p>微服务是一种架构风格，一个大型复杂软件应用由一个或多个微服务组成。系统中的各个微服务可被独立部署，各个微服务之间是松耦合的。每个微服务仅关注于完成一件任务并很好地完成该任务。在所有情况下，每个任务代表着一个小的业务能力</p>
+<p>微服务，从本质意义上看，还是 SOA 架构。但内涵有所不同，微服务并不绑定某种特殊的技术，在一个微服务的系统中，可以有 Java 编写的服务，也可以有 Python编写的服务，他们是靠Restful架构风格统一成一个系统的。所以微服务本身与具体技术实现无关，扩展性强。</p>
+<h2 id="五-前后端完全分离与rest规范"><a class="markdownIt-Anchor" href="#五-前后端完全分离与rest规范"></a> <strong>五、前后端完全分离与Rest规范</strong></h2>
+<p>http是目前在互联网上使用最多的协议，没有之一。可是http的创始人一直都觉得，在过去10几年来，所有的人都在错误的使用Http。</p>
+<p>这句话怎么说呢？如果说你要删除一个数据，以往的做法通常是 delete/{id}，如果你要更新一个数据，可能是Post数据放Body，然后方法是 update/{id}， 或者是artichle/{id}?method=update。</p>
+<p>这种做法让我很暴燥，我觉得这个世界不该这样的，所有的人都在误解而且在严重错误的误解Http的设计初衷，好比是发明了火药却只用它来做烟花爆竹。</p>
+<p>那么正确的使用方式是什么呢？如果你要看Rest各种特性，你恐怕真的很难理解Rest，但是如果你看错误的使用http的人倒底儿了哪些错，什么是Rest就特别容易理解了。</p>
+<p>**第一条，混乱。**一万个人心里有一万个Url的命名规则，Url是统一资源定位符，重点是资源。而很多人却把它当成了万金油，每一个独立的虚拟的网页都可以随意使用，各种操作都能够迭加。这是混乱的来源之一。</p>
+<p>**第二条，贪婪。**有状态和无状态全部混在一起。特别是在购物车或者是登录的应用中，经常刷新就丢失带来的用户体验简直棒棒哒。每一个请求并不能单独的响应一些功能，很多的功能混杂在一起里。这是人性贪婪的本质，也是各种Hack的起源，只要能够把问题解决掉，总会有人用他认为最方便的方式去解决问题，比如说汽车门把手坏掉了直接系根绳子当把手，emmmm这样确实很棒啊。</p>
+<p>**第三条，无序。**返回的结果往往是很随意，各种错误信息本来就是用Http的状态码构成的，可是很多人还是喜欢把错误信息返回在返回值中。最常见的就是Code和Message，当然对于这一点，我个人是保留疑问的，我的观点是，Http本身的错误和服务器的内部错误还是需要在不断层面分开的，不能混在一起。可是在大神眼里并非如此，这个再议。</p>
+<p><strong>好了我编不下去了。那么怎么解决这些问题呢？强迫症患者的福音就是先颁规则，第一个规则就是明确Url是什么，该怎么用。就是所有的Url本质来讲，都应该是一种资源。一个独立的Url地址，就是对应一个独一无二的资源。怎么样？这种感觉是不是棒棒哒？一个冰淇淋，一个老师，一间房子，在Url上对应的都是一个资源，不会有多余的Url跟他对应，也不会表示有多个Url地址~~注意，这里点的是Url地址，并不是单独的参数，他就是一个/room/{room_id}这样的东西，举个栗子,/room/3242 这就表示3242号房间。</strong></p>
+<p>这是一个清爽的世界啊，你想想，之前的Url是什么都要，我开房，可能是/open/room/3242 我要退房可能是/exit/3242/room，我要打理房间，可能是room/3242?method=clean.</p>
+<p><strong>够了！这些乱七八糟的东西全够了，让世界回归清爽的本质，一间房，就是/room/3242 没有别的Url地址了。</strong></p>
+<p><strong>那我想要对这个资源有操作怎么办？这就是棒棒哒大神想出来的了，http有几种Method来着？get ,put ,post,delete，还有其他隐藏的4种。在过去的混乱世界里，经常用的就是Get和Post。如果不是因为Get不支持大数据传输，我想连Post都不会有人使用。（想像一下Roy Fielding在愤怒的对着电脑屏幕喊，Http的Method一共有八个，你们为毛只逮着Get一只羊的毛薅薅薅薅薅）。</strong></p>
+<p>而对资源最常见的操作是什么？CRUD，对不对，就是创建，读，更新，删除。再看Http的Method？是不是非常完美？其实也怪Fielding老爷子一开始命名不准确，如果刚开始就是把Get方法叫做Read，Put方法叫做Update，Post叫做Create这该多好。。。</p>
+<p>你用一个Get，大家又发现没什么限制没什么所谓，又很难理解Put和Post的差别，法无禁止即可为啊，呃，老爷子不要瞪我，我瞎说的。</p>
+<p>总之，这四种方法够不够你浪？你有本身找出来更多的对资源的操作来啊，我还有4个Method没用过呢。如果这4个真的不够了，有什么问题，大不了我再重新更改http协议啊。</p>
+<p>其实简单说，对于Rest理解到这里就够了。后续的东西，都是在这一条基础上空想出来的，比强迫症更强迫症，当然，无状态我是百分百支持的。以上的各种表述可能不太准确，也纯属是我的意淫和各种小道资料，并未考据，但是凭良心讲，我是早就看不惯黑暗年代里的Url命名风格了，所以当时最早接触到Rest的时候，瞬间就找到了真爱，我靠，这不就是我一直想要的答案吗？</p>
+<p>但是我一直想的仅仅是命名规范，从来没有把自己的思考角度放在一个url就是一个资源，所有的操作都是对资源的更改而言的角度上啊。所以你能理解到的程度，更多的就是在于你要弄清楚你要解决的什么问题，如果你的问题只是理解Rest，恐怕你很理解，如果你的问题是怎么解决Url混乱的问题，你反而很快能弄懂了~</p>
+<blockquote>
+<p>**Rest操作最佳实践：**现在在很多企业中，虽然都在支持Rest规范，但是真正严格遵守的几乎没有，因为按照Rest规范，删除需要发送Delete请求，插入需要发送PUT请求，过于繁琐，并且有些框架，例如ajax，Springmvc等，对Delete和PUT请求的支持不太友好，所以实际应用中很少使用这两种请求，一般还是只是用Get和Post请求，使用接口名字来区分，所以，对于Rest规范，只需要记得传递数据只使用JSON，而不是后端去渲染模板，从而实现前后端的完全分离。</p>
+</blockquote>
+<h2 id="六-cap三进二和base定理"><a class="markdownIt-Anchor" href="#六-cap三进二和base定理"></a> 六、<strong>CAP三进二和Base定理</strong></h2>
+<h3 id="1-关系型数据库遵循acid规则"><a class="markdownIt-Anchor" href="#1-关系型数据库遵循acid规则"></a> 1、<strong>关系型数据库遵循ACID规则</strong></h3>
+<p>事务在英文中是transaction，和现实世界中的交易很类似，它有如下四个特性：</p>
+<ol>
+<li>A (Atomicity) 原子性</li>
+</ol>
+<p>原子性很容易理解，也就是说事务里的所有操作要么全部做完，要么都不做，事务成功的条件是事务里的所有操作都成功，只要有一个操作失败，整个事务就失败，需要回滚。比如银行转账，从A账户转100元至B账户，分为两个步骤：1）从A账户取100元；2）存入100元至B账户。这两步要么一起完成，要么一起不完成，如果只完成第一步，第二步失败，钱会莫名其妙少了100元。</p>
+<ol>
+<li>C (Consistency) 一致性</li>
+</ol>
+<p>一致性也比较容易理解，也就是说数据库要一直处于一致的状态，事务的运行不会改变数据库原本的一致性约束。</p>
+<ol>
+<li>I (Isolation) 独立性</li>
+</ol>
+<p>所谓的独立性是指并发的事务之间不会互相影响，如果一个事务要访问的数据正在被另外一个事务修改，只要另外一个事务未提交，它所访问的数据就不受未提交事务的影响。比如现有有个交易是从A账户转100元至B账户，在这个交易还未完成的情况下，如果此时B查询自己的账户，是看不到新增加的100元的</p>
+<ol>
+<li>D (Durability) 持久性</li>
+</ol>
+<p>持久性是指一旦事务提交后，它所做的修改将会永久的保存在数据库上，即使出现宕机也不会丢失。</p>
+<h3 id="2-cap三进二"><a class="markdownIt-Anchor" href="#2-cap三进二"></a> 2、<strong>CAP三进二</strong></h3>
+<p>在分布式系统中，讲究C:Consistency（强一致性）、A:Availability（可用性）、P:Partition tolerance（分区容错性）</p>
+<p>CAP的证明基于异步网络，异步网络也是反映了真实网络中情况的模型。真实的网络系统中，节点之间不可能保持同步，即便是时钟也不可能保持同步，所有的节点依靠获得的消息来进行本地计算和通讯。这个概念其实是相当强的，意味着任何超时判断也是不可能的，因为没有共同的时间标准。之后我们会扩展CAP的证明到弱一点的异步网络中，这个网络中时钟不完全一致，但是时钟运行的步调是一致的，这种系统是允许节点做超时判断的。</p>
+<p>CAP的证明很简单，假设两个节点集{G1, G2}，由于网络分片导致G1和G2之间所有的通讯都断开了，如果不满足P，则整个网络不可用，如果在G1中写，在G2中读刚写的数据， G2中返回的值不可能是G1中的写值。由于A的要求，G2一定要返回这次读请求，由于P的存在，导致C一定是不可满足的。</p>
+<p><strong>CAP理论就是说在分布式存储系统中，最多只能实现上面的两点。</strong></p>
+<p><strong>而由于当前的网络硬件肯定会出现延迟丢包等问题，所以</strong></p>
+<p><strong>分区容忍性是我们必须需要实现的。</strong></p>
+<p><strong>所以我们只能在一致性和可用性之间进行权衡，没有任何分布式系统能同时保证这三点。</strong></p>
+<p>C:强一致性 A：高可用性 P：分布式容忍性</p>
+<ul>
+<li>CA 传统Oracle数据库</li>
+<li>AP 大多数网站架构的选择</li>
+<li>CP Redis、Mongodb</li>
+</ul>
+<p><strong>注意：分布式架构的时候必须做出取舍。</strong></p>
+<p><strong>一致性和可用性之间取一个平衡。多余大多数web应用，其实并不需要强一致性。</strong></p>
+<p><strong>因此牺牲C换取P，这是目前分布式数据库产品的方向</strong></p>
+<p>一致性与可用性的决择</p>
+<p>对于web2.0网站来说，关系数据库的很多主要特性却往往无用武之地</p>
+<p>数据库事务一致性需求</p>
+<p>很多web实时系统并不要求严格的数据库事务，对读一致性的要求很低， 有些场合对写一致性要求并不高。允许实现最终一致性。</p>
+<p>数据库的写实时性和读实时性需求</p>
+<p>对关系数据库来说，插入一条数据之后立刻查询，是肯定可以读出来这条数据的，但是对于很多web应用来说，并不要求这么高的实时性，比方说发一条消息之 后，过几秒乃至十几秒之后，我的订阅者才看到这条动态是完全可以接受的。</p>
+<p>对复杂的SQL查询，特别是多表关联查询的需求</p>
+<p>任何大数据量的web系统，都非常忌讳多个大表的关联查询，以及复杂的数据分析类型的报表查询，特别是SNS类型的网站，从需求以及产品设计角 度，就避免了这种情况的产生。往往更多的只是单表的主键查询，以及单表的简单条件分页查询，SQL的功能被极大的弱化了。</p>
+<p><strong>CAP理论的核心是：一个分布式系统不可能同时很好的满足一致性，可用性和分区容错性这三个需求，</strong></p>
+<p><strong>最多只能同时较好的满足两个。</strong></p>
+<p><strong>因此，根据 CAP 原理将 NoSQL 数据库分成了满足 CA 原则、满足 CP 原则和满足 AP 原则三 大类：</strong></p>
+<ul>
+<li>CA - 单点集群，满足一致性，可用性的系统，通常在可扩展性上不太强大。</li>
+<li>CP - 满足一致性，分区容忍必的系统，通常性能不是特别高。</li>
+<li>AP - 满足可用性，分区容忍性的系统，通常可能对一致性要求低一些。</li>
+</ul>
+<img src="/assets/前端应该知道的服务端知识/11.png" width="400px" />
+<h3 id="3-base定理"><a class="markdownIt-Anchor" href="#3-base定理"></a> 3、<strong>BASE定理</strong></h3>
+<p>BASE就是为了解决关系数据库强一致性引起的问题而引起的可用性降低而提出的解决方案。</p>
+<p>BASE其实是下面三个术语的缩写：</p>
+<ul>
+<li>基本可用（Basically Available）</li>
+<li>软状态（Soft state）</li>
+<li>最终一致（Eventually consistent）</li>
+</ul>
+<p>它的思想是通过让系统放松对某一时刻数据一致性的要求来换取系统整体伸缩性和性能上改观。为什么这么说呢，缘由就在于大型系统往往由于地域分布和极高性能的要求，不可能采用分布式事务来完成这些指标，要想获得这些指标，我们必须采用另外一种方式来完成，这里BASE就是解决这个问题的办法</p>
+<h3 id="4-分布式一致性理论paxos-raft-zab算法"><a class="markdownIt-Anchor" href="#4-分布式一致性理论paxos-raft-zab算法"></a> 4、<strong>分布式一致性理论paxos、raft、zab算法</strong></h3>
+<p>演示 Raft <a target="_blank" rel="noopener" href="http://thesecretlivesofdata.com/raft/">http://thesecretlivesofdata.com/raft/</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/weixin.png" alt="kyleezhang 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/assets/config/alipay.png" alt="kyleezhang 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>kyleezhang
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://kyleezhang.com/2022/06/12/%E5%89%8D%E7%AB%AF%E5%BA%94%E8%AF%A5%E7%9F%A5%E9%81%93%E7%9A%84%E6%9C%8D%E5%8A%A1%E7%AB%AF%E7%9F%A5%E8%AF%86/" title="前端应该知道的服务端知识">http://kyleezhang.com/2022/06/12/前端应该知道的服务端知识/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+        
+
+  <div class="followme">
+    <p>欢迎关注我的其它发布渠道</p>
+
+    <div class="social-list">
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/assets/config/wechat.png">
+            <span class="icon">
+              <i class="fab fa-weixin"></i>
+            </span>
+
+            <span class="label">WeChat</span>
+          </a>
+        </div>
+
+        <div class="social-item">
+          <a target="_blank" class="social-link" href="/atom.xml">
+            <span class="icon">
+              <i class="fa fa-rss"></i>
+            </span>
+
+            <span class="label">RSS</span>
+          </a>
+        </div>
+    </div>
+  </div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E6%9C%8D%E5%8A%A1%E7%AB%AF/" rel="tag"><i class="fa fa-tag"></i>服务端</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/12/28/node-principle/" rel="prev" title="NodeJS的底层原理">
+      <i class="fa fa-chevron-left"></i> NodeJS的底层原理
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F"><span class="nav-text"> 分布式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80-%E5%A4%A7%E5%9E%8B%E7%BD%91%E7%AB%99%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%89%B9%E7%82%B9"><span class="nav-text"> 一、大型网站系统的特点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E9%AB%98%E5%B9%B6%E5%8F%91%E5%A4%A7%E6%B5%81%E9%87%8F"><span class="nav-text"> 1、高并发，大流量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E9%AB%98%E5%8F%AF%E7%94%A8"><span class="nav-text"> 2、高可用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%B5%B7%E9%87%8F%E6%95%B0%E6%8D%AE"><span class="nav-text"> 3、海量数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E7%94%A8%E6%88%B7%E5%88%86%E5%B8%83%E5%B9%BF%E6%B3%9B%E7%BD%91%E7%BB%9C%E6%83%85%E5%86%B5%E5%A4%8D%E6%9D%82"><span class="nav-text"> 4、用户分布广泛，网络情况复杂</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E5%AE%89%E5%85%A8%E7%8E%AF%E5%A2%83%E6%81%B6%E5%8A%A3"><span class="nav-text"> 5、安全环境恶劣</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-%E9%9C%80%E6%B1%82%E5%BF%AB%E9%80%9F%E5%8F%98%E6%9B%B4%E5%8F%91%E5%B8%83%E9%A2%91%E7%B9%81"><span class="nav-text"> 6、需求快速变更，发布频繁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-%E6%B8%90%E8%BF%9B%E5%BC%8F%E5%8F%91%E5%B1%95"><span class="nav-text"> 7、渐进式发展</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C-%E5%A4%A7%E5%9E%8B%E7%BD%91%E7%AB%99%E6%9E%B6%E6%9E%84%E6%BC%94%E5%8C%96%E5%8F%91%E5%B1%95%E5%8E%86%E7%A8%8B"><span class="nav-text"> 二、大型网站架构演化发展历程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%88%9D%E5%A7%8B%E9%98%B6%E6%AE%B5%E7%9A%84%E7%BD%91%E7%AB%99%E6%9E%B6%E6%9E%84"><span class="nav-text"> 1、初始阶段的网站架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%BA%94%E7%94%A8%E6%9C%8D%E5%8A%A1%E5%92%8C%E6%95%B0%E6%8D%AE%E6%9C%8D%E5%8A%A1%E5%88%86%E7%A6%BB"><span class="nav-text"> 2、应用服务和数据服务分离</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E4%BD%BF%E7%94%A8%E7%BC%93%E5%AD%98%E6%94%B9%E5%96%84%E7%BD%91%E7%AB%99%E6%80%A7%E8%83%BD"><span class="nav-text"> 3、使用缓存改善网站性能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E6%95%B0%E6%8D%AE%E5%BA%93%E8%AF%BB%E5%86%99%E5%88%86%E7%A6%BB"><span class="nav-text"> 4、数据库读写分离</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E4%BD%BF%E7%94%A8%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86%E5%92%8C-cdn-%E5%8A%A0%E9%80%9F%E7%BD%91%E7%AB%99%E5%93%8D%E5%BA%94"><span class="nav-text"> 5、使用反向代理和 CDN 加速网站响应</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-%E4%BD%BF%E7%94%A8%E5%88%86%E5%B8%83%E5%BC%8F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%92%8C%E5%88%86%E5%B8%83%E5%BC%8F%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F"><span class="nav-text"> 6、使用分布式文件系统和分布式数据库系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-%E4%BD%BF%E7%94%A8-nosql-%E5%92%8C%E6%90%9C%E7%B4%A2%E5%BC%95%E6%93%8E"><span class="nav-text"> 7、使用 NoSQL 和搜索引擎</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-%E4%B8%9A%E5%8A%A1%E6%8B%86%E5%88%86"><span class="nav-text"> 8、业务拆分</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-%E5%88%86%E5%B8%83%E5%BC%8F%E5%BE%AE%E6%9C%8D%E5%8A%A1"><span class="nav-text"> 9、分布式微服务</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89-%E6%8B%86%E5%88%86-vs-%E9%9B%86%E7%BE%A4"><span class="nav-text"> 三、拆分 VS 集群</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B-%E5%BE%AE%E6%9C%8D%E5%8A%A1-vs-soa"><span class="nav-text"> 四、微服务 VS SOA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94-%E5%89%8D%E5%90%8E%E7%AB%AF%E5%AE%8C%E5%85%A8%E5%88%86%E7%A6%BB%E4%B8%8Erest%E8%A7%84%E8%8C%83"><span class="nav-text"> 五、前后端完全分离与Rest规范</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD-cap%E4%B8%89%E8%BF%9B%E4%BA%8C%E5%92%8Cbase%E5%AE%9A%E7%90%86"><span class="nav-text"> 六、CAP三进二和Base定理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E9%81%B5%E5%BE%AAacid%E8%A7%84%E5%88%99"><span class="nav-text"> 1、关系型数据库遵循ACID规则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-cap%E4%B8%89%E8%BF%9B%E4%BA%8C"><span class="nav-text"> 2、CAP三进二</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-base%E5%AE%9A%E7%90%86"><span class="nav-text"> 3、BASE定理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%80%E8%87%B4%E6%80%A7%E7%90%86%E8%AE%BApaxos-raft-zab%E7%AE%97%E6%B3%95"><span class="nav-text"> 4、分布式一致性理论paxos、raft、zab算法</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="kyleezhang"
+      src="/assets/config/avatar.png">
+  <p class="site-author-name" itemprop="name">kyleezhang</p>
+  <div class="site-description" itemprop="description">学源于思</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">文章</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/kyleezhang" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;kyleezhang" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/2942181559@qq.com" title="E-Mail → 2942181559@qq.com"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/u/6998903195" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;u&#x2F;6998903195" rel="noopener" target="_blank"><i class="fab fa-weibo fa-fw"></i>Weibo</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">kyleezhang</span>
+</div>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">575k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">8:43</span>
+</div>
+
+
+
+        
+<div class="busuanzi-count footer-inner">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '5cb74a324ff7b0f7b544',
+      clientSecret: 'cd372db5bb46f07eda7fae4b615fd27371c80dc7',
+      repo        : 'kyleezhang.github.io',
+      owner       : 'kyleezhang',
+      admin       : ['kyleezhang'],
+      id          : '22f6c487b232a830b7f59886ed8ee648',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+  <!-- 背景动画 -->
+<script src="/js/particle.js"></script>
+
+</body>
+</html>
