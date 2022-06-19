@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 5.2.0">
+<meta name="generator" content="Hexo 5.4.2">
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/config/favicon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/config/favicon.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/config/favicon.png">
@@ -34,7 +34,7 @@
 <meta property="og:image" content="https://img-blog.csdnimg.cn/20190921230804742.png">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/20190921230854349.png">
 <meta property="article:published_time" content="2021-04-21T23:17:59.000Z">
-<meta property="article:modified_time" content="2022-06-16T02:32:58.929Z">
+<meta property="article:modified_time" content="2022-06-19T16:36:17.130Z">
 <meta property="article:author" content="kyleezhang">
 <meta property="article:tag" content="JavaScript">
 <meta name="twitter:card" content="summary">
@@ -225,7 +225,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-06-16 02:32:58" itemprop="dateModified" datetime="2022-06-16T02:32:58+00:00">2022-06-16</time>
+                <time title="修改时间：2022-06-19 16:36:17" itemprop="dateModified" datetime="2022-06-19T16:36:17+00:00">2022-06-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -271,9 +271,9 @@
       
         <p>在 JavaScript 中数值只有一种，即 Number 类型，内部表示为双精度浮点型，即其他语言中的 double 类型，所以在 JavaScript 中实际上是没有整数类型的，数值都是按浮点数来处理的，存储方法相同，遵循 IEEE 754 国际标准，因此在 JavaScript 中 3 和 3.0 被视为同一个值，示例：</p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">3.0</span> === <span class="number">3</span> <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
-<a id="more"></a>
+<span id="more"></span>
 <p>对于整数情况，能够准确计算的整数范围为在 -2<sup>53</sup>~2<sup>53</sup> 之间，不包含两个端点，因此只要在这个范围内整数可以放心使用。除了十进制以外整数还可以通过八进制或十六进制的字面值来表示，其中八进制字面值的第一位必须是零，然后是八进制数字序列（0 ~ 7），如果字面值中的数值超出范围，那么前导零将被忽略，后面的数值被当作十进制解析，这儿需要注意在严格模式中八进制的这种表示会报错，ES6中进一步明确，八进制的表示要使用前缀0o，示例：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="number">0o11</span> === <span class="number">0</span>11)</span><br><span class="line">&#125;)()</span><br><span class="line"><span class="comment">// true</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 严格模式</span></span><br><span class="line">(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line"><span class="meta">  &#x27;use strict&#x27;</span>;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="number">0o11</span> === <span class="number">0</span>11)</span><br><span class="line">&#125;)()</span><br><span class="line"><span class="comment">// Uncaught GyntaxError</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">(<span class="keyword">function</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="number">0o11</span> === <span class="number">011</span>)</span><br><span class="line">&#125;)()</span><br><span class="line"><span class="comment">// true</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 严格模式</span></span><br><span class="line">(<span class="keyword">function</span>(<span class="params"></span>)&#123;</span><br><span class="line">  <span class="string">&#x27;use strict&#x27;</span>;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="number">0o11</span> === <span class="number">011</span>)</span><br><span class="line">&#125;)()</span><br><span class="line"><span class="comment">// Uncaught GyntaxError</span></span><br></pre></td></tr></table></figure>
 <p>十六进制字面值前两位必须是 0x，后跟任何十六进制数字（0 ~ 9以及A ~ F）,其中 A ~ F 可以大写，也可以小写。ES6中又扩展了二进制的写法，使用前缀0b（或0B）。</p>
 <p>虽然在 JavaScript 中无论是小数还是整数都是按照64位的浮点数形式存储，但是进行整数运算会自动转换为32位的有符号整数，例如位运算，有符号整数使用31位表示整数的数值，用第32位表示整数的符号，数值范围是-2<sup>31</sup> ~ 2<sup>31</sup>。</p>
 <p>接下来我们来分析这些范围到底是怎么产生的？</p>
@@ -313,7 +313,7 @@
 <h2 id="二-数值范围"><a class="markdownIt-Anchor" href="#二-数值范围"></a> 二、数值范围</h2>
 <p>ECMAScript能够表示的数字的绝对值范围是 5e-324 ~ 1.7976931348623157e+308，这两个取值可以通过 Number.MIN_VALUE 和 Number.MAX_VALUE 这两个字段来表示，如果某次计算的结果得到了一个超出 JavaScript 数值范围的，那么这个数值会自动被转换为特殊的 Infinity 值，具体来说，如果这个数是负数，则会被转换成 -Infinity（负无穷），如果这个数值是正数，则会被转换成 Infinity（正无穷）。</p>
 <p>示例：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(<span class="built_in">Number</span>.MAX_VALUE) <span class="comment">// 1.7976931348623157e+308</span></span><br><span class="line"><span class="built_in">console</span>.log(<span class="built_in">Number</span>.MIN_VALUE) <span class="comment">// 5e-324</span></span><br><span class="line"><span class="built_in">console</span>.log(<span class="built_in">Number</span>.MAX_VALUE + <span class="built_in">Number</span>.MAX_VALUE) <span class="comment">// Infinity</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Number</span>.<span class="property">MAX_VALUE</span>) <span class="comment">// 1.7976931348623157e+308</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Number</span>.<span class="property">MIN_VALUE</span>) <span class="comment">// 5e-324</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Number</span>.<span class="property">MAX_VALUE</span> + <span class="title class_">Number</span>.<span class="property">MAX_VALUE</span>) <span class="comment">// Infinity</span></span><br></pre></td></tr></table></figure>
 <p>那么这个取值范围是如何得到的呢？</p>
 <p>前面说到 JavaScript 中数值的保存采用的是双精度浮点型，遵循 IEEE 754 标准，在 ECMAScript 规范中规定指数 E 的范围在 -1074 ~ 971，双精度浮点型中有效数字 M 的存储位为52，但是有效数字 M 由于可以省略第一位1，节省一个存储位，因此有效数字M可以存储的范围为 1 ~ 2<sup>53</sup>，因此 JavaScript 中 Number 能表示的最大数字绝对值范围是 2<sup>-1074</sup> ~ 2<sup>(53+971)</sup>。</p>
 <p>注：通过 Number.isFinite()（ES6引入）和 isFinite() 方法可以判断一个数值是不是有穷的，即如果参数位于最小与最大数值之间时会返回 true。</p>
@@ -336,7 +336,7 @@
 <p>ES6 在 Number 对象上新增了一个极小常量：Number.EPSILON，值为 2.220446049250313e-16，引入这么一个常量就是为了为浮点数计算设置一个误差范围，如果这个误差小于 Number.EPSILON 我们就认为得到了准确结果。</p>
 <h2 id="四-最大安全整数"><a class="markdownIt-Anchor" href="#四-最大安全整数"></a> 四、 最大安全整数</h2>
 <p>JavaScript 中最大安全整数的范围是 2<sup>53</sup> ~ 2<sup>53</sup>，不包括两个端点，即 -9007199254740991 ~ 9007199254740991，可以通过 Number.MIN_SAFE_INTEGER 和 Number.MAX_SAFE_INTEGER 字段查询，超出这个范围的整数计算都是不准确的，例如：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">console</span>.log(<span class="built_in">Number</span>.MAX_SAFE_INTEGER) <span class="comment">// 9007199254740991</span></span><br><span class="line"><span class="built_in">console</span>.log(<span class="built_in">Number</span>.MIN_SAFE_INTEGER) <span class="comment">// -9007199254740991</span></span><br><span class="line"><span class="built_in">console</span>.log(<span class="number">9007199254740991</span> + <span class="number">2</span>) <span class="comment">// 9007199254740992</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Number</span>.<span class="property">MAX_SAFE_INTEGER</span>) <span class="comment">// 9007199254740991</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="title class_">Number</span>.<span class="property">MIN_SAFE_INTEGER</span>) <span class="comment">// -9007199254740991</span></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="number">9007199254740991</span> + <span class="number">2</span>) <span class="comment">// 9007199254740992</span></span><br></pre></td></tr></table></figure>
 <p>最大安全整数9007199254740991对应的二进制数如图：</p>
 <p><img src="https://img-blog.csdnimg.cn/20190921230804742.png" alt="" /></p>
 <p>53位有效数字都存储满了之后，想要表示更大的数字，就只能往指数数加一位，这时候尾数因为没有多余的存储空间，因此只能补0。</p>
@@ -347,7 +347,7 @@
 <p>之所以会有最大安全整数这个概念，本质上还是因为数字类型在计算机中的存储结构。在尾数位不够补零之后，只要是多余的尾数为1所对应的整数都不能被精确表示。</p>
 <p>可以发现，不管是浮点数计算的计算结果错误和大整数的计算结果错误，最终都可以归结到JS的精度只有53位（尾数只能存储53位的有效数字）。那么我们在日常工作中碰到这两个问题该如何解决呢？<br />
 大而全的解决方案就是使用 mathjs，看一下 mathjs 的输出：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">math.config(&#123;</span><br><span class="line">    number: <span class="string">&#x27;BigNumber&#x27;</span>,      </span><br><span class="line">    precision: <span class="number">64</span> </span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(math.format(math.eval(<span class="string">&#x27;0.1 + 0.2&#x27;</span>))); <span class="comment">// &#x27;0.3&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(math.format(math.eval(<span class="string">&#x27;0.23 * 0.34 * 0.92&#x27;</span>))); <span class="comment">// &#x27;0.071944&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(math.format(math.eval(<span class="string">&#x27;9007199254740991 + 2&#x27;</span>))); </span><br><span class="line"><span class="comment">// &#x27;9.007199254740993e+15&#x27;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">math.<span class="title function_">config</span>(&#123;</span><br><span class="line">    <span class="attr">number</span>: <span class="string">&#x27;BigNumber&#x27;</span>,      </span><br><span class="line">    <span class="attr">precision</span>: <span class="number">64</span> </span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(math.<span class="title function_">format</span>(math.<span class="built_in">eval</span>(<span class="string">&#x27;0.1 + 0.2&#x27;</span>))); <span class="comment">// &#x27;0.3&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(math.<span class="title function_">format</span>(math.<span class="built_in">eval</span>(<span class="string">&#x27;0.23 * 0.34 * 0.92&#x27;</span>))); <span class="comment">// &#x27;0.071944&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(math.<span class="title function_">format</span>(math.<span class="built_in">eval</span>(<span class="string">&#x27;9007199254740991 + 2&#x27;</span>))); </span><br><span class="line"><span class="comment">// &#x27;9.007199254740993e+15&#x27;</span></span><br></pre></td></tr></table></figure>
 <h2 id="参考资料"><a class="markdownIt-Anchor" href="#参考资料"></a> 参考资料</h2>
 <p><a target="_blank" rel="noopener" href="https://juejin.im/post/5a6fce10f265da3e261c3c71#heading-2">从0.1+0.2=0.30000000000000004再看JS中的Number类型</a></p>
 <p><a target="_blank" rel="noopener" href="http://www.ruanyifeng.com/blog/2010/06/ieee_floating-point_representation.html">浮点数的二进制表示</a></p>
@@ -579,7 +579,7 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="站点总字数">575k</span>
+    <span title="站点总字数">576k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>

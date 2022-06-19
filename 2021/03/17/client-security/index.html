@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 5.2.0">
+<meta name="generator" content="Hexo 5.4.2">
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/config/favicon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/config/favicon.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/config/favicon.png">
@@ -35,7 +35,7 @@
 <meta property="og:image" content="http://kyleezhang.com/assets/client-security/06.webp">
 <meta property="og:image" content="http://kyleezhang.com/assets/client-security/07.webp">
 <meta property="article:published_time" content="2021-03-17T20:06:09.000Z">
-<meta property="article:modified_time" content="2022-06-16T02:32:58.925Z">
+<meta property="article:modified_time" content="2022-06-19T16:36:17.130Z">
 <meta property="article:author" content="kyleezhang">
 <meta property="article:tag" content="Chrome">
 <meta name="twitter:card" content="summary">
@@ -226,7 +226,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-06-16 02:32:58" itemprop="dateModified" datetime="2022-06-16T02:32:58+00:00">2022-06-16</time>
+                <time title="修改时间：2022-06-19 16:36:17" itemprop="dateModified" datetime="2022-06-19T16:36:17+00:00">2022-06-19</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -272,7 +272,7 @@
       
         <p>WEB 世界出现的最初目的就是开放与共享，任何资源都可以接入其中，我们的网站可以加载并执行别人网站的脚本文件、图片、音频、视频等资源，甚至可以下载其他站点的可执行文件。但是如果这种自由没有任何限制反而会引起彻底的混乱和无序，我们的数据与隐私将被肆意窃取。随着 WEB2.0 的时代来临，互联网从C/S架构（客服端/服务端结构）转变为 B/S 架构(浏览器/服务器结构），后者相比于前者更加方便快捷，因此浏览器便成为了我们访问网站的窗口，浏览器安全也随之变得越来越重要。</p>
 <p>浏览器安全主要可以分为<strong>Web页面安全</strong>、<strong>浏览器网络安全</strong>和<strong>浏览器系统安全</strong>，接下来我们按照这三个方面分别进行介绍：</p>
-<a id="more"></a>
+<span id="more"></span>
 <h2 id="页面安全"><a class="markdownIt-Anchor" href="#页面安全"></a> 页面安全</h2>
 <h3 id="一-同源策略"><a class="markdownIt-Anchor" href="#一-同源策略"></a> 一、同源策略</h3>
 <p>同源策略（Same-origin policy）是浏览器页面最基础、最核心的安全策略，主要用于限制不同源站点之间的交互。那么首先什么是同源呢？</p>
@@ -282,9 +282,9 @@
 <p>浏览器默认两个相同的源之间是可以相互访问资源和操作 DOM 的。两个不同的源之间若想要相互访问资源或者操作 DOM，那么会有一套基础的安全策略的制约，我们把这称为同源策略。具体来讲，同源策略主要表现在 DOM、Web 数据和网络这三个层面。</p>
 <p><strong>1、DOM层面</strong></p>
 <p>同源策略限制了来自不同源的 JavaScript 脚本对当前 DOM 对象读和写的操作，举个🌰</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// parent</span></span><br><span class="line"><span class="built_in">window</span>.open(<span class="string">&#x27;https://www.****.com&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// child</span></span><br><span class="line"><span class="keyword">const</span> pdom = <span class="built_in">window</span>.opener.document;</span><br><span class="line">pdom.body.style.color = <span class="string">&quot;red&quot;</span>;</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// parent</span></span><br><span class="line"><span class="variable language_">window</span>.<span class="title function_">open</span>(<span class="string">&#x27;https://www.****.com&#x27;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// child</span></span><br><span class="line"><span class="keyword">const</span> pdom = <span class="variable language_">window</span>.<span class="property">opener</span>.<span class="property">document</span>;</span><br><span class="line">pdom.<span class="property">body</span>.<span class="property">style</span>.<span class="property">color</span> = <span class="string">&quot;red&quot;</span>;</span><br></pre></td></tr></table></figure>
 <p>在上述示例中我们在父页面中打开了子页面并在子页面中操作父页面中 DOM 节点的样式，如果此时子页面与父页面同源那么上述操作会成功，如果不是页面会抛出异常信息：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Blocked a frame <span class="keyword">with</span> origin <span class="string">&quot;https://www.****.ccom&quot;</span> <span class="keyword">from</span> accessing a cross-origin frame.</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="title class_">Blocked</span> a frame <span class="keyword">with</span> origin <span class="string">&quot;https://www.****.ccom&quot;</span> <span class="keyword">from</span> accessing a cross-origin frame.</span><br></pre></td></tr></table></figure>
 <p><strong>2、数据层面</strong></p>
 <p>同源策略限制了不同源的站点读取当前站点的 Cookie、IndexDB、LocalStorage 等数据。由于同源策略，我们依然无法通过第二个页面的 opener 来访问第一个页面中的 Cookie、IndexDB 或者 LocalStorage 等内容。</p>
 <p><strong>3、网络层面</strong></p>
@@ -313,12 +313,12 @@
 <p>但无论是何种类型的 XSS 攻击，它们都有一个共同点，那就是首先往浏览器中注入恶意脚本，然后再通过恶意脚本将用户信息发送至黑客部署的恶意服务器上。所以要阻止 XSS 攻击，我们可以通过阻止恶意 JavaScript 脚本的注入和恶意消息的发送来实现，常用的阻止 XSS 攻击的策略有：</p>
 <p>（1）服务器对输入脚本进行过滤或转码</p>
 <p>不管是反射型还是存储型 XSS 攻击，我们都可以在服务器端将一些关键的字符进行转码，比如最典型的：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">code:<span class="xml"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript">alert(<span class="string">&#x27;你被xss攻击了&#x27;</span>)</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span></span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">code</span>:<span class="language-xml"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="language-javascript"><span class="title function_">alert</span>(<span class="string">&#x27;你被xss攻击了&#x27;</span>)</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span></span><br></pre></td></tr></table></figure>
 <p>这段代码过滤后，只留下了</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">code:</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">code</span>:</span><br></pre></td></tr></table></figure>
 <p>这样，当用户再次请求该页面时，由于 script 标签的内容都被过滤了，所以这段脚本在客户端是不可能被执行的。</p>
 <p>除了过滤之外，服务器还可以对这些内容进行转码，还是上面那段代码，经过转码之后，效果如下所示：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">code:&amp;lt;script&amp;gt;alert(&amp;#39;你被xss攻击了&amp;#39;)&amp;lt;/script&amp;gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">code</span>:&amp;lt;script&amp;gt;<span class="title function_">alert</span>(&amp;#<span class="number">39</span>;你被xss攻击了&amp;#<span class="number">39</span>;)&amp;lt;/script&amp;gt;</span><br></pre></td></tr></table></figure>
 <p>经过转码之后的内容，如<code>&lt;script&gt;</code>标签被转换为<code>&amp;lt;script&amp;gt;</code>，因此即使这段脚本返回给页面，页面也不会执行这段脚本。</p>
 <p>（2）充分利用CSP</p>
 <p>虽然在服务器端执行过滤或者转码可以阻止 XSS 攻击的发生，但完全依靠服务器端依然是不够的，我们还需要把 CSP 等策略充分地利用起来，以降低 XSS 攻击带来的风险和后果。实施严格的 CSP 可以有效地防范 XSS 攻击，具体来讲 CSP 有如下几个功能：</p>
@@ -364,7 +364,7 @@
 <p>从上图可以看出，Origin 属性只包含了域名信息，并没有包含具体的 URL 路径，这是 Origin 和 Referer 的一个主要区别。在这里需要补充一点，Origin 的值之所以不包含详细路径信息，是有些站点因为安全考虑，不想把源站点的详细路径暴露给服务器。因此，服务器的策略是优先判断 Origin，如果请求头中没有包含 Origin 属性，再根据实际情况判断是否使用 Referer 值。</p>
 <p>（3）<strong>CSRF Token</strong></p>
 <p>除了使用以上两种方式来防止 CSRF 攻击之外，还可以采用 CSRF Token 来验证，这个流程比较好理解，大致分为两步。第一步，在浏览器向服务器发起请求时，服务器生成一个 CSRF Token。CSRF Token 其实就是服务器生成的字符串，然后将该字符串植入到返回的页面中。你可以参考下面示例代码：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">&quot;https://time.geekbang.org/sendcoin&quot;</span> <span class="attr">method</span>=<span class="string">&quot;POST&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> <span class="attr">name</span>=<span class="string">&quot;csrf-token&quot;</span> <span class="attr">value</span>=<span class="string">&quot;nc98P987bcpncYhoadjoiydc9ajDlcn&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">name</span>=<span class="string">&quot;user&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">name</span>=<span class="string">&quot;number&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">&quot;https://time.geekbang.org/sendcoin&quot;</span> <span class="attr">method</span>=<span class="string">&quot;POST&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> <span class="attr">name</span>=<span class="string">&quot;csrf-token&quot;</span> <span class="attr">value</span>=<span class="string">&quot;nc98P987bcpncYhoadjoiydc9ajDlcn&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">name</span>=<span class="string">&quot;user&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">name</span>=<span class="string">&quot;number&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;submit&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
 <p>第二步，在浏览器端如果要发起转账的请求，那么需要带上页面中的 CSRF Token，然后服务器会验证该 Token 是否合法。如果是从第三方站点发出的请求，那么将无法获取到 CSRF Token 的值，所以即使发出了请求，服务器也会因为 CSRF Token 不正确而拒绝请求。</p>
 <p>页面安全问题的主要原因就是浏览器为同源策略开的两个“后门”：一个是在页面中可以任意引用第三方资源，另外一个是通过 CORS 策略让 XMLHttpRequest 和 Fetch 去跨域请求资源。为了解决这些问题，我们引入了 CSP 来限制页面任意引入外部资源，引入了 HttpOnly 机制来禁止 XMLHttpRequest 或者 Fetch 发送一些关键 Cookie，引入了 SameSite 和 Origin 来防止 CSRF 攻击。这也是浏览器页面安全的主要内容。</p>
 <h2 id="浏览器系统安全"><a class="markdownIt-Anchor" href="#浏览器系统安全"></a> 浏览器系统安全</h2>
@@ -679,7 +679,7 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="站点总字数">575k</span>
+    <span title="站点总字数">576k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
