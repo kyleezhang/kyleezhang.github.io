@@ -213,7 +213,7 @@ let stu: DulKey = {
 
 ## 二、函数的定义
 
-TypeScript 中函数的定义一共有四种方式：
+TypeScript 中函数的定义方式有如下几种：
 
 ```typescript
 // 函数类型的定义及实现
@@ -229,11 +229,17 @@ type add3 = (x: number, y: number) => number; // 无法描述函数重载
 type add4 = {
   (x: number, y: number): number
 }
+
 // 通过接口定义函数类型，后需指定具体实现
 interface add5 {
   (x: number, y: number): number;
 }
+
+// 函数构造方法
+let greet5 = new Function('name', 'return "hello " + name')
 ```
+
+但需要注意函数构造方法并不被推荐，当我们用这种方式编写函数实例我们发现其类型为 `Function`，具体表现为一个可调用对象，具有 `Function.prototype` 的所有原型方法。但是这里并没有体现出参数和返回值的类型，因此可以使用任何参数类型调用函数，因此并不是类型安全的。
 
 ## 三、可选参数与默认参数
 
@@ -268,7 +274,41 @@ let a = [];
 push(a, 1, 2, 3);
 ```
 
-## 五、函数的重载
+一个函数最多只能有一个剩余参数，而且必须位于参数列表的最后。
+
+## 五、注解 this 的类型
+
+TypeScript 支持通过在函数的第一个参数中声明 this 类型的方式对 this 的使用符合预期，举个🌰:
+
+```typescript
+function fancyDate(this: Date) {
+  return `${this.getDate()}/${this.getMonth()}/${this.getFullYear()}`
+}
+```
+
+这儿的 this 不是常规的参数，而是保留字，是函数签名的一部分。
+
+如果想强制显式注解函数中的 this 类型，可以在 `tsconfig.json` 中启用 noImpicitThis 设置（strict 模式包括 noImpicitThis 设置）。
+
+## 六、生成器函数
+
+```typescript
+function createFibonacciGenerator() {
+  let a = 0
+  let b = 0
+  while (true) {
+    yeild a;
+    [a, b] = [b, a + b]
+  }
+}
+
+let fibonacciGenerator = createFibonacciGenerator() // IterableIterator<number>
+fibonacciGenerator.next()
+```
+
+生成器的用法如上所示，生成器使用 yield 关键字产出值。使用方让生成器提供下一个值时（例如，调用 next），yield 把结果发给使用方，然后停止执行，直到使用方要求提供下一个值为止。示例中调用 createFibonacciGenerator 得到的是一个 IterableIterator，TypeScript 会通过产出值的类型推导出迭代器的类型。除此之外也可以显式注解生成器。
+
+## 七、函数的重载
 
 在静态类型的语言中例如 C++、Java 都有函数重载的概念，它们本质上还是使用相同名称和不同参数数量或类型的多个函数，函数重载的好处在于我们不需要为相似或相同功能的函数选择不同的名称，这样增强了函数的可读性， TypeScript 中的函数重载与 C++、Java 中的有所不同，举个🌰:
 
