@@ -290,7 +290,53 @@ function fancyDate(this: Date) {
 
 如果想强制显式注解函数中的 this 类型，可以在 `tsconfig.json` 中启用 noImpicitThis 设置（strict 模式包括 noImpicitThis 设置）。
 
-## 六、生成器函数
+## 六、迭代器
+
+从概念上讲，<font color="#e1a092" size="4">迭代器</font>是一个对象，它允许我们遍历某些容器（列表、数组，...）。在 Javascript 中，这个概念转换为定义了有 next 方法的对象，该方法返回一个具有 value 和 done 属性的对象。
+
+- value：迭代序列中的下一个值。如果存在 `when done === false`，那么它就是迭代器的返回值。
+- done：布尔值。指示序列是否已完成。
+
+在 TypeScript 中提供了如下迭代器接口：
+
+```typescript
+interface IteratorYieldResult<TYield> {
+  done?: false
+  value: TYield
+}
+interface IteratorReturnResult<TRutern> {
+  done: true
+  value: TRutern
+}
+type IteratorResult<T, TRutern = any> = IteratorYieldResult<T> | IteratorReturnResult<TRutern>
+
+interface Iterator<T, TReturn = any, TNext = undefined> {
+  // NOTE: 'next' is defined using a tuple to ensure we report the correct assignability errors in all places.
+  next(...args: [] | TNext[]): IteratorResult<T, TReturn>
+  return?(value?: TReturn): IteratorResult<T, TReturn> 
+  throw?(e?: any): IteratorResult<T, TReturn> 
+} 
+```
+
+迭代器接口中还有另外两个可选方法，return 和 throw. 基本上，return允许我们向迭代器发出信号，表明它应该完成（将 done 设置为 true）并返回其返回值，throw 允许您将错误传递给它可能知道如何处理的迭代器。
+
+在这儿我们嗨需要提到另一个概念<font color="#e1a092" size="4">可迭代对象</font>。可迭代对象是实现了 `Symbol.interator` 方法的任何对象。这意味着对象（或它的原型链中的任何对象）必须有一个方法，由 `Symbol.iterator` 键索引，返回一个迭代器。TypeScript 中对于可迭代对象的类型描述如下：
+
+```typescript
+interface Interable<T> {
+  [Symbol.iterator](): Iterator<T>
+}
+```
+
+除了 Iterable 接口，我们还有一个名为 IterableIterator 的接口，表示既是可迭代对象，又是迭代器，这在描述生成器函数的时候非常有用。
+
+```typescript
+interface IterableIterator<T> extends Iterator<T> {
+  [Symbol.iterator](): IterableIterator<T>
+}
+```
+
+## 七、生成器函数
 
 ```typescript
 function createFibonacciGenerator() {
@@ -303,12 +349,23 @@ function createFibonacciGenerator() {
 }
 
 let fibonacciGenerator = createFibonacciGenerator() // IterableIterator<number>
-fibonacciGenerator.next()
+fibonacciGenerator.next() // { value: 0, done: false }
 ```
 
-生成器的用法如上所示，生成器使用 yield 关键字产出值。使用方让生成器提供下一个值时（例如，调用 next），yield 把结果发给使用方，然后停止执行，直到使用方要求提供下一个值为止。示例中调用 createFibonacciGenerator 得到的是一个 IterableIterator，TypeScript 会通过产出值的类型推导出迭代器的类型。除此之外也可以显式注解生成器。
+生成器的用法如上所示，生成器使用 yield 关键字产出值。使用方让生成器提供下一个值时（例如，调用 next），yield 把结果发给使用方，然后停止执行，直到使用方要求提供下一个值为止。示例中调用 createFibonacciGenerator 得到的是一个生成器类型 IterableIterator，TypeScript 会通过产出值的类型推导出生成器的类型 number。除此之外也可以显式注解生成器，将产出值的类型放在 IterableIterator 中：
 
-## 七、函数的重载
+```typescript
+function* createNumbers(): IterableIterator<number> {
+  let a = 0
+  let b = 0
+  while (true) {
+    yeild a;
+    [a, b] = [b, a + b]
+  }
+} 
+```
+
+## 八、函数的重载
 
 在静态类型的语言中例如 C++、Java 都有函数重载的概念，它们本质上还是使用相同名称和不同参数数量或类型的多个函数，函数重载的好处在于我们不需要为相似或相同功能的函数选择不同的名称，这样增强了函数的可读性， TypeScript 中的函数重载与 C++、Java 中的有所不同，举个🌰:
 
