@@ -336,33 +336,117 @@ interface IterableIterator<T> extends Iterator<T> {
 }
 ```
 
-## 七、生成器函数
+我们可以使用迭代器在二叉树上实现 BFS（广度优先遍历算法）。
+
+首先，我们定义我们的二叉树：
 
 ```typescript
-function createFibonacciGenerator() {
-  let a = 0
-  let b = 0
-  while (true) {
-    yeild a;
-    [a, b] = [b, a + b]
+class BinaryTreeNode<T> {
+  constructor(
+    public value: T,
+    public left?: BinaryTreeNode<T>,
+    public right?: BinaryTreeNode<T>,
+  ){}
+  getChildren(): BinaryTreeNode<T>[] {
+    const children: BinaryTreeNode<T>[] = []
+    if (this.left) children.push(this.left)
+    if (this.right) children.push(this.right)
   }
 }
 
-let fibonacciGenerator = createFibonacciGenerator() // IterableIterator<number>
-fibonacciGenerator.next() // { value: 0, done: false }
+class Tree<T = unknown> implements {
+  constructor(
+    private root: BinaryTreeNode<T>
+  ){}
+  [Symbol.iterator](): Iteratro<BinaryTreeNode<T>> {
+    return new BfsIterator(this.root)
+  } 
+}
 ```
 
-生成器的用法如上所示，生成器使用 yield 关键字产出值。使用方让生成器提供下一个值时（例如，调用 next），yield 把结果发给使用方，然后停止执行，直到使用方要求提供下一个值为止。示例中调用 createFibonacciGenerator 得到的是一个生成器类型 IterableIterator，TypeScript 会通过产出值的类型推导出生成器的类型 number。除此之外也可以显式注解生成器，将产出值的类型放在 IterableIterator 中：
+这里我们实现了一个最简单的二叉树，紧接着我们来实现迭代器：
 
 ```typescript
-function* createNumbers(): IterableIterator<number> {
-  let a = 0
-  let b = 0
+class BfsIterator<T> implements Iterator<BinaryTreeNode<T>, number | undefined> {
+  private currentRow: BinaryTreeNode<T>[];
+  private currentNodeIndex: number;
+  private numberOfNodes: number;
+  private done: boolean;
+  constructor(root: BinaryTreeNode<T>) {
+    this.currentRow = [root]
+    this.currentNodeIndex = 0
+    this.done = false
+    this.numberOfNode = 0
+  }
+  next(): IteratorResult<BinaryTreeNode<T>, number | undefined> {
+    if (this.done) {
+      return {
+        done: true,
+        value: undefined
+      }
+    }
+    if (this.currentNodeIndex === this.currentRow.length) {
+      this.currentRow = this.getNewRow()
+      this.currentNodeIndex = 0
+      if (this.currentRow.length === 0) {
+       this.done = true
+       return {
+        done: true,
+        value: this.numberOfNode
+       } 
+      }
+    }
+    const result: IteratorYieldResult<BinaryTreeNode<T>> = {
+      done: false,
+      value: this.currentRow[this.currentNodeIndex]
+    }
+    this.currentNodeIndex += 1;
+    this.numberOfNodes += 1;
+    return result
+  }
+  private getNewRow(): BinaryTreeNode<T>[] {
+    return this.currentRow.map((node) => node.getChildren()).flat()
+  }
+}
+```
+
+## 七、生成器函数
+
+迭代器允许我们完全控制迭代某个结构，我们可以决定是否以及何时获得迭代序列的下一个元素，同时向迭代器的消费者隐藏我们如何获取这些元素的实现细节。然而，一切都是有代价的，迭代器实现起来可能相当棘手，因为我们必须跟踪控制执行流程的状态，以便我们可以将迭代器标记为完成。生成器就是为了简化迭代器的创建流程提出的，我们首先来写一个简单的斐波那契数列生成器函数：
+
+```typescript
+function* createFibonacciGenerator() {
+  let a = 1
+  let b = 1
   while (true) {
-    yeild a;
+    yield a;
     [a, b] = [b, a + b]
   }
-} 
+}
+```
+
+生成器的用法如上所示，生成器使用 yield 关键字产出值。使用方让生成器提供下一个值时（例如，调用 next），yield 把结果发给使用方，然后停止执行，直到使用方要求提供下一个值为止。我们查看这里 createFibonacciGenerator 函数的类型为 `function createFibonacciGenerator(): Generator<number, void, unknown>`，那么 Generator 类型到底是什么呢？
+
+```typescript
+interface Generator<T = unknown, TReturn = any, TNext = unknown> extends Iterator<T, TReturn, TNext> {
+  // NOTE: 'next' is defined using a tuple to ensure we report the correct assignability errors in all places.
+  next(...args: [] | [TNext]): IteratorResult<T, TReturn>;
+  return(value: TReturn): IteratorResult<T, TReturn>;
+  throw(e: any): IteratorResult<T, TReturn>;
+  [Symbol.iterator](): Generator<T, TReturn, TNext>;
+}
+```
+
+大家可以发现这里的 Generator 接口与 IterableIterator 非常相像，那么它们之间有什么不同呢？[这里](https://stackoverflow.com/questions/58568399/why-are-typescripts-iterableiterator-and-generator-generics-slightly-differ)有非常全面的讨论。
+
+要命令生成器执行我们的代码，我们只需要调用next：
+
+```typescript
+let fibonacciGenerator = createFibonacciGenerator() // Generator<number, void, unknown>
+fibonacciGenerator.next() // { value: 1, done: false }
+fibonacciGenerator.next() // { value: 1, done: false }
+fibonacciGenerator.next() // { value: 2, done: false }
+fibonacciGenerator.next() // { value: 3, done: false }
 ```
 
 ## 八、函数的重载
@@ -403,7 +487,9 @@ function add(a, b) {
 
 《深入理解TypeScript》
 
-[typeScript 中的type关键字](https://juejin.cn/post/6876359681464336397)
+[Iterators in TypeScript](https://dev.to/gsarciotto/iterators-in-typescript-1d78)
+
+[Generators in Typescript](https://dev.to/gsarciotto/generators-in-typescript-4b37ß)
 
 [一份不可多得的 TS 学习指南（1.8W字）](https://juejin.im/post/6872111128135073806#heading-21)
 
