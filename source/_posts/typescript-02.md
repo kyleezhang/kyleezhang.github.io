@@ -320,7 +320,7 @@ interface Iterator<T, TReturn = any, TNext = undefined> {
 
 迭代器接口中还有另外两个可选方法，return 和 throw. 基本上，return允许我们向迭代器发出信号，表明它应该完成（将 done 设置为 true）并返回其返回值，throw 允许您将错误传递给它可能知道如何处理的迭代器。
 
-在这儿我们嗨需要提到另一个概念<font color="#e1a092" size="4">可迭代对象</font>。可迭代对象是实现了 `Symbol.interator` 方法的任何对象。这意味着对象（或它的原型链中的任何对象）必须有一个方法，由 `Symbol.iterator` 键索引，返回一个迭代器。TypeScript 中对于可迭代对象的类型描述如下：
+在这儿我们还需要提到另一个概念<font color="#e1a092" size="4">可迭代对象</font>。可迭代对象是实现了 `Symbol.interator` 方法的任何对象。这意味着对象（或它的原型链中的任何对象）必须有一个方法，由 `Symbol.iterator` 键索引，返回一个迭代器。TypeScript 中对于可迭代对象的类型描述如下：
 
 ```typescript
 interface Interable<T> {
@@ -465,6 +465,31 @@ function add(a: string | number, b: string | number) {
     return a.toString() + b.toString();
   }
   return a + b;
+}
+```
+
+TypeScript 中函数的重载总的来说分为两步：
+
+- 声明重载的函数签名
+- 在组合后的函数签名中实现函数体
+
+我们用更能说明这边的示例来进行演示：
+
+```typescript
+// 函数重载签名列表
+type Student {
+  (name: string, classroom: string, age: number): void
+  (name: string, age: number): void
+}
+
+// 在组合后的签名进行实现
+let student: Student = (name: string, classroomOrAge: string | number, age?: number) => {
+  if (typeof classroomOrAge === 'string') {
+    ...
+  }
+  if (age !== undefined) {
+    ...
+  }
 }
 ```
 
